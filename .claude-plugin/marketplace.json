@@ -1,0 +1,15 @@
+{
+  "name": "factcheck-tools",
+  "owner": {
+    "name": "Aleksandar Kochovski"
+  },
+  "description": "Editorial and QA workflows for WordPress content teams.",
+  "plugins": [
+    {
+      "name": "factcheck-flow",
+      "source": "./",
+      "description": "Batch WordPress article QA: parallel fact-check with per-finding human triage, then automated editorial + link passes.",
+      "version": "1.0.0"
+    }
+  ]
+}

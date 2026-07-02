@@ -1,0 +1,8 @@
+# Never commit per-user secrets or local overrides
+.claude/settings.local.json
+settings.local.json
+*.local.json
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db

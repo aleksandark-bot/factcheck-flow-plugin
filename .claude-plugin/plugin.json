@@ -1,0 +1,9 @@
+{
+  "name": "factcheck-flow",
+  "description": "Batch WordPress article QA: parallel fact-check with per-finding human triage, then automated editorial + link passes applied over the REST API.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Aleksandar Kochovski"
+  },
+  "keywords": ["wordpress", "editorial", "fact-check", "seo", "workflow"]
+}
