@@ -10,7 +10,11 @@ Check today's date. Find all articles published the past day in /blog/, /diagnos
 
 Check for any 3xx redirects or 4xx errors; all links must return a clean 200.
 
-Keep up to 3 external links ONLY. Choose the ones with the greatest impact, keep those, and remove the rest, while fixing the context around them to make sense without the link.
+External links must be nofollow, open in new tab.
+
+Internal links open in the same tab and are NOT nofollow.
+
+Keep up to 5 external links ONLY. Choose the ones with the greatest impact, keep those, and remove the rest, while fixing the context around them to make sense without the link.
 
 Remove any links to these articles and replace them with something else:
 - …/intraparenchymal-hemorrhage-icd-10-codes/
