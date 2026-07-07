@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # factcheck-flow installer (no plugin system required)
-# Installs the /factcheck-flow command, its two agents, the WordPress skill,
+# Installs the /fact command, its two agents, the WordPress skill,
 # and the three prompt files into ~/.claude/ — works in Claude Code setups
 # where the plugin system is disabled.
 #
@@ -32,7 +32,9 @@ done
 echo "  - prompts installed"
 
 # --- 2. The command -------------------------------------------------------
-cat > "$CLAUDE/commands/factcheck-flow.md" <<'EOF'
+# Remove the old command name if a previous version installed it.
+rm -f "$CLAUDE/commands/factcheck-flow.md"
+cat > "$CLAUDE/commands/fact.md" <<'EOF'
 ---
 description: Batch-QA WordPress articles — parallel fact-check, per-finding human triage, then automated editorial + link passes.
 argument-hint: "<url-or-id> <url-or-id> ... (up to ~5)"
@@ -105,13 +107,13 @@ per article — what fact-check fixes were applied, editorial highlights, link c
 and anything skipped. End with the reminder to purge the WP Rocket cache for each
 edited URL.
 EOF
-echo "  - /factcheck-flow command installed"
+echo "  - /fact command installed"
 
 # --- 3. The agents --------------------------------------------------------
 cat > "$CLAUDE/agents/factcheck-reporter.md" <<'EOF'
 ---
 name: factcheck-reporter
-description: Stage 1 worker for /factcheck-flow. Reviews ONE WordPress article for factual/coding accuracy, categories, tags, links, and structure, and returns a numbered findings report. READ-ONLY — never writes to WordPress.
+description: Stage 1 worker for /fact. Reviews ONE WordPress article for factual/coding accuracy, categories, tags, links, and structure, and returns a numbered findings report. READ-ONLY — never writes to WordPress.
 tools: Read, WebFetch, WebSearch, Bash, Glob, Grep
 model: sonnet
 ---
@@ -139,7 +141,7 @@ EOF
 cat > "$CLAUDE/agents/article-editor.md" <<'EOF'
 ---
 name: article-editor
-description: Stage 3 worker for /factcheck-flow. Owns ONE WordPress article end-to-end — applies the human-approved fact-check fixes, then the editorial pass, then the link-audit pass, writing all changes via the WordPress REST API.
+description: Stage 3 worker for /fact. Owns ONE WordPress article end-to-end — applies the human-approved fact-check fixes, then the editorial pass, then the link-audit pass, writing all changes via the WordPress REST API.
 tools: Read, WebFetch, WebSearch, Bash, Glob, Grep
 model: sonnet
 ---
@@ -185,7 +187,7 @@ echo "  - agents installed"
 cat > "$CLAUDE/skills/wordpress-access/SKILL.md" <<'EOF'
 ---
 name: wordpress-access
-description: Read and update WordPress articles via the REST API using HTTP Basic Auth. Provides the site URL, credentials, and rules for fetching and saving posts. Used by /factcheck-flow.
+description: Read and update WordPress articles via the REST API using HTTP Basic Auth. Provides the site URL, credentials, and rules for fetching and saving posts. Used by /fact.
 ---
 
 # WordPress access
@@ -281,6 +283,6 @@ echo "  ✅ Done!"
 echo ""
 echo "  Next steps:"
 echo "    1. Fully close and reopen Claude Code (so it loads the new command)."
-echo "    2. Type:  /factcheck-flow <article link or post ID>"
+echo "    2. Type:  /fact <article link or post ID>"
 echo "    3. Try one draft article first to see how it works."
 echo ""
