@@ -80,6 +80,8 @@ Add Yoast keywords to headings.
 
 Add tags and categories (use existing in WordPress).
 
+When adding categories, always remove the "Uncategorized" category.
+
 Where applicable, check pricing from ONLY the provider website, not third-party sources.
 
 Note: This is a newly published article or draft that may not yet be indexed by search engines. Fetch the URL directly and review the full article body content. Use a high token limit when fetching because the site has very large navigation menus that consume token space before the article body appears. You have full WordPress access and login via the `wordpress-access` skill (SKILL.md).
