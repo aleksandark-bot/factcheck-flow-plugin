@@ -69,6 +69,20 @@ The three passes are plain editable files under `prompts/`:
   minimum internal-link count, the replacement blog source, and the banned-link list**
   to match your own site (the defaults are specific to one site).
 
+Two reference guides under `guides/` define voice and product context, and are read by
+the editorial pass and the fact-check reviewer:
+
+- `guides/Pabau-style-guide.md` — tone of voice, benefit framing, US/UK terminology,
+  formatting mechanics, and a treatments/regulation glossary.
+- `guides/About-Pabau.md` — what the product is, its product family and naming rules,
+  pricing model, competitors, and the customer journey.
+
+**These defaults are Pabau-specific — replace them with your own brand's voice and
+product context** (keep the filenames, or update the references in `prompts/2-editorial.md`
+and the `factcheck-reporter` agent if you rename them). The installer also adds a small
+Pabau block to `~/.claude/CLAUDE.md` (between managed markers) so ad-hoc editing outside
+`/fact` picks up the guides too.
+
 Edit these freely; the workflow picks up your changes on the next run.
 
 ## How it's built

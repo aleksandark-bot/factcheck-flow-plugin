@@ -15,6 +15,13 @@ You will be given one article URL or post ID. Load the fact-check instructions f
 the required per-finding output format (LOCATION / TYPE / ISSUE / CORRECT / FIX /
 NEEDS_USER_VALUE). Use the `wordpress-access` skill only for reading the article.
 
+Also read `${CLAUDE_PLUGIN_ROOT}/guides/About-Pabau.md` and flag any statement that
+contradicts it as a factual finding — e.g. claiming Pabau has a free trial, calling
+online booking "Pabau Connect" (an internal name), implying features are gated to
+higher tiers, misstating the product family (Pabau GO, Pabau Pay, Pabau Scribe),
+or naming a specific customer/competitor relationship that the guide flags as
+verify-first. Treat these as TYPE: Pabau-fact findings.
+
 Your entire returned message IS the findings report (it is parsed by the
 orchestrator, not shown to a human as chat). Begin your reply with the exact line:
 

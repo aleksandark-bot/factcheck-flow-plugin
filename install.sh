@@ -14,13 +14,14 @@ REPO_RAW="https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugi
 CLAUDE="$HOME/.claude"
 FF="$CLAUDE/factcheck-flow"
 PROMPTS="$FF/prompts"
+GUIDES="$FF/guides"
 CREDS="$FF/wp-credentials"
 
 echo ""
 echo "  Installing factcheck-flow into $CLAUDE ..."
 echo ""
 
-mkdir -p "$CLAUDE/commands" "$CLAUDE/agents" "$CLAUDE/skills/wordpress-access" "$PROMPTS"
+mkdir -p "$CLAUDE/commands" "$CLAUDE/agents" "$CLAUDE/skills/wordpress-access" "$PROMPTS" "$GUIDES"
 
 # --- 1. Download the editable prompt files from the repo -------------------
 for p in 1-factcheck 2-editorial 3-links; do
@@ -30,6 +31,17 @@ for p in 1-factcheck 2-editorial 3-links; do
   fi
 done
 echo "  - prompts installed"
+
+# --- 1b. Download the Pabau reference guides from the repo -----------------
+# These define voice/terminology (Pabau-style-guide) and product/positioning
+# context (About-Pabau). The editorial prompt and factcheck-reporter read them.
+for g in Pabau-style-guide About-Pabau; do
+  if ! curl -fsSL "$REPO_RAW/guides/$g.md" -o "$GUIDES/$g.md"; then
+    echo "  ERROR: could not download guides/$g.md — check your internet connection." >&2
+    exit 1
+  fi
+done
+echo "  - guides installed"
 
 # --- 2. The command -------------------------------------------------------
 # Remove the old command name if a previous version installed it.
@@ -128,6 +140,13 @@ You will be given one article URL or post ID. Load the fact-check instructions f
 exactly, including the required per-finding output format (LOCATION / TYPE / ISSUE /
 CORRECT / FIX / NEEDS_USER_VALUE). Use the `wordpress-access` skill only for reading
 the article.
+
+Also read `~/.claude/factcheck-flow/guides/About-Pabau.md` and flag any statement that
+contradicts it as a factual finding — e.g. claiming Pabau has a free trial, calling
+online booking "Pabau Connect" (an internal name), implying features are gated to
+higher tiers, misstating the product family (Pabau GO, Pabau Pay, Pabau Scribe),
+or naming a specific customer/competitor relationship that the guide flags as
+verify-first. Treat these as TYPE: Pabau-fact findings.
 
 Your entire returned message IS the findings report (it is parsed by the
 orchestrator, not shown to a human as chat). Begin your reply with the exact line:
@@ -259,6 +278,40 @@ curl -s -u "$WP_USER:$WP_APP_PASSWORD" \
   (e.g. WP Rocket → Purge this URL).
 EOF
 echo "  - wordpress-access skill installed"
+
+# --- 4b. Global editing guidance in ~/.claude/CLAUDE.md -------------------
+# The /fact flow reads the Pabau guides automatically. This block also points
+# Claude at them for AD-HOC editing outside /fact. It is written between clearly
+# marked sentinels so re-running the installer refreshes ONLY this block and
+# never touches the rest of your CLAUDE.md.
+CLAUDE_MD="$CLAUDE/CLAUDE.md"
+GUIDE_START="<!-- factcheck-flow:pabau-guides START (managed by install.sh) -->"
+GUIDE_END="<!-- factcheck-flow:pabau-guides END -->"
+touch "$CLAUDE_MD"
+if grep -qF "$GUIDE_START" "$CLAUDE_MD"; then
+  awk -v s="$GUIDE_START" -v e="$GUIDE_END" '
+    $0==s{skip=1}
+    skip==0{print}
+    $0==e{skip=0}
+  ' "$CLAUDE_MD" > "$CLAUDE_MD.tmp" && mv "$CLAUDE_MD.tmp" "$CLAUDE_MD"
+fi
+# Drop trailing blank lines so repeated installs don't accumulate whitespace.
+awk 'NF{last=NR} {line[NR]=$0} END{for(i=1;i<=last;i++) print line[i]}' \
+  "$CLAUDE_MD" > "$CLAUDE_MD.tmp" && mv "$CLAUDE_MD.tmp" "$CLAUDE_MD"
+cat >> "$CLAUDE_MD" <<EOF
+
+$GUIDE_START
+## Pabau content editing (factcheck-flow)
+
+When writing, editing, or fact-checking Pabau content, read both guides first:
+
+- \`~/.claude/factcheck-flow/guides/Pabau-style-guide.md\` — voice/tone, benefit framing, US vs UK terminology, formatting, glossary.
+- \`~/.claude/factcheck-flow/guides/About-Pabau.md\` — what Pabau is, product family + naming rules, pricing model, competitors, customer journey.
+
+Quick rules: US English (say "practice", not "clinic"); introduce Pabau on first mention ("practice management software like Pabau"); qualify product names once ("Pabau GO, our iOS app"); never say "Pabau Connect" externally (say "online booking"); no free trial (structured onboarding); every subscription includes every feature (no gating); don't undermine the core product when describing Plus add-ons.
+$GUIDE_END
+EOF
+echo "  - CLAUDE.md editing guidance installed"
 
 # --- 5. WordPress credentials (interactive) -------------------------------
 if [ -f "$CREDS" ]; then
