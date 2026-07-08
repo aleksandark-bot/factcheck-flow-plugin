@@ -25,4 +25,6 @@ Remove any links to these articles and replace them with something else:
 
 When you link to articles from the /diagnostic-codes/ or /procedure-codes/ subfolders, the anchor text should be just the procedural or diagnostic code itself, and the sentence should not contain any parentheticals describing what the code refers to (as this makes sentences extremely clunky).
 
+Anchor text should be no longer than 4 words. Reduce anchor text that is too long.
+
 Note: This is a newly published article or draft that may not yet be indexed by search engines. Fetch the URL directly and review the full article body content. Use a high token limit when fetching because the site has very large navigation menus that consume token space before the article body appears. You have full WordPress access and login via the `wordpress-access` skill (SKILL.md).
