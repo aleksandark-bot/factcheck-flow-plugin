@@ -54,6 +54,8 @@ For templates, make sure the download box is below Key Takeaways, above intro an
 
 Fix all improperly formatted HTML.
 
+Always check if the FAQ block is malformed. If it is, fix the HTML and apply the proper Yoast FAQ schema.
+
 Check for proper capitalization of titles and body text (Titles should be sentence case, except when the title starts with a number (first letter of the first proper word must be capitalized then). Another exception is following a period, colon, semicolon or em-dash.
 
 For codes, intro starts with a definition — delete all hedging language that sets up stakes etc (the searcher does not need to know that they're liable if they mess up coding, that's why they're looking this up).
@@ -63,6 +65,10 @@ For codes, intro starts with a definition — delete all hedging language that s
 Fix outdated feature references, if any (e.g. Echo AI).
 
 Break up long paragraphs (no more than 4 lines or 60 words).
+
+If you find a sentence that lists three or more long items (as in, entire clauses of three or more words are list items), turn that into a wordpress list block instead of a paragraph.
+
+Shorten long sentences to make them more legible. Split off clauses from longer sentences into their own sentences, rather than separating them with em dashes, colons or semicolons.
 
 Ensure headings have correct hierarchy (H1 > H2 > H3 > H4).
 
