@@ -9,6 +9,7 @@ Before applying anything below, read both guides and treat them as the source of
 
 - `Pabau-style-guide.md` — tone of voice, benefit framing, US/UK terminology table, formatting mechanics, and the treatments/regulation glossary.
 - `About-Pabau.md` — what Pabau is, the product family and naming rules, pricing model, competitors, and the customer journey.
+- `Meta-title-best-practices.md` — SERP title optimization: listicle numbers, year usage, matching micro-intent, differentiating in the SERP, and solving the pain point in the title.
 
 Non-negotiable rules from those guides that must hold in every edit:
 
@@ -57,6 +58,8 @@ Fix all improperly formatted HTML.
 Always check if the FAQ block is malformed. If it is, fix the HTML and apply the proper Yoast FAQ schema.
 
 Check for proper capitalization of titles and body text (Titles should be sentence case, except when the title starts with a number (first letter of the first proper word must be capitalized then). Another exception is following a period, colon, semicolon or em-dash.
+
+Optimize the SERP title (meta title) per `Meta-title-best-practices.md`: use a number for listicles, include the current year where the topic is time-sensitive, match the searcher's micro-intent, differentiate from the rest of the SERP, and lead with the pain point being solved. Don't just repeat the H1 verbatim if a stronger SERP title is warranted.
 
 For codes, intro starts with a definition — delete all hedging language that sets up stakes etc (the searcher does not need to know that they're liable if they mess up coding, that's why they're looking this up).
 - BAD: Most heart transplant complications fall cleanly into a named category: rejection, failure, infection. When the complication doesn't fit any of those, ICD-10 Code T86.298 is the correct billable code. It covers every post-transplant cardiac complication not elsewhere classified within the T86.2x subcategory, and it's the code that coders most frequently reach for when documentation describes something atypical in a transplant recipient's clinical course.
