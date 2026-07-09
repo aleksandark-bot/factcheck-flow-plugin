@@ -6,7 +6,7 @@
 
 For this article, check internal links (NOT redirects, NOT nofollow, anchor text makes sense with the content and searcher intent). No duplicate links, unless they're in the "Expert Picks" or "Continue your research" (the box at the bottom that lists other articles to visit). If you remove links for any reason, find appropriate Pabau blogs to replace them with. Make sure there are at least 15 internal links to /blog/, /diagnostic-codes/, /procedure-codes/, or /templates/ pages.
 
-For duplicate links, always remove the second link, then rephrase the sentence containing it so it makes sense without the link. If the removed link was in a sentence solely directing the reader to read the linked article, delete the sentence entirely. If the removed link was in an Expert picks / continue your research block, then replace the enite sentence with another one, linking to a different article.
+For duplicate links, always remove the second link, then rephrase the sentence containing it so it makes sense without the link. If the removed link was in a sentence solely directing the reader to read the linked article, delete the sentence entirely. If the removed link was in an Expert picks / continue your research block, then replace the entire sentence with another one, linking to a different article.
 
 Check today's date. Find all articles published the past day in /blog/, /diagnostic-codes/, /procedure-codes/, or /templates/. Link to at least 3 of those articles (choose them at random, do not go in order).
 
