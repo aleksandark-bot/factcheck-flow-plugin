@@ -33,9 +33,10 @@ done
 echo "  - prompts installed"
 
 # --- 1b. Download the Pabau reference guides from the repo -----------------
-# These define voice/terminology (Pabau-style-guide) and product/positioning
-# context (About-Pabau). The editorial prompt and factcheck-reporter read them.
-for g in Pabau-style-guide About-Pabau; do
+# These define voice/terminology (Pabau-style-guide), product/positioning
+# context (About-Pabau), and SERP title optimization (Meta-title-best-practices).
+# The editorial prompt and factcheck-reporter read them.
+for g in Pabau-style-guide About-Pabau Meta-title-best-practices; do
   if ! curl -fsSL "$REPO_RAW/guides/$g.md" -o "$GUIDES/$g.md"; then
     echo "  ERROR: could not download guides/$g.md — check your internet connection." >&2
     exit 1
