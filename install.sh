@@ -44,6 +44,69 @@ for g in Pabau-style-guide About-Pabau Meta-title-best-practices; do
 done
 echo "  - guides installed"
 
+# --- 1c. The auto-updater script ------------------------------------------
+# Pulled by a SessionStart hook (installed in section 4c). Re-downloads the
+# editable prompts + guides whenever the repo has advanced since the last sync.
+cat > "$FF/update.sh" <<'UPDATESH'
+#!/usr/bin/env bash
+#
+# factcheck-flow auto-updater (runs from a SessionStart hook)
+# Pulls the latest editable /fact files (prompts + guides) from the repo, but
+# ONLY when the repo has advanced since the last sync. Design goals:
+#   - Fail-silent: a network hiccup, offline laptop, or API rate-limit must never
+#     block or slow a Claude Code session. Every failure path exits 0 quietly.
+#   - Author-safe: gated on the remote commit SHA. If nobody has pushed since the
+#     last sync, this is a no-op — so uncommitted local edits are never clobbered.
+#   - Quiet: prints nothing on success so it doesn't pollute session context.
+#
+set -uo pipefail   # deliberately NOT -e
+
+REPO="aleksandark-bot/factcheck-flow-plugin"
+BRANCH="main"
+RAW="https://raw.githubusercontent.com/$REPO/$BRANCH"
+API="https://api.github.com/repos/$REPO/commits/$BRANCH"
+FF="$HOME/.claude/factcheck-flow"
+STATE="$FF/.last-sync-sha"
+
+mkdir -p "$FF/prompts" "$FF/guides" 2>/dev/null || true
+
+# 1. Latest commit on main. Bail quietly if we can't reach GitHub.
+remote_sha="$(curl -fsSL --max-time 8 -H 'Accept: application/vnd.github+json' "$API" 2>/dev/null \
+  | grep -m1 '"sha"' | sed -E 's/.*"sha"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"
+[ -n "${remote_sha:-}" ] || exit 0
+
+# 2. Nothing new since last sync? Do nothing (this is what protects unpushed edits).
+if [ -f "$STATE" ] && [ "$(cat "$STATE" 2>/dev/null)" = "$remote_sha" ]; then
+  exit 0
+fi
+
+# 3. Download each file to a temp path; only replace the real file on a clean,
+#    non-empty download so a partial fetch never truncates a good local file.
+fetch() { # $1 = repo-relative path, $2 = local destination
+  local tmp
+  tmp="$(mktemp 2>/dev/null)" || return 0
+  if curl -fsSL --max-time 8 "$RAW/$1" -o "$tmp" 2>/dev/null && [ -s "$tmp" ]; then
+    mkdir -p "$(dirname "$2")" 2>/dev/null || true
+    mv "$tmp" "$2" 2>/dev/null || rm -f "$tmp" 2>/dev/null || true
+  else
+    rm -f "$tmp" 2>/dev/null || true
+  fi
+}
+
+for p in 1-factcheck 2-editorial 3-links; do
+  fetch "prompts/$p.md" "$FF/prompts/$p.md"
+done
+for g in Pabau-style-guide About-Pabau Meta-title-best-practices; do
+  fetch "guides/$g.md" "$FF/guides/$g.md"
+done
+
+# 4. Remember the commit we're now in sync with.
+printf '%s\n' "$remote_sha" > "$STATE" 2>/dev/null || true
+exit 0
+UPDATESH
+chmod +x "$FF/update.sh"
+echo "  - auto-updater script installed"
+
 # --- 2. The command -------------------------------------------------------
 # Remove the old command name if a previous version installed it.
 rm -f "$CLAUDE/commands/factcheck-flow.md"
@@ -314,6 +377,43 @@ $GUIDE_END
 EOF
 echo "  - CLAUDE.md editing guidance installed"
 
+# --- 4c. Enable auto-update via a SessionStart hook -----------------------
+# Registers a hook in ~/.claude/settings.json that runs update.sh whenever a new
+# Claude Code session starts, so prompt/guide changes propagate without a manual
+# reinstall. Idempotent, and it refuses to touch a settings.json it can't parse.
+UPDATE_CMD='bash "$HOME/.claude/factcheck-flow/update.sh"'
+if command -v python3 >/dev/null 2>&1; then
+  SETTINGS="$CLAUDE/settings.json" python3 - "$UPDATE_CMD" <<'PY'
+import json, os, sys
+path = os.environ["SETTINGS"]
+cmd = sys.argv[1]
+try:
+    with open(path) as f:
+        cfg = json.load(f)
+except FileNotFoundError:
+    cfg = {}
+except Exception:
+    sys.exit(0)  # malformed settings.json — do NOT risk clobbering it; skip
+if not isinstance(cfg, dict):
+    sys.exit(0)
+ss = cfg.setdefault("hooks", {}).setdefault("SessionStart", [])
+already = any(
+    h.get("command") == cmd
+    for g in ss if isinstance(g, dict)
+    for h in g.get("hooks", []) if isinstance(h, dict)
+)
+if not already:
+    ss.append({"hooks": [{"type": "command", "command": cmd}]})
+with open(path, "w") as f:
+    json.dump(cfg, f, indent=2)
+    f.write("\n")
+PY
+  echo "  - auto-update hook installed (SessionStart)"
+else
+  echo "  - NOTE: python3 not found — skipped auto-update hook (you'll need to re-run"
+  echo "          this installer manually to get future prompt/guide changes)."
+fi
+
 # --- 5. WordPress credentials (interactive) -------------------------------
 if [ -f "$CREDS" ]; then
   echo "  - credentials already present ($CREDS) — keeping them"
@@ -336,7 +436,13 @@ echo ""
 echo "  ✅ Done!"
 echo ""
 echo "  Next steps:"
-echo "    1. Fully close and reopen Claude Code (so it loads the new command)."
+echo "    1. Fully close and reopen Claude Code (so it loads the new command +"
+echo "       the auto-update hook)."
 echo "    2. Type:  /fact <article link or post ID>"
 echo "    3. Try one draft article first to see how it works."
+echo ""
+echo "  Auto-update is on: from now on, each time you open Claude Code it quietly"
+echo "  pulls the latest prompts/guides when they've changed. Prompt/guide updates"
+echo "  apply on your next /fact run; a rare command/agent change still needs a"
+echo "  reinstall + restart."
 echo ""
