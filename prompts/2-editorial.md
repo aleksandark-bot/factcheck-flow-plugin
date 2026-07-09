@@ -49,6 +49,8 @@ Also check for keyword stuffing in headings and body text. Especially check if t
 
 Also check for UK spelling / phrasing (it MUST be US English). This includes changing "clinic" to "practice" in most cases, as well as changing any other UK-specific medical language to US. When in doubt, go the moderate route. If the article is UK-specific, still go moderate, keeping references to UK legislation, bodies, etc but mostly using "practice" still.
 
+Unless it's a UK-specific article, remove references to Healthcode and replace with generic claims and billing. Example: OLD: Automate claims through Healthcode. NEW: Automate claims and billing with Pabau. Apply this automatically — never ask about it, just replace. If the reference is in an image caption, don't worry about the image — it's generic enough to just change the caption and be good.
+
 Intro must exist. The proper structure is H1 > Key Takeaways > Intro > H2 > rest of the article. The only exception are template articles, where it's H1 > Key Takeaways > Download box (with built-in H2) > intro > H2 > rest of the article.
 
 For templates, make sure the download box is below Key Takeaways, above intro and has a built-in H2 tag (something along the lines of "Download your free [template name]", but make sure it's grammatically correct, not just exact-match.
