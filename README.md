@@ -68,8 +68,8 @@ main keyword, and then automatically runs `/fact` on the same article.
 Its first question is always **"Is this a draft?"**
 
 - **Draft** → fully automatic keyword selection, then it saves and runs `/fact`.
-- **Published** → it also pulls the queries the page already ranks for from GSC, and writes an
-  Obsidian checklist to your Desktop; you tick the keywords, save, and it reads them back.
+- **Published** → it also pulls the queries the page already ranks for from GSC, and opens a
+  clean keyword picker in your browser; you choose keywords, click Save, and it continues.
 - If very few keywords are found, it falls back to an in-chat multiple-choice picker and asks
   whether to optimize at all before proceeding.
 

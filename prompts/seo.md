@@ -15,8 +15,8 @@ The FIRST thing /SEO does is ask **"Is this a draft?"** (Stage 0), which picks t
   transcript). No GSC list. Ends by saving and running **/fact**. (A post someone published
   by accident is still treated as a draft here — content only; never change publish status.)
 - **Published update → MANUAL.** After "No", Claude also pulls the **GSC** 4th list and, for
-  keyword selection, writes an Obsidian checklist to the Desktop for David to tick. (GSC is one
-  of five lists; the Highly Relevant list appears in both branches.)
+  keyword selection, opens a clean keyword picker in the browser to choose from. (GSC is one of
+  five lists; the Highly Relevant list appears in both branches.)
 
 Selection routing at Stage 3 depends on how many keywords the data actually yields:
 - **> 10 total:** draft = auto-select; published = Desktop document.
@@ -319,9 +319,9 @@ CASE C — total_kw > 10:
         supersedes it, set new_main_keyword; otherwise keep the current main keyword;
       - set use_in_heading = true where the keyword maps cleanly to a heading topic.
     Continue to Stage 4 (no proceed gate — there is plenty to do).
-  • is_draft == false → DOCUMENT PATH: write the Obsidian checklist to the Desktop, post the
-    bold link block as the LAST thing in the reply, and STOP until David saves. Then read the
-    file and parse ticked boxes into the SELECTION JSON.
+  • is_draft == false → PICKER PATH: launch the local web picker (see below), which opens a
+    clean page in the browser with a per-keyword role dropdown and a "new main" selector. STOP
+    until the user clicks Save; then read the selection JSON it writes.
 
 ── PROCEED GATE (Cases A and B only) ──
 Final question of this step, via AskUserQuestion:
@@ -329,31 +329,26 @@ Final question of this step, via AskUserQuestion:
 If Skip (or Case A with nothing selected): do NOT optimize — jump straight to Stage 9 (/fact
 handoff). This is the escape hatch for when there aren't enough keywords to matter.
 
-── DESKTOP DOCUMENT (Case C, published) ──
-Write an Obsidian-compatible Markdown file to:  ~/Desktop/SEO-<slug>-keywords.md
-One section per list; each keyword is a clickable checkbox with two nested flag checkboxes,
-metrics shown inline:
+── BROWSER PICKER (Case C, published) ──
+Do NOT write a markdown/Obsidian file. Launch the shipped local web picker: it renders the
+lists as a clean page with clickable controls (a per-keyword "Use as" dropdown — skip / Text /
+Heading — plus one "New main keyword" selector) and writes the selection back automatically.
 
-    ## Related keywords
-    - [ ] **google drive**  ·  diff 3 · vol 210 · informational
-        - [ ] use in heading
-        - [ ] set as NEW MAIN keyword
-    ## Highly relevant keywords
-    - [ ] **appointment reminders**  ·  relevance #1 · diff 12 · vol 40
-        - [ ] use in heading
-        - [ ] set as NEW MAIN keyword
-    ## Already ranking (GSC)
-    - [ ] **medical certificate generator**  ·  2077 clicks · 26170 impr · pos 8.0
-        - [ ] use in heading
-        - [ ] set as NEW MAIN keyword
-
-Read-back parse: top box ticked = selected; nested "use in heading" = use_in_heading; nested
-"NEW MAIN" = new_main_keyword (enforce at most ONE across the whole file).
-The bold link block MUST be the very LAST thing in the reply, exactly:
-
-    **Article title:** <title>
-    **Article link:** <url>
-    **Keyword lists:** <file:// path to the .md on the Desktop>
+1. Write the five lists to a temp JSON at /tmp/seo-<slug>-kw.json, shaped as:
+     { "article_title": "<title>", "article_url": "<url>",
+       "lists": { "related":[...], "variations":[...], "competitor":[...],
+                  "highly_relevant":[...], "gsc_ranking":[...] } }
+   Row fields: keyword, difficulty, volume, intent, why — or for gsc_ranking: keyword, clicks,
+   impressions, position, opportunity. Omit gsc_ranking on drafts.
+2. Run (this BLOCKS until the user clicks Save in the browser):
+     python3 "$HOME/.claude/factcheck-flow/bin/keyword_picker.py" \
+             --in /tmp/seo-<slug>-kw.json --out /tmp/seo-<slug>-sel.json
+   It opens the page in the user's browser automatically. Tell the user: "I've opened a keyword
+   picker in your browser — choose your keywords and click Save."
+3. When it exits 0, read /tmp/seo-<slug>-sel.json — it already IS the SELECTION JSON below
+   ({selected:[{keyword,list,use_in_heading}], new_main_keyword}). Delete both temp files after.
+   If the picker exits non-zero / can't open a browser (headless), FALL BACK to the Case B
+   AskUserQuestion picker.
 
 ── Gate #2 SELECTION (produced by whichever path ran) ──
 {
@@ -513,8 +508,8 @@ meta/title/description changes, categories/tags added.
 ```
 1. Ensure all S7/S8 changes are saved to WordPress. Draft stays draft; a post someone
    accidentally published is still handled as draft content — NEVER change publish status.
-2. If a Desktop keyword document was created (Case C, published path), DELETE it now
-   (~/Desktop/SEO-<slug>-keywords.md).
+2. If the browser picker was used (Case C, published), delete its temp files now
+   (/tmp/seo-<slug>-kw.json and /tmp/seo-<slug>-sel.json).
 3. Run /fact on the SAME article (its URL/ID). /SEO ALWAYS finishes by handing off to /fact —
    including when the PROCEED GATE was skipped and no optimization happened.
 4. Produce ONE combined report covering the /SEO change-log (if any) + the /fact results,

@@ -39,6 +39,12 @@ if curl -fsSL "$REPO_RAW/bin/gsc_query.py" -o "$FF/bin/gsc_query.py"; then
 else
   echo "  NOTE: could not download bin/gsc_query.py — /SEO's GSC step will be unavailable." >&2
 fi
+if curl -fsSL "$REPO_RAW/bin/keyword_picker.py" -o "$FF/bin/keyword_picker.py"; then
+  chmod +x "$FF/bin/keyword_picker.py" 2>/dev/null || true
+  echo "  - keyword picker installed"
+else
+  echo "  NOTE: could not download bin/keyword_picker.py — /SEO will use the in-chat picker." >&2
+fi
 
 # --- 1b. Download the Pabau reference guides from the repo -----------------
 # These define voice/terminology (Pabau-style-guide), product/positioning
@@ -111,6 +117,7 @@ done
 # /SEO command + GSC helper (seo.md prompt is fetched in the prompts loop above)
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
 fetch "bin/gsc_query.py" "$FF/bin/gsc_query.py"; chmod +x "$FF/bin/gsc_query.py" 2>/dev/null || true
+fetch "bin/keyword_picker.py" "$FF/bin/keyword_picker.py"; chmod +x "$FF/bin/keyword_picker.py" 2>/dev/null || true
 
 # 4. Remember the commit we're now in sync with.
 printf '%s\n' "$remote_sha" > "$STATE" 2>/dev/null || true
