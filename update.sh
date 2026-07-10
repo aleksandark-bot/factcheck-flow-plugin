@@ -54,6 +54,7 @@ done
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
 fetch "bin/gsc_query.py" "$FF/bin/gsc_query.py"; chmod +x "$FF/bin/gsc_query.py" 2>/dev/null || true
 fetch "bin/keyword_picker.py" "$FF/bin/keyword_picker.py"; chmod +x "$FF/bin/keyword_picker.py" 2>/dev/null || true
+fetch "bin/serp_picker.py" "$FF/bin/serp_picker.py"; chmod +x "$FF/bin/serp_picker.py" 2>/dev/null || true
 
 # 4. Remember the commit we're now in sync with.
 printf '%s\n' "$remote_sha" > "$STATE" 2>/dev/null || true

@@ -45,6 +45,12 @@ if curl -fsSL "$REPO_RAW/bin/keyword_picker.py" -o "$FF/bin/keyword_picker.py"; 
 else
   echo "  NOTE: could not download bin/keyword_picker.py — /SEO will use the in-chat picker." >&2
 fi
+if curl -fsSL "$REPO_RAW/bin/serp_picker.py" -o "$FF/bin/serp_picker.py"; then
+  chmod +x "$FF/bin/serp_picker.py" 2>/dev/null || true
+  echo "  - SERP picker installed"
+else
+  echo "  NOTE: could not download bin/serp_picker.py — /SEO will use the in-chat SERP list." >&2
+fi
 
 # --- 1b. Download the Pabau reference guides from the repo -----------------
 # These define voice/terminology (Pabau-style-guide), product/positioning
@@ -118,6 +124,7 @@ done
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
 fetch "bin/gsc_query.py" "$FF/bin/gsc_query.py"; chmod +x "$FF/bin/gsc_query.py" 2>/dev/null || true
 fetch "bin/keyword_picker.py" "$FF/bin/keyword_picker.py"; chmod +x "$FF/bin/keyword_picker.py" 2>/dev/null || true
+fetch "bin/serp_picker.py" "$FF/bin/serp_picker.py"; chmod +x "$FF/bin/serp_picker.py" 2>/dev/null || true
 
 # 4. Remember the commit we're now in sync with.
 printf '%s\n' "$remote_sha" > "$STATE" 2>/dev/null || true

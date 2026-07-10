@@ -153,23 +153,23 @@ URLs are reused for entity NLP in Stage 5, so choose once.
        log which URLs you kept and why — as clickable markdown links — then CONTINUE without
        asking the user.
 
-   4b. is_draft == false (MANUAL): present the results for the user to choose — THIS EXACT
-       FORMAT, no exceptions. Output a NUMBERED LIST where EVERY line is a CLICKABLE MARKDOWN
-       LINK to the exact live ranking page. One clickable link per SERP result (all of them).
-       - DO NOT render a table.
-       - DO NOT show the domain, ever.
-       - DO NOT print a bare/plain URL — it MUST be markdown link syntax so it is clickable.
-       - The link target MUST be the exact ranking page URL (the organic item's `url`), never
-         the homepage or the domain root.
-
-       Format each line exactly like this:
-
-           1. [<page title>](<full exact live https:// URL>)
-           2. [<page title>](<full exact live https:// URL>)
-           … continue for every ranking result …
-
-       Then ask:
-         "Which of these should I use for competitor keywords + entity analysis? (e.g. 1,2,5)".
+   4b. is_draft == false (MANUAL): launch the browser SERP picker — a clean page listing every
+       ranking result as a checkbox row whose title is a CLICKABLE live link (opens in a new
+       tab), with Select all / Select none. It writes the chosen URLs back automatically.
+       1. Write the SERP JSON (from step 3) to /tmp/seo-<slug>-serp.json:
+            { "main_keyword": "<kw>", "serp": [ {"rank","title","url"}, ... ] }
+       2. Run (this BLOCKS until the user clicks Save):
+            python3 "$HOME/.claude/factcheck-flow/bin/serp_picker.py" \
+                    --in /tmp/seo-<slug>-serp.json --out /tmp/seo-<slug>-serp-sel.json
+          It opens in the browser automatically. Tell the user: "I've opened a SERP picker in
+          your browser — check the results to use and click Save."
+       3. On exit 0, read /tmp/seo-<slug>-serp-sel.json → { "selected_urls": [...] }. Delete
+          both temp files afterward.
+       FALLBACK (headless machine, or picker exits non-zero): present a NUMBERED LIST where
+       every line is a CLICKABLE MARKDOWN LINK to the exact live ranking page (never a table,
+       never the domain, never a bare URL) — `1. [<title>](<full https:// URL>)` … one per
+       result — then ask: "Which should I use for competitor keywords + entity analysis?
+       (e.g. 1,2,5)".
 5. Record the Gate #1 SELECTION (auto-chosen in 4a for drafts, user-chosen in 4b for published):
 
    { "selected_competitor_urls": ["<url>", "<url>", ...] }
