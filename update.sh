@@ -18,7 +18,7 @@ API="https://api.github.com/repos/$REPO/commits/$BRANCH"
 FF="$HOME/.claude/factcheck-flow"
 STATE="$FF/.last-sync-sha"
 
-mkdir -p "$FF/prompts" "$FF/guides" 2>/dev/null || true
+mkdir -p "$FF/prompts" "$FF/guides" "$FF/bin" "$HOME/.claude/commands" 2>/dev/null || true
 
 # 1. Latest commit on main. Bail quietly if we can't reach GitHub.
 remote_sha="$(curl -fsSL --max-time 8 -H 'Accept: application/vnd.github+json' "$API" 2>/dev/null \
@@ -43,12 +43,16 @@ fetch() { # $1 = repo-relative path, $2 = local destination
   fi
 }
 
-for p in 1-factcheck 2-editorial 3-links; do
+for p in 1-factcheck 2-editorial 3-links seo; do
   fetch "prompts/$p.md" "$FF/prompts/$p.md"
 done
 for g in Pabau-style-guide About-Pabau Meta-title-best-practices; do
   fetch "guides/$g.md" "$FF/guides/$g.md"
 done
+
+# /SEO command + GSC helper (seo.md prompt is fetched in the prompts loop above)
+fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
+fetch "bin/gsc_query.py" "$FF/bin/gsc_query.py"; chmod +x "$FF/bin/gsc_query.py" 2>/dev/null || true
 
 # 4. Remember the commit we're now in sync with.
 printf '%s\n' "$remote_sha" > "$STATE" 2>/dev/null || true

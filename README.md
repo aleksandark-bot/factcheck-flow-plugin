@@ -58,6 +58,38 @@ session so the env vars load.
 
 Accepts full URLs or bare post IDs, whitespace-separated, up to ~5 at a time.
 
+## /SEO — single-article optimization
+
+`/SEO <url-or-id>` optimizes ONE article end to end: it researches keywords (DataForSEO +
+Google Search Console), lets you choose which to target, rewrites/adds headings and content
+around them, updates the main keyword / meta description / SEO title when you promote a new
+main keyword, and then automatically runs `/fact` on the same article.
+
+Its first question is always **"Is this a draft?"**
+
+- **Draft** → fully automatic keyword selection, then it saves and runs `/fact`.
+- **Published** → it also pulls the queries the page already ranks for from GSC, and writes an
+  Obsidian checklist to your Desktop; you tick the keywords, save, and it reads them back.
+- If very few keywords are found, it falls back to an in-chat multiple-choice picker and asks
+  whether to optimize at all before proceeding.
+
+The flow lives in `prompts/seo.md` (auto-synced like the other prompts); the command is
+`commands/SEO.md`; the GSC helper is `bin/gsc_query.py`.
+
+### GSC access (required for published articles)
+
+The "already ranking" list reads Google Search Console via a **service-account key** — a
+secret that is **not** in this repo. Each user needs:
+
+1. The service-account **JSON key** (ask your admin) at `~/.claude/factcheck-flow/gsc-key.json`
+   (the installer offers to copy it there), or pointed to via `$PABAU_GSC_KEY`.
+2. That service account granted **read access** to the Search Console property
+   (`https://pabau.com/`) — the admin adds its `client_email` as a user in GSC.
+3. **PyJWT** (`python3 -m pip install --user pyjwt`) — the installer does this when it can.
+
+Without it, draft-mode `/SEO` still works; published-mode stops with a clear message until the
+key is set up.
+
 ## Customizing for your site
 
 The three passes are plain editable files under `prompts/`:

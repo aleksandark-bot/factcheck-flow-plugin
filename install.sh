@@ -21,16 +21,24 @@ echo ""
 echo "  Installing factcheck-flow into $CLAUDE ..."
 echo ""
 
-mkdir -p "$CLAUDE/commands" "$CLAUDE/agents" "$CLAUDE/skills/wordpress-access" "$PROMPTS" "$GUIDES"
+mkdir -p "$CLAUDE/commands" "$CLAUDE/agents" "$CLAUDE/skills/wordpress-access" "$PROMPTS" "$GUIDES" "$FF/bin"
 
 # --- 1. Download the editable prompt files from the repo -------------------
-for p in 1-factcheck 2-editorial 3-links; do
+for p in 1-factcheck 2-editorial 3-links seo; do
   if ! curl -fsSL "$REPO_RAW/prompts/$p.md" -o "$PROMPTS/$p.md"; then
     echo "  ERROR: could not download prompts/$p.md — check your internet connection." >&2
     exit 1
   fi
 done
 echo "  - prompts installed"
+
+# --- 1a. The GSC query helper (used by /SEO on published articles) --------
+if curl -fsSL "$REPO_RAW/bin/gsc_query.py" -o "$FF/bin/gsc_query.py"; then
+  chmod +x "$FF/bin/gsc_query.py" 2>/dev/null || true
+  echo "  - GSC helper installed"
+else
+  echo "  NOTE: could not download bin/gsc_query.py — /SEO's GSC step will be unavailable." >&2
+fi
 
 # --- 1b. Download the Pabau reference guides from the repo -----------------
 # These define voice/terminology (Pabau-style-guide), product/positioning
@@ -68,7 +76,7 @@ API="https://api.github.com/repos/$REPO/commits/$BRANCH"
 FF="$HOME/.claude/factcheck-flow"
 STATE="$FF/.last-sync-sha"
 
-mkdir -p "$FF/prompts" "$FF/guides" 2>/dev/null || true
+mkdir -p "$FF/prompts" "$FF/guides" "$FF/bin" "$HOME/.claude/commands" 2>/dev/null || true
 
 # 1. Latest commit on main. Bail quietly if we can't reach GitHub.
 remote_sha="$(curl -fsSL --max-time 8 -H 'Accept: application/vnd.github+json' "$API" 2>/dev/null \
@@ -93,12 +101,16 @@ fetch() { # $1 = repo-relative path, $2 = local destination
   fi
 }
 
-for p in 1-factcheck 2-editorial 3-links; do
+for p in 1-factcheck 2-editorial 3-links seo; do
   fetch "prompts/$p.md" "$FF/prompts/$p.md"
 done
 for g in Pabau-style-guide About-Pabau Meta-title-best-practices; do
   fetch "guides/$g.md" "$FF/guides/$g.md"
 done
+
+# /SEO command + GSC helper (seo.md prompt is fetched in the prompts loop above)
+fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
+fetch "bin/gsc_query.py" "$FF/bin/gsc_query.py"; chmod +x "$FF/bin/gsc_query.py" 2>/dev/null || true
 
 # 4. Remember the commit we're now in sync with.
 printf '%s\n' "$remote_sha" > "$STATE" 2>/dev/null || true
@@ -184,6 +196,14 @@ and anything skipped. End with the reminder to purge the WP Rocket cache for eac
 edited URL.
 EOF
 echo "  - /fact command installed"
+
+# --- 2b. The /SEO command -------------------------------------------------
+if curl -fsSL "$REPO_RAW/commands/SEO.md" -o "$CLAUDE/commands/SEO.md"; then
+  echo "  - /SEO command installed"
+else
+  echo "  ERROR: could not download commands/SEO.md — check your internet connection." >&2
+  exit 1
+fi
 
 # --- 3. The agents --------------------------------------------------------
 cat > "$CLAUDE/agents/factcheck-reporter.md" <<'EOF'
@@ -414,6 +434,37 @@ else
   echo "          this installer manually to get future prompt/guide changes)."
 fi
 
+# --- 4d. GSC access for /SEO (published-article keyword list) -------------
+# /SEO's "already ranking" list reads Google Search Console via a service-account
+# key. The key is a SECRET and is NOT in this repo — you supply it. PyJWT signs the
+# short-lived token used to call the API.
+if command -v python3 >/dev/null 2>&1; then
+  if python3 -c 'import jwt' >/dev/null 2>&1; then
+    echo "  - PyJWT present (GSC auth ready)"
+  elif python3 -m pip install --user --quiet pyjwt >/dev/null 2>&1; then
+    echo "  - PyJWT installed (GSC auth ready)"
+  else
+    echo "  NOTE: could not install PyJWT — if /SEO's GSC step fails, run:"
+    echo "        python3 -m pip install --user pyjwt"
+  fi
+fi
+GSC_KEY_DEST="$FF/gsc-key.json"
+if [ -f "$GSC_KEY_DEST" ]; then
+  echo "  - GSC key already present ($GSC_KEY_DEST) — keeping it"
+else
+  echo ""
+  echo "  /SEO on PUBLISHED articles needs a Google Search Console service-account"
+  echo "  key (JSON). Ask your admin for it. Leave blank to set up later (draft-only"
+  echo "  /SEO still works without it)."
+  read -r -p "  Path to your GSC service-account JSON (blank to skip): " GSC_SRC
+  if [ -n "${GSC_SRC:-}" ] && [ -f "$GSC_SRC" ]; then
+    umask 077; cp "$GSC_SRC" "$GSC_KEY_DEST"; chmod 600 "$GSC_KEY_DEST"
+    echo "  - GSC key saved (readable only by you) to $GSC_KEY_DEST"
+  else
+    echo "  - skipped — set \$PABAU_GSC_KEY or place the JSON at $GSC_KEY_DEST later"
+  fi
+fi
+
 # --- 5. WordPress credentials (interactive) -------------------------------
 if [ -f "$CREDS" ]; then
   echo "  - credentials already present ($CREDS) — keeping them"
@@ -438,7 +489,8 @@ echo ""
 echo "  Next steps:"
 echo "    1. Fully close and reopen Claude Code (so it loads the new command +"
 echo "       the auto-update hook)."
-echo "    2. Type:  /fact <article link or post ID>"
+echo "    2. Type:  /fact <article link or post ID>   (batch QA)"
+echo "       or:    /SEO  <article link or post ID>   (optimize one article, then auto-runs /fact)"
 echo "    3. Try one draft article first to see how it works."
 echo ""
 echo "  Auto-update is on: from now on, each time you open Claude Code it quietly"

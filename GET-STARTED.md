@@ -100,6 +100,34 @@ Your only jobs are handing it the articles and answering the yes/no questions.
 
 ---
 
+## Optimizing one article (/SEO)
+
+Besides checking articles, you can **optimize** one for search. In the chat, type:
+
+```
+/SEO https://yoursite.com/blog/your-article/
+```
+
+The first thing it asks is **"Is this a draft?"**
+
+- **Draft** → it does everything automatically: researches keywords, improves the headings and
+  text, then runs the fact-check.
+- **A published article you're updating** → it builds keyword lists (including what the page
+  already ranks for on Google) and saves a checklist file on your **Desktop**. Open that file
+  in **Obsidian**, tick the keywords you want, **save**, and tell Claude to continue. It then
+  optimizes the article and runs the fact-check.
+
+**Two extra bits for published articles:**
+
+1. It uses Google Search Console data, which needs a key file from whoever set this up. Ask
+   them for the **GSC service-account JSON**, then either let the installer copy it in when it
+   asks, or save it to `~/.claude/factcheck-flow/gsc-key.json`. (Draft optimization works
+   without it.)
+2. You need the free **Obsidian** app to tick the checklist. Install it with
+   `flatpak install flathub md.obsidian.Obsidian` (or download from obsidian.md).
+
+---
+
 ## Updating later
 
 If the prompts or the tool are improved, just re-run the same one-line install command
