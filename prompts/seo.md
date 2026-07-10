@@ -8,15 +8,16 @@
 
 ## Two branches + selection routing
 
-The FIRST thing /SEO does is ask **"Is this a draft?"** (Stage 0), which picks the branch:
+The FIRST thing /SEO does is ask, verbatim, **"Is this a new article or a refresh?"** with two
+options in this exact order — **1. New article**, **2. Refresh** (Stage 0). That picks the branch:
 
-- **Draft → QUICK / AUTOMATIC.** After "Yes", everything runs automatically; Claude makes the
-  keyword judgment calls itself using David's documented logic (this brief + the video
-  transcript). No GSC list. Ends by saving and running **/fact**. (A post someone published
-  by accident is still treated as a draft here — content only; never change publish status.)
-- **Published update → MANUAL.** After "No", Claude also pulls the **GSC** 4th list and, for
-  keyword selection, opens a clean keyword picker in the browser to choose from. (GSC is one of
-  five lists; the Highly Relevant list appears in both branches.)
+- **New article → QUICK / AUTOMATIC** (is_draft = true). Everything runs automatically; Claude
+  makes the keyword judgment calls itself using David's documented logic (this brief + the video
+  transcript). No GSC list. Ends by saving and running **/fact**. (A post someone published by
+  accident is still handled as new-article content — never change publish status.)
+- **Refresh → MANUAL** (is_draft = false). Claude also pulls the **GSC** list and, for keyword
+  selection, opens a clean keyword picker in the browser to choose from. (GSC is one of five
+  lists; the Highly Relevant list appears in both branches.)
 
 Selection routing at Stage 3 depends on how many keywords the data actually yields:
 - **> 10 total:** draft = auto-select; published = Desktop document.
@@ -95,12 +96,12 @@ free trial; lead with outcomes; headings must read naturally (no keyword stuffin
 You are running the /SEO optimization flow for a single article: $ARGUMENTS
 (one WordPress URL or post ID). If none was given, ask for it and stop.
 
-1. DRAFT CHECK — the /SEO command asks this as its VERY FIRST action, before any file reads:
-     "Is this a draft, or a published article being updated?"
-   Use that answer as is_draft (true/false); if it is somehow unset, ask it now before any
-   data work. It gates the GSC list (Stage 2, list D):
-     - is_draft = true  → do NOT run GSC (a draft has no search history yet); only 3 lists.
-     - is_draft = false → build the GSC "already-ranking" list (list D) in Stage 2.
+1. NEW-VS-REFRESH CHECK — the /SEO command asks this as its VERY FIRST action, before any file
+   reads, verbatim and in this exact order: "Is this a new article or a refresh?" →
+   1. New article, 2. Refresh. Map it: New article → is_draft = true; Refresh → is_draft = false
+   (if somehow unset, ask it now before any data work). It gates the GSC list (Stage 2, list D):
+     - is_draft = true (New article)  → do NOT run GSC (no search history yet); only 4 lists.
+     - is_draft = false (Refresh)     → build the GSC "already-ranking" list (list D) in Stage 2.
    When you fetch in step 3, cross-check the WordPress `status` field. If the human's answer
    and the WP status disagree, flag it and trust the human's answer.
 2. Load CONFIG and read all guides listed in "Guides every writing stage MUST obey".
