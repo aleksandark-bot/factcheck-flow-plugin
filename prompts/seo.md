@@ -1,8 +1,8 @@
 # /SEO — Article Optimization flow
 
-> Executed by the `/SEO` command (`commands/SEO.md`), which asks "Is this a draft?" as its
-> first action and then runs the stages below. This file is auto-synced from the
-> factcheck-flow repo, so edits here propagate to everyone on their next session.
+> Executed by the `/SEO` command (`commands/SEO.md`), which asks "Is this a new article or a
+> refresh?" as its first action and then runs the stages below. This file is auto-synced from
+> the factcheck-flow repo, so edits here propagate to everyone on their next session.
 
 ---
 
