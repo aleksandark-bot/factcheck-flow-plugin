@@ -140,28 +140,42 @@ URLs are reused for entity NLP in Stage 5, so choose once.
      ]
    }
 
-4. PRESENT for selection — THIS EXACT FORMAT, no exceptions:
-   Output a NUMBERED LIST where EVERY line is a CLICKABLE MARKDOWN LINK to the exact live
-   ranking page. One clickable link per SERP result — all of them (however many rank).
-   - DO NOT render a table.
-   - DO NOT show the domain, ever.
-   - DO NOT print a bare/plain URL — it MUST be markdown link syntax so it is clickable.
-   - The link target MUST be the exact ranking page URL (the organic item's `url`), never the
-     homepage or the domain root.
+4. SELECT which results to mine (Competitor Keywords + Stage 5 entity NLP). The METHOD
+   depends on is_draft:
 
-   Format each line exactly like this:
+   4a. is_draft == true  (AUTO — NO human step): Claude chooses them itself. Keep results that
+       are GENUINE WRITTEN ARTICLES / editorial content topically similar to the draft. EXCLUDE
+       non-article pages — software directories / review aggregators (Capterra, G2, GetApp,
+       Trustpilot, Software Advice, and similar), homepages, product / pricing / category /
+       landing pages, and thin listing pages with no real prose. Prefer the closest-matching,
+       article-style pages. If NONE qualify, fall back to selecting EVERY result that has any
+       usable written content you can mine (exclude only pure link/directory shells). Briefly
+       log which URLs you kept and why — as clickable markdown links — then CONTINUE without
+       asking the user.
 
-       1. [<page title>](<full exact live https:// URL>)
-       2. [<page title>](<full exact live https:// URL>)
-       … continue for every ranking result …
+   4b. is_draft == false (MANUAL): present the results for the user to choose — THIS EXACT
+       FORMAT, no exceptions. Output a NUMBERED LIST where EVERY line is a CLICKABLE MARKDOWN
+       LINK to the exact live ranking page. One clickable link per SERP result (all of them).
+       - DO NOT render a table.
+       - DO NOT show the domain, ever.
+       - DO NOT print a bare/plain URL — it MUST be markdown link syntax so it is clickable.
+       - The link target MUST be the exact ranking page URL (the organic item's `url`), never
+         the homepage or the domain root.
 
-   Then ask:
-     "Which of these should I use for competitor keywords + entity analysis? (e.g. 1,2,5)".
-5. Record the Gate #1 SELECTION:
+       Format each line exactly like this:
+
+           1. [<page title>](<full exact live https:// URL>)
+           2. [<page title>](<full exact live https:// URL>)
+           … continue for every ranking result …
+
+       Then ask:
+         "Which of these should I use for competitor keywords + entity analysis? (e.g. 1,2,5)".
+5. Record the Gate #1 SELECTION (auto-chosen in 4a for drafts, user-chosen in 4b for published):
 
    { "selected_competitor_urls": ["<url>", "<url>", ...] }
 
-   Require at least 1. Do not proceed until selection is received.
+   Aim for at least 1. For drafts, never pause — if truly nothing usable ranks, note it and
+   continue (Stage 2's Competitor list is simply empty). For published, wait for the pick.
 ```
 
 ---
