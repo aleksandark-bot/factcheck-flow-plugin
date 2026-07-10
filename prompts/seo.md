@@ -130,26 +130,33 @@ URLs are reused for entity NLP in Stage 5, so choose once.
      depth = serp_depth.
 2. Keep ORGANIC results only. Drop: our own domain (site_domain), pure aggregators/SERP
    features, and anything paywalled/login-gated you can't open. Keep the ranked order.
-   For EACH kept result, capture the EXACT LIVE RANKING URL — the full `url` field of the
-   organic SERP item (the actual page that ranks, e.g.
-   `https://competitor.com/blog/best-x/`), NOT the bare domain and NOT the homepage. If the
-   API returns a relative or encoded URL, resolve it to the full absolute `https://` URL.
 3. Build the SERP-pick JSON (Gate #1 OUTPUT):
 
    {
      "main_keyword": "<string>",
      "serp": [
-       {"rank": 1, "title": "<title>", "url": "<full exact live page URL>", "domain": "<domain>"},
+       {"rank": 1, "title": "<title>", "url": "<full exact live page URL, incl https://>"},
        ...
      ]
    }
 
-4. PRESENT for selection — ALWAYS show the exact live ranking URL, never just the domain:
-   render a numbered table with columns [# | rank | full live URL | title], where the URL
-   column is the COMPLETE clickable `https://` link to the ranking page (not the domain, not
-   a shortened/relative form). Every row MUST include this exact live link — required, not
-   optional. Then ask:
-     "Which results should I use for competitor keywords + entity analysis? (e.g. 1,2,5)".
+4. PRESENT for selection — THIS EXACT FORMAT, no exceptions:
+   Output a NUMBERED LIST where EVERY line is a CLICKABLE MARKDOWN LINK to the exact live
+   ranking page. One clickable link per SERP result — all of them (however many rank).
+   - DO NOT render a table.
+   - DO NOT show the domain, ever.
+   - DO NOT print a bare/plain URL — it MUST be markdown link syntax so it is clickable.
+   - The link target MUST be the exact ranking page URL (the organic item's `url`), never the
+     homepage or the domain root.
+
+   Format each line exactly like this:
+
+       1. [<page title>](<full exact live https:// URL>)
+       2. [<page title>](<full exact live https:// URL>)
+       … continue for every ranking result …
+
+   Then ask:
+     "Which of these should I use for competitor keywords + entity analysis? (e.g. 1,2,5)".
 5. Record the Gate #1 SELECTION:
 
    { "selected_competitor_urls": ["<url>", "<url>", ...] }
