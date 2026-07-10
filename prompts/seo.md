@@ -304,11 +304,12 @@ CASE A — total_kw == 0 (all lists empty):
 
 CASE B — total_kw ≤ scarce_total_threshold (10):
   Too few to justify a document. Use the Claude Code picker (AskUserQuestion), batches of ≤4
-  keywords. Present each keyword as its OWN multi-select question with exactly three options:
-  [use in text] / [use in heading] / [set as NEW MAIN]. There is NO skip — leaving all three
-  unchecked means the keyword is NOT used. If ANY box is checked the keyword IS used: "use in
-  heading" = heading AND text; "set as NEW MAIN" = H1 + intro + meta description + SEO title
-  (Stage 7). At most ONE new main across all keywords. This OVERRIDES both the auto and document
+  keywords. Present each keyword as its OWN multi-select question with exactly four options:
+  [use in text] / [use in heading] / [use as FAQ] / [set as NEW MAIN]. There is NO skip —
+  leaving all four unchecked means the keyword is NOT used. If ANY box is checked the keyword IS
+  used: "use in heading" = heading AND text; "use as FAQ" = an FAQ question (see the FAQ rule in
+  Selection semantics); "set as NEW MAIN" = H1 + intro + meta description + SEO title (Stage 7).
+  At most ONE new main across all keywords. This OVERRIDES both the auto and document
   paths — it runs even for drafts. Then the PROCEED GATE.
 
 CASE C — total_kw > 10:
@@ -333,7 +334,7 @@ handoff). This is the escape hatch for when there aren't enough keywords to matt
 ── BROWSER PICKER (Case C, published) ──
 Do NOT write a markdown/Obsidian file. Launch the shipped local web picker: it renders the
 lists as a clean page with clickable controls (a per-keyword "Use as" dropdown — skip / Text /
-Heading — plus one "New main keyword" selector) and writes the selection back automatically.
+Heading / FAQ — plus one "New main keyword" selector) and writes the selection back automatically.
 
 1. Write the five lists to a temp JSON at /tmp/seo-<slug>-kw.json, shaped as:
      { "article_title": "<title>", "article_url": "<url>",
@@ -347,20 +348,27 @@ Heading — plus one "New main keyword" selector) and writes the selection back 
    It opens the page in the user's browser automatically. Tell the user: "I've opened a keyword
    picker in your browser — choose your keywords and click Save."
 3. When it exits 0, read /tmp/seo-<slug>-sel.json — it already IS the SELECTION JSON below
-   ({selected:[{keyword,list,use_in_heading}], new_main_keyword}). Delete both temp files after.
+   ({selected:[{keyword,list,use_in_heading,use_as_faq}], new_main_keyword}). Delete temp files after.
    If the picker exits non-zero / can't open a browser (headless), FALL BACK to the Case B
    AskUserQuestion picker.
 
 ── Gate #2 SELECTION (produced by whichever path ran) ──
 {
   "selected": [ {"keyword": "...", "list": "related|variation|competitor|highly_relevant|gsc_ranking",
-                 "use_in_heading": true, "new_main_keyword": false}, ... ],
+                 "use_in_heading": true, "use_as_faq": false, "new_main_keyword": false}, ... ],
   "new_main_keyword": "<the one keyword flagged new main, or null>"
 }
 Selection semantics (apply in EVERY path — auto, document, picker):
-- selected, use_in_heading = false → weave the keyword into BODY TEXT only.
+- selected, use_in_heading = false and use_as_faq = false → weave the keyword into BODY TEXT only.
 - selected, use_in_heading = true  → place it as an EXACT-MATCH heading AND weave it into that
   section's body text (a heading keyword ALWAYS also appears in text).
+- selected, use_as_faq = true → add the keyword VERBATIM as an FAQ QUESTION in the article's FAQ
+  block (use proper Yoast FAQ schema; create the FAQ block if none exists). For its ANSWER:
+  FIRST check whether ANY OTHER selected keyword is similar/related to this FAQ question — if so,
+  work THAT keyword naturally into the answer. If none is related, write the answer using a
+  sensible VARIATION of the FAQ keyword that fits the sentence — do NOT duplicate the question
+  keyword or echo a near-identical phrase. use_as_faq is mutually exclusive with use_in_heading,
+  and a new main keyword is never an FAQ.
 - new_main_keyword → apply in the H1, intro text, meta description, and SEO title (Stage 7);
   implies use_in_heading. At most ONE new_main_keyword.
 - a keyword with nothing selected is NOT used.
@@ -383,7 +391,12 @@ Placement decision per selected keyword:
    Note the content intent (what the section will cover) — no prose yet.
 3. use_in_heading = true but no sensible heading placement exists → mark the keyword for
    IN-TEXT insertion instead, and note the target section.
-4. use_in_heading = false → mark for in-text insertion in the most relevant section.
+4. use_as_faq = true → plan it into the FAQ block as a new FAQ QUESTION (exact match); note the
+   answer source per Selection semantics (reuse a related selected keyword if one exists, else a
+   non-duplicative variation). If the article has no FAQ block, plan to create one (Yoast FAQ
+   schema).
+5. use_in_heading = false and use_as_faq = false → mark for in-text insertion in the most
+   relevant section.
 
 Exact-match rule: any keyword placed in a heading must appear verbatim; you MUST reword the
 whole heading around it for grammar/sense (this is mandatory, not optional). A heading keyword
@@ -481,6 +494,10 @@ For each OUTLINE node:
 - [UNCHANGED] heading → only enrich the body with any grouped entities that clearly improve
   it; otherwise leave it.
 - IN-TEXT keywords → insert into the most relevant existing sentence/section naturally.
+- FAQ keywords (use_as_faq) → add each as a new Q in the FAQ block (verbatim question, proper
+  Yoast FAQ schema; create the block if missing). Write the ANSWER per Selection semantics:
+  reuse a related SELECTED keyword in the answer if one exists; otherwise use a sensible
+  variation of the FAQ keyword — never duplicate the question phrase or a near-identical one.
 
 Hard rules:
 - Keywords placed in headings are EXACT match; headings still read naturally (reword fully).

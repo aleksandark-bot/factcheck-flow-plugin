@@ -87,7 +87,7 @@ for(const key of ["related","variations","competitor","highly_relevant","gsc_ran
       : "<td class=num>"+(r.difficulty??"")+"</td><td class=num>"+(r.volume??"")+"</td><td>"+esc(r.intent||"")+"</td>";
     const why = r.why||r.opportunity;
     tr.innerHTML="<td><span class=kw>"+esc(r.keyword)+"</span>"+(why?"<br><span class=why>"+esc(why)+"</span>":"")+"</td>"+meta+
-      "<td><select data-id='"+esc(id)+"'><option value=''>— skip —</option><option value='text'>Text</option><option value='heading'>Heading</option></select></td>";
+      "<td><select data-id='"+esc(id)+"'><option value=''>— skip —</option><option value='text'>Text</option><option value='heading'>Heading</option><option value='faq'>FAQ</option></select></td>";
     tb.appendChild(tr);
   });
   t.appendChild(tb); lists.appendChild(t);
@@ -104,14 +104,14 @@ function refresh(){
 }
 document.addEventListener('change',refresh); refresh();
 document.getElementById('save').onclick=async()=>{
-  const selected=[]; const roles={};
-  document.querySelectorAll('select[data-id]').forEach(s=>{ if(s.value){const [list,...kw]=s.dataset.id.split("::"); roles[s.dataset.id]=1;
-    selected.push({keyword:kw.join("::"),list:list,use_in_heading:s.value==='heading'});}});
+  const selected=[];
+  document.querySelectorAll('select[data-id]').forEach(s=>{ if(s.value){const [list,...kw]=s.dataset.id.split("::");
+    selected.push({keyword:kw.join("::"),list:list,use_in_heading:s.value==='heading',use_as_faq:s.value==='faq'});}});
   let newMain=null; const nmv=document.getElementById('newmain').value;
   if(nmv){const [list,...kw]=nmv.split("::"); newMain=kw.join("::");
-    // ensure the new-main keyword is selected + heading
-    if(!selected.find(x=>x.keyword===newMain)) selected.push({keyword:newMain,list:list,use_in_heading:true});
-    else selected.forEach(x=>{if(x.keyword===newMain)x.use_in_heading=true;});}
+    // ensure the new-main keyword is selected + heading (new main is never an FAQ)
+    if(!selected.find(x=>x.keyword===newMain)) selected.push({keyword:newMain,list:list,use_in_heading:true,use_as_faq:false});
+    else selected.forEach(x=>{if(x.keyword===newMain){x.use_in_heading=true;x.use_as_faq=false;}});}
   const payload={selected:selected,new_main_keyword:newMain};
   document.getElementById('msg').textContent="Saving…";
   try{await fetch('/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
