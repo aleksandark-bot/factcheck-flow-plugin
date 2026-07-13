@@ -189,58 +189,74 @@ read-only — nothing is written to WordPress in this stage.
 Collect every subagent's returned report. A report is one of: `CORRECT: No fix
 needed`; a single `REWRITE_REQUIRED: <reason>` line (handle via the Rewrite gate
 below — do NOT treat it as a finding); or a numbered findings list. Parse the findings
-lists into a flat list, tagging each with its article. Keep the `NEEDS_USER_VALUE`
-flag, `TYPE`, `LOCATION`, `ISSUE`, `CORRECT`, and `FIX` for each. Articles that
+lists into a flat list, tagging each with its article. Keep the `NEEDS_USER_VALUE` and `CONFIRM`
+flags, `TYPE`, `LOCATION`, `ISSUE`, `CORRECT`, and `FIX` for each. Articles that
 returned `CORRECT: No fix needed` contribute zero findings but still go through Stage 3.
 
 Briefly tell the user how many findings came back per article, then go to Stage 2.
 If there are zero findings across all articles (and none needs a rewrite), tell the
 user and skip directly to Stage 3.
 
-### Rewrite gate (runs before triage — fully automatic, no user input)
+### Rewrite gate
 
-Any article whose report is `REWRITE_REQUIRED: <reason>` is truncated/incomplete or
-repeats itself and cannot be QA'd as-is. For each such article, before Stage 2:
+An article enters the rewrite path in one of two ways: (a) its Stage 1 report is a bare
+`REWRITE_REQUIRED: <reason>` — truncated/incomplete or self-repeating; this is fully
+automatic with no user input and runs before Stage 2; or (b) the user **confirmed a
+grave factual error** during Stage 2 triage (case 3 below). For each such article:
 
-1. Spawn an **article-editor** subagent in **rewrite mode**: pass the article URL/ID
-   and the `REWRITE_REQUIRED` reason, and tell it to complete/rewrite the article so
-   it matches the full structure of similar articles on the same site (fill missing
-   sections, remove any duplicated/repeated content) and save via `wordpress-access`.
-   In rewrite mode it runs no triage, editorial, or link pass.
+1. Spawn an **article-editor** subagent in **rewrite mode**: pass the article URL/ID and
+   the reason — the `REWRITE_REQUIRED` reason, or, for a confirmed grave factual error,
+   that confirmed correction — and tell it to complete/rewrite the article so it matches
+   the full structure of similar articles on the same site (fill missing sections, remove
+   any duplicated/repeated content, correct the confirmed error) and save via
+   `wordpress-access`. In rewrite mode it runs no triage, editorial, or link pass.
 2. When the rewrite is saved, **re-run the entire /fact pipeline on that article from
    Stage 1** (fresh fact-check → triage → editorial + links).
 
-Never ask the user about a rewrite — it always happens automatically on detection.
-Guard against loops: rewrite a given article at most **twice**. If it still returns
-`REWRITE_REQUIRED` after the second rewrite, stop looping it and flag it for manual
-attention in the final report. Articles that did not trigger `REWRITE_REQUIRED`
-proceed through Stage 2 as normal (they do not wait on rewriting articles).
+A truncation/repetition rewrite is never asked about — it happens automatically on
+detection. A grave factual error is the one case where a rewrite follows a user
+confirmation (Stage 2, case 3). Guard against loops: rewrite a given article at most
+**twice**. If it still returns `REWRITE_REQUIRED` after the second rewrite, stop looping
+it and flag it for manual attention in the final report. Articles that did not trigger a
+rewrite proceed through Stage 2 as normal (they do not wait on rewriting articles).
 
-## Stage 2 — Triage gate (interactive — this is the ONLY manual step)
+## Stage 2 — Triage gate (mostly automatic — the human is asked in only three cases)
 
-**Auto-approved findings — do NOT triage these.** Any finding with `TYPE:
-missing-section` is applied automatically: never put it in an `AskUserQuestion` batch.
-Silently mark each as Apply and route it to Stage 3 (the article-editor writes the
-absent section during its editorial pass). Only findings of other types go through the
-interactive gate below.
+Almost every finding is **applied automatically** — do NOT put it in an `AskUserQuestion`
+batch. Silently mark as Apply and route straight to Stage 3 all findings of type
+`factual`, `Pabau-fact`, `link`, `publishing`, and `missing-section`, plus any
+`listicle-rank` finding that does **not** move Pabau's own position. (`publishing`: a
+draft stays a draft and a published article stays published — the editor already targets
+the right one, so never ask. Categories and tags are owned by the editorial pass, which
+also strips "Uncategorized" — nothing to ask here.)
 
-Walk the user through **every** remaining finding using the `AskUserQuestion` tool, in
-batches of **up to 4 findings per call** (its per-screen maximum). Preserve article
-grouping where practical and label each question with the article + location so the
-user has context. For each finding:
+The human is asked **only** in the three cases below, via the `AskUserQuestion` tool
+(batch up to 4 per call; label each with its article + location). If no finding matches
+these three, skip the questions entirely and go straight to Stage 3.
 
-- **Normal finding** → options:
-  - `Apply suggested fix` — apply the FIX as written.
-  - `Reject` — do not change this.
-  - `Edit before applying` — user supplies the exact change (via the "Other" field).
-- **`NEEDS_USER_VALUE` finding** (e.g. "Correct G2 score for <service>?", ambiguous
-  category/tag) → make the question ask for that value; offer sensible options plus
-  the free-text "Other" field.
+1. **Listicle review scores** — any finding with `NEEDS_USER_VALUE: true`. The reporter
+   can't reach Capterra/G2/Trustpilot, so ask the user for the correct current score for
+   each service; offer sensible options plus the free-text "Other" field. Apply the
+   supplied value in Stage 3.
 
-Record a decision for every finding. Nothing has been written to WordPress yet — this
-gate exists precisely so the user approves each change first. After the last batch,
-show a short confirmation summary of what will be applied vs. rejected per article,
-then proceed to Stage 3 automatically (no further prompts).
+2. **Pabau's own ranking position** — a `listicle-rank` finding flagged `CONFIRM: true`,
+   i.e. one that would move Pabau up or down from where the article currently places it.
+   Show the proposed position vs. current and ask **Apply / Reject**. Re-ranking of every
+   other service is automatic and is never asked.
+
+3. **Grave factual error (rewrite-scale)** — a `factual` finding flagged `CONFIRM: true`:
+   one whose correction would require a full rewrite or rewriting large parts of the
+   article (e.g. the central ICD/CPT code the article is built on is wrong). Ask the user
+   to **confirm the error is real**:
+   - **Confirmed** → do not apply it as a normal in-place fix; route the article into the
+     Rewrite gate path above (article-editor rewrite mode, then re-run /fact from Stage 1),
+     passing the confirmed correction as the basis for the rewrite.
+   - **Not confirmed** → drop the finding and leave the article unchanged on that point.
+
+Record a decision for every finding that was asked; everything else is already marked
+Apply. Nothing has been written to WordPress yet. After the last batch, show a short
+summary of what will be applied / rewritten / rejected per article, then proceed to
+Stage 3 automatically (no further prompts).
 
 ## Stage 3 — Apply + editorial + links (parallel, automated)
 
@@ -288,7 +304,7 @@ link edits). All approved fixes are applied later by a separate stage.
 You will be given one article URL or post ID. Load the fact-check instructions from
 `~/.claude/factcheck-flow/prompts/1-factcheck.md` (read that file) and follow them
 exactly, including the required per-finding output format (LOCATION / TYPE / ISSUE /
-CORRECT / FIX / NEEDS_USER_VALUE). Use the `wordpress-access` skill only for reading
+CORRECT / FIX / NEEDS_USER_VALUE / CONFIRM). Use the `wordpress-access` skill only for reading
 the article.
 
 Also read `~/.claude/factcheck-flow/guides/About-Pabau.md` and flag any statement that
