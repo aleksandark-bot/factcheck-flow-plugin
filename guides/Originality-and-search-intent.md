@@ -82,7 +82,11 @@ mostly how-to guides, Google is telling you the real intent is procedural; follo
 
 ### How to pull the SERP (do this yourself)
 
-You need the actual top results before you can judge intent — don't guess them. Get them with
+You need the actual top results before you can judge intent — don't guess them.
+
+**Already have the SERP? Reuse it — do not re-fetch.** If the flow you're running in has already
+pulled the SERP for this exact keyphrase (it's in your context / an earlier step gathered it),
+use that read. Only pull it yourself when you don't already have it. Otherwise get it with
 whichever tool you have:
 
 - **DataForSEO (preferred when available)** — call `serp_organic_live_advanced` with the focus
