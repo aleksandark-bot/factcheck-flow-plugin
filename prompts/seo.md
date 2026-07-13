@@ -224,8 +224,18 @@ E. HIGHLY RELEVANT KEYWORDS → dataforseo_labs_google_keyword_ideas (seed = mai
 
 ── Enrichment ────────────────────────────────────────────────────────────────
 - Difficulty: dataforseo_labs_bulk_keyword_difficulty (batch).
+  NO-DATA RULE: DataForSEO computes KD from the current top-10 ranking pages, so for
+  long-tail / near-zero-volume keywords it returns the keyword with the keyword_difficulty
+  field ABSENT (not null, not 0 — the key is simply missing). The discovery endpoints
+  (keyword_ideas / related_keywords / ranked_keywords) omit it the same way. Whenever KD is
+  absent or null after this batch call, record difficulty as the string "N/A" — NEVER leave it
+  blank and NEVER fabricate a number. Every keyword in every list must carry a difficulty value
+  that is either an integer or "N/A"; a blank difficulty cell is a bug.
 - Volume + CPC + trend: dataforseo_labs_google_keyword_overview.
 - Intent: dataforseo_labs_search_intent. Flag intent that mismatches the article's intent.
+- ALSO enrich the CURRENT MAIN KEYWORD (Stage 0) for difficulty + volume in these same batch
+  calls — it is not a candidate, but Stage 3 displays it (current_main) above the new-main
+  selector so the user can compare. Same no-data rule: difficulty is an int or "N/A".
 
 ── Classification rule (RELATED vs VARIATION) ───────────────────────────────────
 Tokenize the main keyword into content words (ignore stopwords). For a candidate:
@@ -252,7 +262,9 @@ tiers, stopping the moment a list hits 20:
            with difficulty ABOVE 10 (lowest difficulty first, then volume desc), volume ≥ 20.
   Tier 3 — if STILL < 20 (or the list is empty): LAST RESORT — add relevant keywords that do
            NOT meet the difficulty/volume criteria, including volume < 20 and any difficulty,
-           best available first.
+           best available first. Keywords with "N/A" difficulty belong here (their difficulty
+           is unknown, so they can never satisfy the Tier 1 ≤10 or Tier 2 >10 bands); place
+           them at the BOTTOM of the tier, sorted by volume desc.
 If even Tier 3 yields few, KEEP WHAT YOU HAVE — a short/empty list is valid and drives the
 Stage 3 routing. Do not invent keywords.
 Always applied (every tier): drop keywords the article already targets as an exact-match
@@ -283,6 +295,8 @@ Gate #2 OUTPUT payload (what the UI/table is built from):
 
 {
   "main_keyword": "<current>",
+  // "difficulty" is ALWAYS present on every row: an integer 0–100, or the string "N/A" when
+  // DataForSEO has no KD for that keyword (Stage 2 no-data rule). Never blank, never fabricated.
   "lists": {
     "related":       [ {"keyword": "...", "difficulty": 3, "volume": 210, "intent": "informational", "why": "...", "new_main_candidate": false}, ... ],
     "variations":    [ {"keyword": "...", "difficulty": 5, "volume": 140, "intent": "...", "why": "qualifier: women", "new_main_candidate": false}, ... ],
@@ -338,10 +352,16 @@ Heading / FAQ — plus one "New main keyword" selector) and writes the selection
 
 1. Write the five lists to a temp JSON at /tmp/seo-<slug>-kw.json, shaped as:
      { "article_title": "<title>", "article_url": "<url>",
+       "current_main": { "keyword": "<current Yoast focus keyphrase / main keyword>",
+                         "difficulty": <int|"N/A">, "volume": <int|null> },
        "lists": { "related":[...], "variations":[...], "competitor":[...],
                   "highly_relevant":[...], "gsc_ranking":[...] } }
    Row fields: keyword, difficulty, volume, intent, why — or for gsc_ranking: keyword, clicks,
    impressions, position, opportunity. Omit gsc_ranking on drafts.
+   current_main is the CURRENT MAIN KEYWORD determined in Stage 0 (Yoast focus keyphrase, else
+   inferred). Enrich its difficulty + volume in Stage 2 alongside the candidates (same no-data
+   rule: difficulty is an int or "N/A", never blank). The picker shows it directly above the
+   "New main keyword" selector so the user can compare before promoting a replacement.
 2. Run (this BLOCKS until the user clicks Save in the browser):
      python3 "$HOME/.claude/factcheck-flow/bin/keyword_picker.py" \
              --in /tmp/seo-<slug>-kw.json --out /tmp/seo-<slug>-sel.json
