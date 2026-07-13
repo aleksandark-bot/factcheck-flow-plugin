@@ -56,7 +56,7 @@ fi
 # These define voice/terminology (Pabau-style-guide), product/positioning
 # context (About-Pabau), and SERP title optimization (Meta-title-best-practices).
 # The editorial prompt and factcheck-reporter read them.
-for g in Pabau-style-guide About-Pabau Meta-title-best-practices; do
+for g in Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent; do
   if ! curl -fsSL "$REPO_RAW/guides/$g.md" -o "$GUIDES/$g.md"; then
     echo "  ERROR: could not download guides/$g.md — check your internet connection." >&2
     exit 1
@@ -116,7 +116,7 @@ fetch() { # $1 = repo-relative path, $2 = local destination
 for p in 1-factcheck 2-editorial 3-links seo; do
   fetch "prompts/$p.md" "$FF/prompts/$p.md"
 done
-for g in Pabau-style-guide About-Pabau Meta-title-best-practices; do
+for g in Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent; do
   fetch "guides/$g.md" "$FF/guides/$g.md"
 done
 
