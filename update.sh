@@ -46,7 +46,7 @@ fetch() { # $1 = repo-relative path, $2 = local destination
 for p in 1-factcheck 2-editorial 3-links seo; do
   fetch "prompts/$p.md" "$FF/prompts/$p.md"
 done
-for g in Pabau-style-guide About-Pabau Meta-title-best-practices; do
+for g in Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent; do
   fetch "guides/$g.md" "$FF/guides/$g.md"
 done
 
