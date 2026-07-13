@@ -12,7 +12,8 @@ Input JSON:
     "serp": [ {"rank": 1, "title": "...", "url": "https://exact/live/page/"}, ... ] }
 
 Output JSON (written on Save):
-  { "selected_urls": ["https://...", ...] }
+  { "selected_urls": ["https://...", ...],
+    "structural_changes": "<free-text custom instructions for larger updates, or \"\">" }
 
 Blocks until the user clicks Save. Exit 0 on save, 2 otherwise.
 """
@@ -37,6 +38,11 @@ h1{font-size:17px;margin:0 0 4px} .sub{color:#9aa3c0;font-size:13px}
 .title{font-weight:600}
 .title a{color:#e7e9f2;text-decoration:none} .title a:hover{color:#6ea8fe;text-decoration:underline}
 .url{color:#6ea8fe;font-size:12px;word-break:break-all;margin-top:2px;display:block}
+.struct{margin-top:24px;background:#181c2e;border:1px solid #2a3050;border-radius:10px;padding:14px 16px}
+.struct label{display:block;margin-bottom:8px}
+.struct .hint{color:#9aa3c0;font-size:12px;font-weight:400}
+.struct textarea{width:100%;background:#0f1220;color:#e7e9f2;border:1px solid #2a3050;border-radius:8px;padding:10px 12px;font:inherit;resize:vertical;min-height:100px}
+.struct textarea:focus{outline:none;border-color:#6ea8fe}
 .bar{position:fixed;left:0;right:0;bottom:0;background:#12162a;border-top:1px solid #2a3050;padding:14px 24px;display:flex;gap:14px;align-items:center;justify-content:flex-end}
 .count{margin-right:auto;color:#9aa3c0}
 button{background:#6ea8fe;color:#0b0e18;border:0;border-radius:9px;padding:11px 22px;font:600 15px system-ui;cursor:pointer}
@@ -48,6 +54,11 @@ button:hover{filter:brightness(1.08)} .done{color:#3fb950;font-weight:600}
   <div class="tools"><a id="all">Select all</a> · <a id="none">Select none</a>
     <span style="margin-left:auto">Tip: click a title to open the live page in a new tab.</span></div>
   <div id="rows"></div>
+  <div class="struct">
+    <label for="struct"><b>Structural changes</b>
+      <span class="hint">Optional — custom instructions for larger updates: format overhauls, section reordering, or a bigger rewrite the SERPs imply (e.g. our article is the wrong format for this query). The SEO updater will follow these specifically. Leave blank for none.</span></label>
+    <textarea id="struct" placeholder="e.g. The top results are all step-by-step how-to guides, but our article is a thin listicle — restructure it into a numbered how-to with an intro, prerequisites, and ordered steps."></textarea>
+  </div>
 </div>
 <div class="bar"><span class="count" id="count"></span><span id="msg"></span>
   <button id="save">Save &amp; return to Claude</button></div>
@@ -71,8 +82,9 @@ document.getElementById('none').onclick=()=>{document.querySelectorAll('input[da
 document.addEventListener('change',refresh); refresh();
 document.getElementById('save').onclick=async()=>{
   const urls=[...document.querySelectorAll('input[data-url]:checked')].map(c=>c.dataset.url);
+  const structural=(document.getElementById('struct').value||'').trim();
   document.getElementById('msg').textContent="Saving…";
-  try{await fetch('/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({selected_urls:urls})});
+  try{await fetch('/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({selected_urls:urls,structural_changes:structural})});
     document.getElementById('msg').innerHTML="<span class=done>Saved. Close this tab and return to Claude.</span>";
     document.getElementById('save').disabled=true;
   }catch(e){document.getElementById('msg').textContent="Error saving — is Claude still running?";}
