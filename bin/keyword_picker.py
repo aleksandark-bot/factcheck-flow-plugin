@@ -10,6 +10,7 @@ Usage:
 Input JSON:
   {
     "article_title": "...", "article_url": "...",
+    "current_main": {"keyword": "...", "difficulty": <int|"N/A">, "volume": <int|null>},
     "lists": {
       "related":         [{"keyword","difficulty","volume","intent","why"}, ...],
       "variations":      [ ... same shape ... ],
@@ -51,6 +52,8 @@ tr:hover td{background:#1d2237}
 select{background:#0f1220;color:#e7e9f2;border:1px solid #2a3050;border-radius:7px;padding:6px 8px;font:inherit}
 select.on{border-color:#3fb950;color:#fff}
 .num{font-variant-numeric:tabular-nums;color:#c9d1e6}
+.curmain{margin-top:24px;padding:12px 14px;background:#181c2e;border:1px solid #2a3050;border-radius:10px}
+.cmeta{color:#9aa3c0;font-size:13px;margin-left:10px;font-variant-numeric:tabular-nums}
 .newmain{display:flex;gap:10px;align-items:center;margin-top:8px}
 .bar{position:fixed;left:0;right:0;bottom:0;background:#12162a;border-top:1px solid #2a3050;padding:14px 24px;display:flex;gap:14px;align-items:center;justify-content:flex-end}
 .count{margin-right:auto;color:#9aa3c0}
@@ -84,13 +87,21 @@ for(const key of ["related","variations","competitor","highly_relevant","gsc_ran
     const tr=document.createElement('tr');
     const meta = gsc
       ? "<td class=num>"+(r.clicks??"")+"</td><td class=num>"+(r.impressions??"")+"</td><td class=num>"+(r.position??"")+"</td>"
-      : "<td class=num>"+(r.difficulty??"")+"</td><td class=num>"+(r.volume??"")+"</td><td>"+esc(r.intent||"")+"</td>";
+      : "<td class=num>"+(r.difficulty??"N/A")+"</td><td class=num>"+(r.volume??"")+"</td><td>"+esc(r.intent||"")+"</td>";
     const why = r.why||r.opportunity;
     tr.innerHTML="<td><span class=kw>"+esc(r.keyword)+"</span>"+(why?"<br><span class=why>"+esc(why)+"</span>":"")+"</td>"+meta+
       "<td><select data-id='"+esc(id)+"'><option value=''>— skip —</option><option value='text'>Text</option><option value='heading'>Heading</option><option value='faq'>FAQ</option></select></td>";
     tb.appendChild(tr);
   });
   t.appendChild(tb); lists.appendChild(t);
+}
+// current focus keyphrase (Yoast) — shown directly above the new-main selector
+if(DATA.current_main && DATA.current_main.keyword){
+  const cm=document.createElement('div'); cm.className='curmain';
+  const d=DATA.current_main.difficulty, v=DATA.current_main.volume;
+  cm.innerHTML="<b>Current focus keyphrase:</b> <span class=kw>"+esc(DATA.current_main.keyword)+"</span>"+
+    "<span class=cmeta>Difficulty "+esc(d==null?'N/A':d)+" · Volume "+esc(v==null?'N/A':v)+"</span>";
+  lists.appendChild(cm);
 }
 // new-main selector
 const nm=document.createElement('div'); nm.className='newmain';
