@@ -3,10 +3,12 @@
 > Source thinking: Grow and Convert's [Originality Nuggets](https://www.growandconvert.com/content-marketing/originality-nuggets/),
 > [Specificity Strategy](https://www.growandconvert.com/content-marketing/specificity-strategy/),
 > and [Mirage Content](https://www.growandconvert.com/content-marketing/mirage-content/).
-> Applies whenever we WRITE new content or decide HOW TO RESTRUCTURE an existing article
-> (/SEO Stages 1, 4 & 8, the Structural-changes box, and /fact's editorial pass). Read alongside
-> `Pabau-style-guide.md` and `About-Pabau.md` — this guide governs *what makes the piece worth
-> reading and able to rank*; those govern *voice, product facts, and formatting*.
+> Applies to ALL Pabau content work — writing a new article, editing/restructuring an existing
+> one, or reviewing one in an editorial pass. It is self-contained: every check below is
+> something you run yourself, so it works the same whether you're writing ad-hoc, editing, or
+> inside a command that has already gathered SERP data. Read alongside `Pabau-style-guide.md`
+> and `About-Pabau.md` — this guide governs *what makes the piece worth reading and able to
+> rank*; those govern *voice, product facts, and formatting*.
 
 ---
 
@@ -78,10 +80,27 @@ question — not to an adjacent one we find more interesting or easier to write.
 Treat this as guidance, not gospel — the **SERP overrides the table**. If "best X" pulls up
 mostly how-to guides, Google is telling you the real intent is procedural; follow the SERP.
 
+### How to pull the SERP (do this yourself)
+
+You need the actual top results before you can judge intent — don't guess them. Get them with
+whichever tool you have:
+
+- **DataForSEO (preferred when available)** — call `serp_organic_live_advanced` with the focus
+  keyphrase, `location_name` "United States", `language_code` "en", `depth` 10. This is the
+  cleanest read of the real organic top 10. Available in the main Claude session.
+- **WebSearch (fallback)** — if you don't have DataForSEO (e.g. inside the /fact editorial
+  agent, which only has WebSearch), run a WebSearch for the exact focus keyphrase and read the
+  top ~10 organic results it returns. Good enough to judge format, angle, and depth.
+- **Then open a few** — click into 2–4 of the top results (WebFetch) to confirm their format and
+  depth first-hand, not just from the title.
+
+If you genuinely can't reach either tool, say so and fall back to reasoning from the query
+pattern table above — but flag that the intent read is unverified.
+
 ### Step-by-step: how to read intent from the SERP
 
-1. Pull the top 10 organic results for the focus keyphrase (already done in /SEO Stage 1). Drop
-   our own domain, pure aggregators/directories, and SERP features.
+1. Pull the top 10 organic results for the focus keyphrase (see "How to pull the SERP" above).
+   Drop our own domain, pure aggregators/directories, and SERP features.
 2. For each result, note in one line: its **format** (how-to / listicle / comparison / etc.),
    its **angle** (what makes it distinct), and roughly its **depth**.
 3. Count the formats. The majority format is the intent signal. Note the second-most-common —
@@ -124,12 +143,13 @@ consent reminders) that generic templates lists don't have.
 
 ### On a mismatch — the decision
 
-If our article answers a different question, or is the wrong format:
-- **Published/refresh path:** call it out and let the human spell out the fix in the
-  **Structural-changes box** on the SERP picker. This is exactly what that box is for.
-- **Draft/auto path:** you own the restructure in Stage 4 — reorder, merge, split, replace
-  sections, or change the article type outright.
-Either way: **do not tweak keywords on the wrong skeleton.** Fix the shape first.
+If our article answers a different question, or is the wrong format, the fix is **structural,
+not cosmetic** — reorder, merge, split, or replace sections, or change the article type outright.
+**Do not tweak keywords on the wrong skeleton; fix the shape first.** This can be a larger
+rewrite than a normal edit, and that's expected. Flag it clearly: name the current shape, the
+shape the SERP rewards, and what has to change. (Whatever command you're running will have its
+own mechanism for authorizing a bigger restructure — use it; if you're editing directly, just
+make the change.)
 
 ---
 
@@ -175,7 +195,7 @@ Medium**, producible in days, not the months a heavy piece takes. Start light.
   cost calculator" logic, or a "paper-to-digital migration checklist" for clinics.
 - **An original cut of data.** Even a small one: pull a real figure (an industry no-show rate, a
   cost range for training, a benchmark) and interpret it for the reader. Use REAL numbers with a
-  source — never fabricate a statistic (this will be fact-checked in /fact).
+  source — never fabricate a statistic (it will be fact-checked downstream).
 - **An expert quote or interview.** Find someone with hands-on experience (a practitioner, a
   clinic manager) and quote a specific, non-obvious insight.
 - **Concrete worked examples end to end** — not "you can automate rebooking" but the actual
@@ -389,13 +409,13 @@ Take the keyword **"how to reduce no-shows in a clinic."**
    one-tap reschedule → same-day waitlist backfill → no-show follow-up), with the **actual
    message copy** and the front-desk workflow — plus a real no-show cost figure interpreted for
    the reader. Nothing in the top 10 shows the whole operational sequence.
-3. **Outline to the intent, nugget inside (Stage 4).** H1 answers the query as a how-to. Key
-   Takeaways up top (snippet play). H2s = the sequence steps, in order. An FAQ for the PAA
-   questions. Our nugget lives across the step sections (the copy, the workflow, the number).
-4. **Write each section (Stage 8, Sections 3–4).** Concrete detail per step; real message copy;
-   run each through the mirage battery — cut "make sure clients know their time"; keep the deposit
-   mechanics and the reschedule-link workflow. Introduce Pabau once, outcome-led, where the
-   automated sequence is shown. No fabricated stats.
+3. **Outline to the intent, nugget inside.** H1 answers the query as a how-to. Key Takeaways up
+   top (snippet play). H2s = the sequence steps, in order. An FAQ for the PAA questions. Our
+   nugget lives across the step sections (the copy, the workflow, the number).
+4. **Write each section (Sections 3–4 of this guide).** Concrete detail per step; real message
+   copy; run each through the mirage battery — cut "make sure clients know their time"; keep the
+   deposit mechanics and the reschedule-link workflow. Introduce Pabau once, outcome-led, where
+   the automated sequence is shown. No fabricated stats.
 5. **Checklist (Section 6).** Confirm intent, name the nugget in one sentence, intro passes the
    litmus test, every section specific, nothing generic survives, Pabau handled per style guide.
 
@@ -417,7 +437,7 @@ Take the keyword **"how to reduce no-shows in a clinic."**
       detail/examples/numbers/steps; no platitudes survive.
 - [ ] **No mirage:** passes reader's-shoes, real-examples, customer-fit, and specificity tests.
 - [ ] **Honest:** every example, quote, and number is real and sourced (nothing fabricated —
-      it will be fact-checked in /fact).
+      it will be fact-checked downstream).
 - [ ] **Pabau:** angle uses our real advantage; product introduced/qualified per the style guide;
       no over-pitching, no feature gating; outcomes-led.
 
