@@ -10,6 +10,7 @@ Before applying anything below, read both guides and treat them as the source of
 - `Pabau-style-guide.md` — tone of voice, benefit framing, US/UK terminology table, formatting mechanics, and the treatments/regulation glossary.
 - `About-Pabau.md` — what Pabau is, the product family and naming rules, pricing model, competitors, and the customer journey.
 - `Meta-title-best-practices.md` — SERP title optimization: listicle numbers, year usage, matching micro-intent, differentiating in the SERP, and solving the pain point in the title.
+- `Originality-and-search-intent.md` — the two-bar rule: every article must fit searcher intent (answer the query's actual question, in the SERP-dominant format and depth) AND carry at least one originality nugget (a unique angle no top-10 result has). Cut mirage/fluff; be specific.
 
 Non-negotiable rules from those guides that must hold in every edit:
 
@@ -20,6 +21,7 @@ Non-negotiable rules from those guides that must hold in every edit:
 - **No free trial** — frame as structured onboarding; never apologize for a missing trial.
 - **Lead with outcomes, not features.** Spell the benefit out ("so you can…"); don't imply it or leave the reader to join the dots.
 - **Verify Pabau facts** (product family, pricing model, integrations, competitor framing) against About-Pabau; never name specific customers without the team's confirmation.
+- **Fit intent + be original** (per Originality-and-search-intent.md): the article must answer the query's actual question in the SERP-rewarded format AND have a unique angle. Flag generic me-too content and mirage fluff (obvious "no shit" advice, platitudes, no real examples) for rewrite. If the article is the wrong format for the SERP, that's a structural change, not a copy tweak.
 
 Precedence: the two guides govern **voice, terminology, and Pabau positioning**. The rules below govern **article structure** (H1 > Key Takeaways > Intro > H2), **meta descriptions**, and **AI-tell removal**. Where a US/UK spelling or term is in question, the style guide's terminology table wins.
 
