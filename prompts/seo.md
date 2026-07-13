@@ -163,20 +163,27 @@ URLs are reused for entity NLP in Stage 5, so choose once.
             python3 "$HOME/.claude/factcheck-flow/bin/serp_picker.py" \
                     --in /tmp/seo-<slug>-serp.json --out /tmp/seo-<slug>-serp-sel.json
           It opens in the browser automatically. Tell the user: "I've opened a SERP picker in
-          your browser — check the results to use and click Save."
-       3. On exit 0, read /tmp/seo-<slug>-serp-sel.json → { "selected_urls": [...] }. Delete
-          both temp files afterward.
+          your browser — check the results to use, optionally add any Structural changes at the
+          bottom, and click Save."
+       3. On exit 0, read /tmp/seo-<slug>-serp-sel.json →
+          { "selected_urls": [...], "structural_changes": "<text or empty>" }. Capture BOTH:
+          the URLs AND the free-text structural_changes box (may be ""). Delete both temp files
+          afterward.
        FALLBACK (headless machine, or picker exits non-zero): present a NUMBERED LIST where
        every line is a CLICKABLE MARKDOWN LINK to the exact live ranking page (never a table,
        never the domain, never a bare URL) — `1. [<title>](<full https:// URL>)` … one per
        result — then ask: "Which should I use for competitor keywords + entity analysis?
-       (e.g. 1,2,5)".
+       (e.g. 1,2,5)". THEN also ask, as a second question: "Any structural changes? (custom
+       instructions for larger format/rewrite updates — or leave blank)" and capture the reply
+       as structural_changes.
 5. Record the Gate #1 SELECTION (auto-chosen in 4a for drafts, user-chosen in 4b for published):
 
-   { "selected_competitor_urls": ["<url>", "<url>", ...] }
+   { "selected_competitor_urls": ["<url>", "<url>", ...], "structural_changes": "<text or "">" }
 
-   Aim for at least 1. For drafts, never pause — if truly nothing usable ranks, note it and
-   continue (Stage 2's Competitor list is simply empty). For published, wait for the pick.
+   Aim for at least 1 URL. For drafts, never pause — if truly nothing usable ranks, note it and
+   continue (Stage 2's Competitor list is simply empty); drafts have NO structural_changes box
+   (Claude decides format itself), so structural_changes = "" on the auto path. For published,
+   wait for the pick and carry structural_changes forward — it drives Stages 4 and 8.
 ```
 
 ---
@@ -402,6 +409,17 @@ Selection semantics (apply in EVERY path — auto, document, picker):
 Using the Gate #2 selection + the existing heading tree, decide placement for EACH selected
 keyword. Produce an OUTLINE; write NO article copy yet (only short content-intent notes).
 
+STRUCTURAL CHANGES (Stage 1) — read FIRST and let them shape the whole outline. If the user
+entered structural_changes text, treat it as an explicit, high-priority instruction that can
+OVERRIDE the default "preserve existing structure" behavior: it may require reordering,
+merging, splitting, adding or removing sections, changing the article TYPE/format entirely
+(e.g. listicle → how-to guide), or a substantial rewrite the SERPs imply. Bake those changes
+into the OUTLINE now (new/removed/reordered nodes), then layer keyword placement on top. If
+structural_changes is empty, proceed with the normal keyword-driven placement below. Where a
+structural instruction conflicts with a keyword-placement default, the structural instruction
+wins (still obeying 2-editorial.md structure rules — H1 > Key Takeaways > Intro > H2, valid
+hierarchy, natural headings). Note in the outline which nodes exist BECAUSE of structural_changes.
+
 Placement decision per selected keyword:
 1. TOPIC ALREADY COVERED, heading not an exact match → reword that heading so it contains
    the keyword as an EXACT MATCH, rewritten to be fully grammatical and natural (never a
@@ -505,6 +523,15 @@ Now produce and apply the actual copy, using the OUTLINE + grouped entities + S7
 EVERYTHING written here must comply with 2-editorial.md, the style guide, About-Pabau, and
 Meta-title-best-practices.md.
 
+STRUCTURAL CHANGES (Stage 1): if structural_changes was provided, EXECUTE it here in full — it
+is already reflected in the Stage 4 outline, so write to that restructured outline. This may
+mean a LARGER REWRITE than a normal optimization pass: reformatting the article, re-sequencing
+or replacing whole sections, or rewriting substantial copy to match the format the SERPs
+reward. Do exactly what the instruction says (within the editorial/style guides); don't
+half-apply it to "preserve" the old structure. Keep the SEO keyword work intact on top of the
+new structure. If the instruction implies the article's TYPE changed, re-check the meta title
+per Meta-title-best-practices.md. Summarize the structural changes made in the S9 change-log.
+
 For each OUTLINE node:
 - [OPTIMIZED] heading → apply the new heading text; then rewrite that section's existing
   copy to naturally weave in the grouped entities (don't just append; integrate).
@@ -534,9 +561,10 @@ Save via wordpress-access: PUT only changed fields (content, title, excerpt/meta
 Yoast focus keyphrase meta, categories/tags — append-only, remove "Uncategorized"). Draft
 stays draft; published stays published.
 
-CHANGE-LOG (hold for the S9 combined report): main keyword (old→new if changed), headings
-added/optimized, keywords placed (heading vs in-text), entity themes woven in,
-meta/title/description changes, categories/tags added.
+CHANGE-LOG (hold for the S9 combined report): main keyword (old→new if changed), structural
+changes applied (from the Stage 1 box, if any), headings added/optimized, keywords placed
+(heading vs in-text), entity themes woven in, meta/title/description changes, categories/tags
+added.
 ```
 
 ---
