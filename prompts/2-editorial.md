@@ -51,7 +51,7 @@ Also check for UK spelling / phrasing (it MUST be US English). This includes cha
 
 Unless it's a UK-specific article, remove references to Healthcode and replace with generic claims and billing. Example: OLD: Automate claims through Healthcode. NEW: Automate claims and billing with Pabau. Apply this automatically — never ask about it, just replace. If the reference is in an image caption, don't worry about the image — it's generic enough to just change the caption and be good.
 
-Intro must exist. The proper structure is H1 > Key Takeaways > Intro > H2 > rest of the article. The only exception are template articles, where it's H1 > Key Takeaways > Download box (with built-in H2) > intro > H2 > rest of the article.
+Intro must exist. The proper structure is H1 > Key Takeaways > Intro > H2 > rest of the article. The only exception are template articles, where it's H1 > Key Takeaways > Download box (with built-in H2) > intro > H2 > rest of the article. Add any missing section automatically — including any `missing-section` fixes handed to you from Stage 1 (intro, Key Takeaways, FAQ, conclusion, etc.). Write the section to match the depth and tone of the rest of the article; never ask about it.
 
 For templates, make sure the download box is below Key Takeaways, above intro and has a built-in H2 tag (something along the lines of "Download your free [template name]", but make sure it's grammatically correct, not just exact-match.
 
@@ -83,7 +83,7 @@ Edit meta description to include an answer to the searcher query, written as if 
 
 Add Yoast keywords to headings.
 
-Add tags and categories (use existing in WordPress).
+Add tags and categories manually — use existing ones in WordPress, and apply no more than 4 categories. (Stage 1 no longer flags categories/tags; owning them here is the single source of truth.)
 
 When adding categories, always remove the "Uncategorized" category.
 
