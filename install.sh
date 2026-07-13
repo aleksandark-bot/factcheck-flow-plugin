@@ -161,21 +161,48 @@ Spawn one **factcheck-reporter** subagent per article, **all in a single message
 and tell it to produce its findings report per its instructions. These agents are
 read-only — nothing is written to WordPress in this stage.
 
-Collect every subagent's returned report. Parse them into a flat list of findings,
-tagging each with its article. Keep the `NEEDS_USER_VALUE` flag, `TYPE`, `LOCATION`,
-`ISSUE`, `CORRECT`, and `FIX` for each. Articles that returned `CORRECT: No fix
-needed` contribute zero findings but still go through Stage 3.
+Collect every subagent's returned report. A report is one of: `CORRECT: No fix
+needed`; a single `REWRITE_REQUIRED: <reason>` line (handle via the Rewrite gate
+below — do NOT treat it as a finding); or a numbered findings list. Parse the findings
+lists into a flat list, tagging each with its article. Keep the `NEEDS_USER_VALUE`
+flag, `TYPE`, `LOCATION`, `ISSUE`, `CORRECT`, and `FIX` for each. Articles that
+returned `CORRECT: No fix needed` contribute zero findings but still go through Stage 3.
 
 Briefly tell the user how many findings came back per article, then go to Stage 2.
-If there are zero findings across all articles, tell the user and skip directly to
-Stage 3.
+If there are zero findings across all articles (and none needs a rewrite), tell the
+user and skip directly to Stage 3.
+
+### Rewrite gate (runs before triage — fully automatic, no user input)
+
+Any article whose report is `REWRITE_REQUIRED: <reason>` is truncated/incomplete or
+repeats itself and cannot be QA'd as-is. For each such article, before Stage 2:
+
+1. Spawn an **article-editor** subagent in **rewrite mode**: pass the article URL/ID
+   and the `REWRITE_REQUIRED` reason, and tell it to complete/rewrite the article so
+   it matches the full structure of similar articles on the same site (fill missing
+   sections, remove any duplicated/repeated content) and save via `wordpress-access`.
+   In rewrite mode it runs no triage, editorial, or link pass.
+2. When the rewrite is saved, **re-run the entire /fact pipeline on that article from
+   Stage 1** (fresh fact-check → triage → editorial + links).
+
+Never ask the user about a rewrite — it always happens automatically on detection.
+Guard against loops: rewrite a given article at most **twice**. If it still returns
+`REWRITE_REQUIRED` after the second rewrite, stop looping it and flag it for manual
+attention in the final report. Articles that did not trigger `REWRITE_REQUIRED`
+proceed through Stage 2 as normal (they do not wait on rewriting articles).
 
 ## Stage 2 — Triage gate (interactive — this is the ONLY manual step)
 
-Walk the user through **every** finding using the `AskUserQuestion` tool, in batches
-of **up to 4 findings per call** (its per-screen maximum). Preserve article grouping
-where practical and label each question with the article + location so the user has
-context. For each finding:
+**Auto-approved findings — do NOT triage these.** Any finding with `TYPE:
+missing-section` is applied automatically: never put it in an `AskUserQuestion` batch.
+Silently mark each as Apply and route it to Stage 3 (the article-editor writes the
+absent section during its editorial pass). Only findings of other types go through the
+interactive gate below.
+
+Walk the user through **every** remaining finding using the `AskUserQuestion` tool, in
+batches of **up to 4 findings per call** (its per-screen maximum). Preserve article
+grouping where practical and label each question with the article + location so the
+user has context. For each finding:
 
 - **Normal finding** → options:
   - `Apply suggested fix` — apply the FIX as written.
@@ -223,7 +250,7 @@ fi
 cat > "$CLAUDE/agents/factcheck-reporter.md" <<'EOF'
 ---
 name: factcheck-reporter
-description: Stage 1 worker for /fact. Reviews ONE WordPress article for factual/coding accuracy, categories, tags, links, and structure, and returns a numbered findings report. READ-ONLY — never writes to WordPress.
+description: Stage 1 worker for /fact. Reviews ONE WordPress article for factual/coding accuracy, link status, and listicle ranking, and returns a numbered findings report (or a single REWRITE_REQUIRED line if the article is truncated or repeats itself). READ-ONLY — never writes to WordPress.
 tools: Read, WebFetch, WebSearch, Bash, Glob, Grep
 model: sonnet
 ---
@@ -251,14 +278,16 @@ orchestrator, not shown to a human as chat). Begin your reply with the exact lin
 
 `ARTICLE: <the url or post id you reviewed>`
 
-then either `CORRECT: No fix needed`, or the numbered list of findings. Do not add
+then one of: `CORRECT: No fix needed`; the single line `REWRITE_REQUIRED: <reason>`
+(when the article is truncated/incomplete or repeats itself — see the fact-check
+instructions, and emit nothing else); or the numbered list of findings. Do not add
 preamble, sign-off, or commentary outside the report.
 EOF
 
 cat > "$CLAUDE/agents/article-editor.md" <<'EOF'
 ---
 name: article-editor
-description: Stage 3 worker for /fact. Owns ONE WordPress article end-to-end — applies the human-approved fact-check fixes, then the editorial pass, then the link-audit pass, writing all changes via the WordPress REST API.
+description: Stage 3 worker for /fact. Owns ONE WordPress article end-to-end — applies the human-approved fact-check fixes, then the editorial pass, then the link-audit pass, writing all changes via the WordPress REST API. Can also run in rewrite mode to fix a truncated/self-repeating article before /fact re-runs.
 tools: Read, WebFetch, WebSearch, Bash, Glob, Grep
 model: sonnet
 ---
@@ -274,7 +303,17 @@ You will be given:
   edit / Reject, plus any human-supplied values such as listicle scores or category
   choices). Apply only the approved ones; ignore rejected findings.
 
-Perform three passes in this exact order, on this one article:
+**Rewrite mode.** If the orchestrator dispatched you in rewrite mode (it will say so
+and hand you a `REWRITE_REQUIRED` reason), do ONLY this: fetch the article, then
+complete or rewrite it so it matches the full structure of similar articles on the
+same site — fill in any missing sections (intro, FAQ, conclusion, documentation
+requirements, etc.) and remove any duplicated or self-repeating content — then save
+(a draft stays a draft; a published post stays published). Do NOT run the three passes
+below: /fact re-runs in full on the rewritten article afterward, which is where
+editorial and links get handled. Return a short change-log of what you completed and
+de-duplicated, plus the cache-purge reminder, and stop.
+
+Otherwise (the normal case), perform three passes in this exact order, on this one article:
 
 1. **Pass A — approved fact-check fixes.** Fetch the current article, apply exactly
    the approved decisions you were handed, and save (draft stays a draft; published
