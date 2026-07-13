@@ -80,6 +80,10 @@ comply with — these are the source of truth and override anything below on voi
 - `~/.claude/factcheck-flow/guides/Meta-title-best-practices.md` — SERP title rules.
 - `~/.claude/factcheck-flow/guides/Pabau-style-guide.md` — voice, US/UK terms, glossary.
 - `~/.claude/factcheck-flow/guides/About-Pabau.md` — product family, naming rules, pricing.
+- `~/.claude/factcheck-flow/guides/Originality-and-search-intent.md` — the TWO-BAR rule: every
+  article must fit searcher intent (judge from the SERP) AND carry an originality nugget (a
+  unique angle no top-10 result has). Governs new content AND restructuring decisions; drives
+  the Structural-changes box, Stage 4 outline, and Stage 8 writing. Originality is the priority.
 - `~/.claude/skills/wordpress-access/SKILL.md` — how to read/write the article (REST API,
   `context=edit`, PUT only changed fields, draft stays draft, append-only categories/tags,
   Yoast focus keyphrase via the post `meta` field).
@@ -131,6 +135,17 @@ URLs are reused for entity NLP in Stage 5, so choose once.
      depth = serp_depth.
 2. Keep ORGANIC results only. Drop: our own domain (site_domain), pure aggregators/SERP
    features, and anything paywalled/login-gated you can't open. Keep the ranked order.
+   ASSESS INTENT (per Originality-and-search-intent.md): intent is not just info/commercial —
+   FIRST read the focus keyphrase as a literal question and confirm what answer it demands (a
+   "how to…" wants a procedure; "best…" a ranked list; "what is…" a definition; "X vs Y" a
+   comparison; "…cost" pricing). Then from the kept top results note the SERP-DOMINANT FORMAT
+   (how-to / listicle / comparison / definition / template / tool / case study) and the depth
+   the SERP rewards. Record this — it is the intent "floor" every later stage must match. If our
+   current article answers a DIFFERENT question than the query, or uses the wrong format (e.g.
+   keyphrase "how to become an aesthetic practitioner in the UK" but our article is a list of
+   qualifications rather than a step-by-step route), say so now: on the published path the user
+   can spell out the fix in the Structural-changes box; on the auto/draft path YOU own the
+   restructure in Stage 4.
 3. Build the SERP-pick JSON (Gate #1 OUTPUT):
 
    {
@@ -444,6 +459,22 @@ the heading and its text carry the keyword naturally.
 If new_main_keyword is set: plan the new H1 (exact-match, grammatical) and note that S7 will
 also update meta/intro/SEO title/focus keyphrase.
 
+TWO-BAR CHECK (per Originality-and-search-intent.md) — the outline must clear both before you
+proceed to writing:
+- INTENT (floor): the outline ANSWERS THE QUERY'S ACTUAL QUESTION (not an adjacent one) in the
+  SERP-dominant format + depth assessed in Stage 1. If the current article answers a different
+  question or uses the wrong format, restructure it here (reorder/merge/split/replace sections,
+  or change the article type) — this is exactly the kind of larger change the Structural-changes
+  box authorizes; on the auto/draft path do it on your own judgment. Originality never excuses
+  answering the wrong question — the nugget must live INSIDE the correct answer.
+- ORIGINALITY NUGGET (priority): name at least one nugget the outline will deliver that no
+  top-10 result has (Light→Medium is fine — a distinctive sort/framing, a practitioner angle, a
+  proprietary checklist, real Pabau workflows/customer examples). Plan where it lives. If you
+  can't name one, the article isn't ready — find an angle before writing. Apply the intro
+  litmus test to the planned intro (no generic "When it comes to…" opener).
+Also apply specificity: each section is a concrete pain point; flag any section so broad it
+"could be its own blog" to either go deep or split (respect what the SERP rewards).
+
 Structure compliance (per 2-editorial.md): keep H1 > Key Takeaways > Intro > H2 order; valid
 hierarchy H1>H2>H3>H4; headings must read naturally; no keyword stuffing.
 
@@ -556,6 +587,12 @@ Hard rules:
   sentence-length limits; convert 3+ clause lists to WordPress list blocks.
 - If the SERP shows a featured-snippet opportunity, format the relevant answer as both a
   short paragraph and a list to compete for it (from the transcript's snippet tactic).
+- ORIGINALITY + ANTI-MIRAGE (per Originality-and-search-intent.md): actually DELIVER the nugget
+  planned in Stage 4 (don't let it evaporate into generic copy), and run every new/rewritten
+  section through the mirage battery — reader's-shoes ("no shit" vs "no one told me this"),
+  real-examples, and customer-fit (write for a practice owner/manager who already knows the
+  basics, not "anyone"). Cut platitudes, obvious tips, and generic intros. Keep the piece
+  matched to the SERP intent throughout.
 
 Save via wordpress-access: PUT only changed fields (content, title, excerpt/meta description,
 Yoast focus keyphrase meta, categories/tags — append-only, remove "Uncategorized"). Draft
