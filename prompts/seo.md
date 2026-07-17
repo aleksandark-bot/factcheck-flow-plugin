@@ -30,8 +30,9 @@ Human gates use strict JSON contracts (below), so these prompts also drop into a
 app with no rewrite.
 
 Stages: **S0** draft-check + setup → **S1** SERP pick → **S2** build lists → **S3** keyword
-selection (routing above) → **S4** Outline → **S5** entities → **S6** group entities →
-**S7** main-keyword swap → **S8** optimize + write → **S9** save, cleanup, hand off to /fact.
+selection (routing above) → **S4** Outline → **S5** entities + SERP structure analysis →
+**S6** group entities + structure refine → **S7** main-keyword swap → **S8** optimize + write →
+**S9** save, cleanup, hand off to /fact.
 
 ---
 
@@ -64,7 +65,7 @@ gsc_query_script: "$HOME/.claude/factcheck-flow/bin/gsc_query.py"  # portable he
 gsc_key: "$HOME/.claude/factcheck-flow/gsc-key.json"  # service-account JSON (SECRET; not in repo). Override: $PABAU_GSC_KEY
 gsc_property: "https://pabau.com/"   # URL-prefix property. Override: $PABAU_GSC_PROPERTY
 gsc_window_days: 90                  # trailing window for the query pull
-gsc_top_n: 20                        # queries to pull, ordered by clicks desc
+gsc_top_n: 20                        # candidate pool the helper pulls (top 20 by clicks); the GSC list is then re-sorted by position asc for display
 ```
 
 ---
@@ -227,22 +228,46 @@ D. ALREADY-RANKING — GSC, PUBLISHED ARTICLES ONLY (this is the 4th list).
        python3 "$HOME/.claude/factcheck-flow/bin/gsc_query.py" \
                --page "<full article URL>" --days 90 --limit 20
    It prints JSON — { page, start, end, queries: [{query, clicks, impressions, position}, …] } —
-   already sorted by clicks desc (top gsc_top_n).
+   sorted by clicks desc (top gsc_top_n). This is the candidate POOL.
    HARD REQUIREMENT: GSC is mandatory on the PUBLISHED path. If the helper exits non-zero
    (missing key, PyJWT not installed, or an API error), STOP and tell the user GSC isn't set up
    — do NOT silently continue without this list. Fix path: place the key at gsc_key or set
    $PABAU_GSC_KEY, and install PyJWT (`python3 -m pip install --user pyjwt`). Drafts never call it.
-   CLICKS + IMPRESSIONS + AVERAGE POSITION are the primary columns ("how many clicks each keyword
-   gets"). Do NOT apply the difficulty/volume filters here — we already rank for these. Instead
-   FLAG optimization opportunities:
-     · queries with high impressions but weak position (≈ pos 4–15), and/or
-     · queries NOT currently reflected in any article heading (exact-match gap).
+
+   ENRICH each GSC query with DIFFICULTY + SEARCH VOLUME from DataForSEO — fold the queries into
+   the batch bulk_keyword_difficulty + keyword_overview calls in the Enrichment section below
+   (same no-data rule: difficulty is an int or "N/A", never blank). These are DISPLAY/context
+   columns only. Do NOT apply the difficulty/volume Tier filters to GSC — we surface these terms
+   because we already have first-party ranking signal for them, not because they clear a bar.
+
+   ORDER FOR DISPLAY — sort the GSC list by AVERAGE POSITION ASCENDING (best ranking first:
+   position 1 is the greatest, larger numbers are worse). This is the order the keyword picker
+   renders them in. Clicks, impressions, difficulty and volume ride along as columns.
+
+   PRESENCE CHECK — for each query, check whether it appears (exact or near-exact match) in ANY
+   article HEADING **or** anywhere in the BODY TEXT, using the heading tree + body blocks captured
+   in Stage 0. Record present_on_page = true/false.
+
+   SELECTION LOGIC — flag the two TARGET categories via the "opportunity" field (this becomes the
+   reason text the picker shows, so the user knows which to pick). Both require present_on_page ==
+   false (a term already in a heading or the body is already targeted — leave it unflagged):
+     · Category 1 — RANKING, NOT ON-PAGE (quick win): present_on_page == false AND position ≤ 10.
+       We already rank for it, but it is absent from every heading and the body text. Just weave
+       it into the relevant section's body — and into a heading where it maps to a topic.
+       opportunity = "ranking, not on-page — add to a heading/body".
+     · Category 2 — WINNABLE, NEEDS CONTENT: present_on_page == false AND position > 10. We are NOT
+       in the top 10, but the term is relevant enough to win by giving it a dedicated HEADING and
+       creating content built for it. opportunity = "not top 10 — target with a new heading + content".
+   A query already in the top 10 AND already present on-page is info-only (opportunity = "");
+   still show it (ordered by position), just don't flag it as an opportunity.
 E. HIGHLY RELEVANT KEYWORDS → dataforseo_labs_google_keyword_ideas (seed = main keyword),
    using DataForSEO's DEFAULT relevance ordering. Take the top list_target_len (20) purely BY
    RELEVANCE. This list has NO difficulty/volume filtering and NO fill tiers — just the 20 most
    relevant terms (show difficulty/volume as info only). Only the always-on hygiene applies
    (drop the bare main keyword, drop terms already used as an exact-match heading, dedupe, stay
-   on-topic). Overlap with other lists is fine — tag it. Present for BOTH drafts and published.
+   on-topic). Cross-list overlap is resolved in the "Deduplicate across ALL lists" final pass —
+   highly_relevant is LOWEST priority, so any term it shares with another list moves there and this
+   list may end up shorter than 20. Present for BOTH drafts and published.
 
 ── Enrichment ────────────────────────────────────────────────────────────────
 - Difficulty: dataforseo_labs_bulk_keyword_difficulty (batch).
@@ -258,6 +283,9 @@ E. HIGHLY RELEVANT KEYWORDS → dataforseo_labs_google_keyword_ideas (seed = mai
 - ALSO enrich the CURRENT MAIN KEYWORD (Stage 0) for difficulty + volume in these same batch
   calls — it is not a candidate, but Stage 3 displays it (current_main) above the new-main
   selector so the user can compare. Same no-data rule: difficulty is an int or "N/A".
+- ALSO enrich the GSC list keywords (list D) for difficulty + volume in these same batch calls
+  so the picker can show Diff. + Vol. columns for them. GSC keeps its own no-filter rule — these
+  are display/context only, never a reason to drop a GSC query.
 
 ── Classification rule (RELATED vs VARIATION) ───────────────────────────────────
 Tokenize the main keyword into content words (ignore stopwords). For a candidate:
@@ -290,15 +318,27 @@ tiers, stopping the moment a list hits 20:
 If even Tier 3 yields few, KEEP WHAT YOU HAVE — a short/empty list is valid and drives the
 Stage 3 routing. Do not invent keywords.
 Always applied (every tier): drop keywords the article already targets as an exact-match
-heading; dedupe within and across lists (cross-list dupes stay in the most useful list —
-Related > Variation — note the overlap); drop off-topic/off-intent/brand terms that don't fit
-Pabau (borderline → keep, tag "review"). Relevance is NEVER relaxed, even in Tier 3.
+heading; dedupe WITHIN each list here (cross-list duplicates are removed later in the "Deduplicate
+across ALL lists" final pass — note the overlap on the keeper); drop off-topic/off-intent/brand
+terms that don't fit Pabau (borderline → keep, tag "review"). Relevance is NEVER relaxed, even in Tier 3.
 
 ── Ranking within each list ─────────────────────────────────────────────────────
 Primary: difficulty band (0–5 first, then 6–10, then the Tier 2/3 fill in that order).
 Secondary: volume desc. Target list_target_len (20). For each kept keyword, record a one-line
 "why" (e.g. "distinct entity, diff 3 / vol 210", "qualifier variation: women", "competitor
 rank 4 also targets this").
+
+── Deduplicate across ALL lists (final pass — run AFTER every list is built) ──────
+Once all lists exist, remove DUPLICATE entries so no keyword appears more than once across the
+whole payload. Normalize for comparison: lowercase, trim, collapse internal whitespace, and treat
+a trivial plural/stopword-only difference as the SAME keyword. When a keyword lands in more than
+one list, KEEP it in the single highest-priority list and DELETE it from the others:
+    gsc_ranking > competitor > related > variations > highly_relevant
+(GSC wins because it carries first-party ranking data and its own selection logic; highly_relevant
+is the raw relevance dump, so shared terms move to their more specific list.) When you keep a row,
+note the overlap in its "why" (e.g. "also in variations"). Lists may end up shorter than
+list_target_len after this pass — that is expected; do NOT backfill or re-invent keywords to refill
+them. The result is five (published) or four (draft) lists with ZERO repeated keywords.
 
 ── New-main-keyword candidate detection ─────────────────────────────────────────
 If any candidate (usually a Variation or Competitor keyword) has notably higher volume than
@@ -324,7 +364,7 @@ Gate #2 OUTPUT payload (what the UI/table is built from):
     "variations":    [ {"keyword": "...", "difficulty": 5, "volume": 140, "intent": "...", "why": "qualifier: women", "new_main_candidate": false}, ... ],
     "competitor":     [ {"keyword": "...", "difficulty": 2, "volume": 300, "intent": "...", "why": "ranks #4 for competitorX", "new_main_candidate": true}, ... ],
     "highly_relevant":[ {"keyword": "...", "difficulty": 12, "volume": 40, "intent": "...", "relevance_rank": 1}, ... ],
-    "gsc_ranking":    [ {"keyword": "...", "clicks": 2077, "impressions": 26170, "position": 8.0, "opportunity": "high impr / weak pos", "in_heading_already": false}, ... ]
+    "gsc_ranking":    [ {"keyword": "...", "position": 8.0, "clicks": 2077, "impressions": 26170, "difficulty": 12, "volume": 40, "intent": "informational", "present_on_page": false, "opportunity": "ranking, not on-page — add to a heading/body"}, ... ]  // ordered by position ASC (best rank first)
   }
 }
 
@@ -378,8 +418,9 @@ Heading / FAQ — plus one "New main keyword" selector) and writes the selection
                          "difficulty": <int|"N/A">, "volume": <int|null> },
        "lists": { "related":[...], "variations":[...], "competitor":[...],
                   "highly_relevant":[...], "gsc_ranking":[...] } }
-   Row fields: keyword, difficulty, volume, intent, why — or for gsc_ranking: keyword, clicks,
-   impressions, position, opportunity. Omit gsc_ranking on drafts.
+   Row fields: keyword, difficulty, volume, intent, why — or for gsc_ranking: keyword, position,
+   clicks, impressions, difficulty, volume, intent, opportunity — with the gsc_ranking rows
+   ORDERED BY POSITION ASC (best ranking first). Omit gsc_ranking on drafts.
    current_main is the CURRENT MAIN KEYWORD determined in Stage 0 (Yoast focus keyphrase, else
    inferred). Enrich its difficulty + volume in Stage 2 alongside the candidates (same no-data
    rule: difficulty is an int or "N/A", never blank). The picker shows it directly above the
@@ -475,6 +516,12 @@ proceed to writing:
 Also apply specificity: each section is a concrete pain point; flag any section so broad it
 "could be its own blog" to either go deep or split (respect what the SERP rewards).
 
+SERP STRUCTURE (deferred to S5→S6): the deep competitor analysis — every ranking page's heading
+tree, which keywords/entities they put in headings, and their structured-data formats (tables,
+lists, FAQ/step blocks) — runs in S5 and is applied to THIS outline in S6 (novel headings,
+[TABLE]/[LIST] nodes, reorganization to beat the SERP). Plan keyword placement now; leave room for
+those structural improvements rather than locking the format here.
+
 Structure compliance (per 2-editorial.md): keep H1 > Key Takeaways > Intro > H2 order; valid
 hierarchy H1>H2>H3>H4; headings must read naturally; no keyword stuffing.
 
@@ -489,7 +536,7 @@ This OUTLINE is the reference object for S6 (entity grouping) and S8 (writing).
 
 ---
 
-# STAGE 5 — Entity extraction (NLP over selected SERP pages)  (your step 5)
+# STAGE 5 — Entity extraction + SERP structure analysis (NLP over selected SERP pages)  (your step 5)
 
 ```
 Open EACH Gate #1 selected_competitor_url (use on_page_content_parsing, or WebFetch with a
@@ -505,11 +552,34 @@ Build an ENTITY LIST of the salient words and phrases that recur ACROSS PAGES:
 
 ENTITY LIST output — for each entity: canonical label, the variant spellings/synonyms seen,
 and page coverage count (e.g. "3/3 pages"). Order by coverage desc, then salience.
+
+── SERP STRUCTURE ANALYSIS (same open pages) ────────────────────────────────────
+While each page is open, ALSO analyze its STRUCTURE. Do this for EVERY SERP page you opened (the
+more of the ranking set the better) so the profile reflects the whole SERP, not one page:
+- HEADING OUTLINE: capture each page's full H1–H4 tree in document order.
+- HEADING KEYWORD/ENTITY USE: for each heading, note which target keywords and which Stage-5
+  entities appear in it, and the heading PATTERN (question, "how to", "X vs Y", number + noun,
+  benefit-led, etc.). Which subtopics/entities does nearly every competitor give a dedicated
+  heading? Which does none of them?
+- STRUCTURED-DATA FORMATS: record every structured presentation and what it holds —
+  comparison/pricing/spec TABLES, ordered (step) and unordered LISTS, FAQ blocks, definition
+  boxes, pros/cons, checklists, "at a glance" summary boxes, how-to/FAQ schema. Note where a
+  format is competing for a FEATURED SNIPPET (short answer + list/table).
+
+SERP STRUCTURE PROFILE output:
+- consensus heading map: the subtopics/entities the SERP consistently gives headings to, with the
+  dominant heading pattern for each (this is the structural "floor" the article must match);
+- format inventory: which structured formats dominate (e.g. "5/6 pages use a comparison table";
+  "all use a numbered step list"), plus any featured-snippet opportunity;
+- WEAKNESSES TO BEAT: vague or keyword-stuffed competitor headings, missing/thin tables or lists,
+  disorganized flow, obvious subtopics with no heading — and, most important, what NEW useful data
+  we could present as a table/list that none of the ranking pages offer.
+This profile is consumed by S6 (outline structure refinement) and S8 (writing).
 ```
 
 ---
 
-# STAGE 6 — Group entities under the Outline  (your step 6)
+# STAGE 6 — Group entities + refine outline structure  (your step 6)
 
 ```
 Map each ENTITY to the OUTLINE heading it is most semantically relevant to. An entity may
@@ -519,9 +589,23 @@ map to more than one heading if genuinely relevant to each.
 - Entities that fit no specific heading but are on-topic → pool under "Intro / general".
 - Entities that don't fit the article's scope at all → drop (note them under "unused").
 
-Output: the OUTLINE, now with a bullet list of grouped entities beneath each heading. These
-grouped entities are the raw material S8 uses to write new sections and to enrich existing
-copy. Still no prose written.
+STRUCTURE REFINEMENT (from the S5 SERP STRUCTURE PROFILE) — now improve the outline's SHAPE, not
+just its entity coverage. Emulate what works on the SERP and beat it; never copy competitors:
+- HEADINGS: make sure every consensus-map subtopic the article should cover has a heading (respect
+  hierarchy + editorial rules), but word them as NOVEL, clearer, more natural headings than the
+  SERP's — don't mirror a competitor's phrasing or stuff keywords. Keep the exact-match keyword
+  placements from S4 intact; only improve the wording around them.
+- STRUCTURED DATA: where the format inventory shows a table or list wins (or a snippet is up for
+  grabs), plan a [TABLE] or [LIST] node — and make it carry NEW useful information (an extra
+  column, a fresh comparison axis, real numbers/steps competitors omit), not a rehash. Add the
+  intended columns/list items as short notes on the relevant node.
+- ORGANIZATION: reorder / merge / split nodes so the flow is more logical than the SERP's, directly
+  addressing the WEAKNESSES TO BEAT. Any Stage-1 structural_changes still win, and keep 2-editorial
+  structure rules (H1 > Key Takeaways > Intro > H2, valid hierarchy, natural headings).
+
+Output: the FINAL OUTLINE S8 writes from — the heading tree with any S6 structure revisions and
+planned [TABLE]/[LIST] nodes, each node carrying its grouped entities plus table-column / list-item
+notes beneath it. Still no prose written.
 ```
 
 ---
@@ -587,6 +671,13 @@ Hard rules:
   sentence-length limits; convert 3+ clause lists to WordPress list blocks.
 - If the SERP shows a featured-snippet opportunity, format the relevant answer as both a
   short paragraph and a list to compete for it (from the transcript's snippet tactic).
+- EMULATE + IMPROVE ON THE SERP STRUCTURE (S5 profile / S6 final outline): write the planned novel
+  headings (clearer and more natural than the ranking pages', never mirrored or keyword-stuffed);
+  build every planned [TABLE]/[LIST] node as a real WordPress table/list block that delivers NEW
+  useful information (a new column or comparison axis, real numbers or steps competitors omit) —
+  never a decorative rehash of a competitor's table; and organize each section more logically than
+  the SERP, fixing the WEAKNESSES TO BEAT. Match the structural formats the SERP rewards, then go
+  one better in clarity and usefulness.
 - ORIGINALITY + ANTI-MIRAGE (per Originality-and-search-intent.md): actually DELIVER the nugget
   planned in Stage 4 (don't let it evaporate into generic copy), and run every new/rewritten
   section through the mirage battery — reader's-shoes ("no shit" vs "no one told me this"),
@@ -624,7 +715,16 @@ added.
 ## Notes / defaults (resolved)
 
 - Competitor keywords: pooled into ONE deduped list, tagged with which competitor(s) rank.
-- GSC list: top 20 by clicks; "opportunity" = high impressions + weak position (≈ 4–15) or a
-  heading gap; trailing 90-day window.
+- SERP structure analysis (S5): reuses the SAME pages opened for entity NLP — headings, heading
+  keyword/entity use, and structured-data formats (tables/lists/FAQ/step blocks) → a SERP structure
+  profile that S6 turns into novel headings + [TABLE]/[LIST] nodes + reorganization, and S8 writes
+  and improves on. No extra fetches beyond the entity pass.
+- GSC list: pull top 20 by clicks (trailing 90-day window), enrich each with difficulty + volume
+  (DataForSEO; display only — no filtering), then DISPLAY ordered by position ASC (best ranking
+  first). "opportunity" flags the two target categories, both requiring the term to be absent from
+  every heading AND the body text (present_on_page == false): (1) RANKING, NOT ON-PAGE — position
+  ≤ 10, a quick win to weave into a heading/body; (2) WINNABLE, NEEDS CONTENT — position > 10, win
+  it with a new dedicated heading + content. Terms already in the top 10 and already on-page are
+  shown but not flagged.
 - Save cadence: single save in S8 (S7 changes are held and saved together).
 - After the keyword gate, S4–S8 run straight through to the /fact handoff (S9).

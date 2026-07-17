@@ -16,7 +16,8 @@ Input JSON:
       "variations":      [ ... same shape ... ],
       "competitor":      [ ... same shape ... ],
       "highly_relevant": [{"keyword","difficulty","volume","intent","relevance_rank"}, ...],
-      "gsc_ranking":     [{"keyword","clicks","impressions","position","opportunity"}, ...]
+      "gsc_ranking":     [{"keyword","position","clicks","impressions","difficulty","volume","opportunity"}, ...]
+                         (ordered by position asc — best ranking first)
     }
   }
   (Any list may be omitted or empty. gsc_ranking is absent for drafts.)
@@ -80,13 +81,13 @@ for(const key of ["related","variations","competitor","highly_relevant","gsc_ran
   const h=document.createElement('h2'); h.textContent=LABELS[key]+" ("+rows.length+")"; lists.appendChild(h);
   const gsc = key==="gsc_ranking";
   const t=document.createElement('table');
-  t.innerHTML="<thead><tr><th>Keyword</th>"+(gsc?"<th>Clicks</th><th>Impr.</th><th>Pos.</th>":"<th>Diff.</th><th>Vol.</th><th>Intent</th>")+"<th>Use as</th></tr></thead>";
+  t.innerHTML="<thead><tr><th>Keyword</th>"+(gsc?"<th>Pos.</th><th>Clicks</th><th>Impr.</th><th>Diff.</th><th>Vol.</th>":"<th>Diff.</th><th>Vol.</th><th>Intent</th>")+"<th>Use as</th></tr></thead>";
   const tb=document.createElement('tbody');
   rows.forEach((r,i)=>{
     const id=key+"::"+r.keyword; allKw.push({id,keyword:r.keyword,list:key});
     const tr=document.createElement('tr');
     const meta = gsc
-      ? "<td class=num>"+(r.clicks??"")+"</td><td class=num>"+(r.impressions??"")+"</td><td class=num>"+(r.position??"")+"</td>"
+      ? "<td class=num>"+(r.position??"")+"</td><td class=num>"+(r.clicks??"")+"</td><td class=num>"+(r.impressions??"")+"</td><td class=num>"+(r.difficulty??"N/A")+"</td><td class=num>"+(r.volume??"")+"</td>"
       : "<td class=num>"+(r.difficulty??"N/A")+"</td><td class=num>"+(r.volume??"")+"</td><td>"+esc(r.intent||"")+"</td>";
     const why = r.why||r.opportunity;
     tr.innerHTML="<td><span class=kw>"+esc(r.keyword)+"</span>"+(why?"<br><span class=why>"+esc(why)+"</span>":"")+"</td>"+meta+
