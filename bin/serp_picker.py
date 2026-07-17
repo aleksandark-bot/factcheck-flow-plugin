@@ -15,7 +15,8 @@ Output JSON (written on Save):
   { "selected_urls": ["https://...", ...],
     "structural_changes": "<free-text custom instructions for larger updates, or \"\">" }
 
-Blocks until the user clicks Save. Exit 0 on save, 2 otherwise.
+Blocks until the user clicks Save — there is NO timeout window; it waits indefinitely
+(press Ctrl+C to abort). Exit 0 on save, 2 otherwise.
 """
 import argparse, json, sys, threading, subprocess, time
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -56,7 +57,7 @@ button:hover{filter:brightness(1.08)} .done{color:#3fb950;font-weight:600}
   <div id="rows"></div>
   <div class="struct">
     <label for="struct"><b>Structural changes</b>
-      <span class="hint">Optional — custom instructions for larger updates: format overhauls, section reordering, or a bigger rewrite the SERPs imply (e.g. our article is the wrong format for this query). The SEO updater will follow these specifically. Leave blank for none.</span></label>
+      <span class="hint">Optional. Add any specific structural changes you want — format overhauls, section reordering, or a bigger rewrite the SERPs imply (e.g. our article is the wrong format for this query). The SEO updater will do these <b>and</b> add its own structural improvements on top. Leave blank to let it decide the structure itself — either way it will restructure where the SERP and intent call for it. No time limit — take as long as you need.</span></label>
     <textarea id="struct" placeholder="e.g. The top results are all step-by-step how-to guides, but our article is a thin listicle — restructure it into a numbered how-to with an intro, prerequisites, and ordered steps."></textarea>
   </div>
 </div>
@@ -103,7 +104,8 @@ def main():
     ap.add_argument("--out", dest="outfile", required=True)
     ap.add_argument("--port", type=int, default=0)
     ap.add_argument("--no-open", action="store_true")
-    ap.add_argument("--timeout", type=int, default=1800)
+    ap.add_argument("--timeout", type=int, default=0,
+                    help="seconds to wait for a selection; 0 = wait indefinitely (default, no timeout)")
     a = ap.parse_args()
 
     with open(a.infile) as f:
@@ -159,14 +161,18 @@ def main():
             except Exception:
                 pass
 
-    deadline = time.time() + a.timeout
-    while not state["done"] and time.time() < deadline:
-        time.sleep(0.25)
+    # No timeout window by default: wait indefinitely for the user's Save.
+    deadline = None if a.timeout <= 0 else time.time() + a.timeout
+    try:
+        while not state["done"] and (deadline is None or time.time() < deadline):
+            time.sleep(0.25)
+    except KeyboardInterrupt:
+        pass
     httpd.shutdown()
     if state["done"]:
         print("SELECTION_SAVED " + a.outfile)
         sys.exit(0)
-    sys.stderr.write("serp picker timed out with no selection\n")
+    sys.stderr.write("serp picker exited with no selection\n")
     sys.exit(2)
 
 

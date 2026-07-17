@@ -28,7 +28,8 @@ Output JSON (written to --out on Save):
     "new_main_keyword": "<keyword or null>"
   }
 
-Blocks until the user clicks Save (or closes via the timeout). Exit 0 on save, 2 otherwise.
+Blocks until the user clicks Save — there is NO timeout window; it waits indefinitely
+(press Ctrl+C to abort). Exit 0 on save, 2 otherwise.
 """
 import argparse, json, os, sys, threading, subprocess, time
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -140,7 +141,8 @@ def main():
     ap.add_argument("--out", dest="outfile", required=True)
     ap.add_argument("--port", type=int, default=0)
     ap.add_argument("--no-open", action="store_true")
-    ap.add_argument("--timeout", type=int, default=1800)
+    ap.add_argument("--timeout", type=int, default=0,
+                    help="seconds to wait for a selection; 0 = wait indefinitely (default, no timeout)")
     a = ap.parse_args()
 
     with open(a.infile) as f:
@@ -201,14 +203,18 @@ def main():
             except Exception:
                 pass
 
-    deadline = time.time() + a.timeout
-    while not state["done"] and time.time() < deadline:
-        time.sleep(0.25)
+    # No timeout window by default: wait indefinitely for the user's Save.
+    deadline = None if a.timeout <= 0 else time.time() + a.timeout
+    try:
+        while not state["done"] and (deadline is None or time.time() < deadline):
+            time.sleep(0.25)
+    except KeyboardInterrupt:
+        pass
     httpd.shutdown()
     if state["done"]:
         print("SELECTION_SAVED " + a.outfile)
         sys.exit(0)
-    sys.stderr.write("picker timed out with no selection\n")
+    sys.stderr.write("picker exited with no selection\n")
     sys.exit(2)
 
 
