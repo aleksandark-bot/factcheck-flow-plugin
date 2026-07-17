@@ -24,9 +24,11 @@ Input JSON:
 
 Output JSON (written to --out on Save):
   {
-    "selected": [{"keyword","list","use_in_heading"}, ...],
+    "selected": [{"keyword","list","use_in_heading","use_as_faq"}, ...],
     "new_main_keyword": "<keyword or null>"
   }
+  The "New main keyword" control is a FREE-TEXT box, so new_main_keyword may be a keyword the
+  user typed that is not in any list — its "selected" entry then carries list = "custom".
 
 Blocks until the user clicks Save — there is NO timeout window; it waits indefinitely
 (press Ctrl+C to abort). Exit 0 on save, 2 otherwise.
@@ -51,8 +53,10 @@ th{color:#9aa3c0;font-weight:600;font-size:12px;text-transform:uppercase;letter-
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#1d2237}
 .kw{font-weight:600} .why{color:#9aa3c0;font-size:12px}
-select{background:#0f1220;color:#e7e9f2;border:1px solid #2a3050;border-radius:7px;padding:6px 8px;font:inherit}
+select,#newmain{background:#0f1220;color:#e7e9f2;border:1px solid #2a3050;border-radius:7px;padding:6px 8px;font:inherit}
 select.on{border-color:#3fb950;color:#fff}
+#newmain{flex:1;min-width:260px}
+#newmain:focus{outline:none;border-color:#6ea8fe}
 .num{font-variant-numeric:tabular-nums;color:#c9d1e6}
 .curmain{margin-top:24px;padding:12px 14px;background:#181c2e;border:1px solid #2a3050;border-radius:10px}
 .cmeta{color:#9aa3c0;font-size:13px;margin-left:10px;font-variant-numeric:tabular-nums}
@@ -105,10 +109,13 @@ if(DATA.current_main && DATA.current_main.keyword){
     "<span class=cmeta>Difficulty "+esc(d==null?'N/A':d)+" · Volume "+esc(v==null?'N/A':v)+"</span>";
   lists.appendChild(cm);
 }
-// new-main selector
+// new-main keyword: a FREE-TEXT box (type anything). The datalist offers the discovered
+// keywords as optional type-ahead so there's no long dropdown to scroll through.
 const nm=document.createElement('div'); nm.className='newmain';
-nm.innerHTML="<b>New main keyword:</b> <select id='newmain'><option value=''>— keep current —</option>"+
-  allKw.map(k=>"<option value='"+esc(k.id)+"'>"+esc(k.keyword)+"</option>").join("")+"</select>"+
+nm.innerHTML="<b>New main keyword:</b> "+
+  "<input id='newmain' type='text' list='newmain-opts' autocomplete='off' "+
+    "placeholder='type a keyword — or leave blank to keep current'>"+
+  "<datalist id='newmain-opts'>"+allKw.map(k=>"<option value='"+esc(k.keyword)+"'></option>").join("")+"</datalist>"+
   "<span class=why>(applied to H1, intro, meta description & SEO title — implies a heading)</span>";
 lists.appendChild(nm);
 function refresh(){
@@ -120,11 +127,18 @@ document.getElementById('save').onclick=async()=>{
   const selected=[];
   document.querySelectorAll('select[data-id]').forEach(s=>{ if(s.value){const [list,...kw]=s.dataset.id.split("::");
     selected.push({keyword:kw.join("::"),list:list,use_in_heading:s.value==='heading',use_as_faq:s.value==='faq'});}});
-  let newMain=null; const nmv=document.getElementById('newmain').value;
-  if(nmv){const [list,...kw]=nmv.split("::"); newMain=kw.join("::");
+  let newMain=null; const nmv=(document.getElementById('newmain').value||'').trim();
+  if(nmv){
+    // free text: if it matches a discovered keyword (case-insensitive) reuse that list + exact
+    // spelling; otherwise it's a custom term the user typed (list = "custom").
+    const hit=allKw.find(k=>k.keyword.toLowerCase()===nmv.toLowerCase());
+    newMain=hit?hit.keyword:nmv;
+    const list=hit?hit.list:'custom';
+    const existing=selected.find(x=>x.keyword.toLowerCase()===newMain.toLowerCase());
     // ensure the new-main keyword is selected + heading (new main is never an FAQ)
-    if(!selected.find(x=>x.keyword===newMain)) selected.push({keyword:newMain,list:list,use_in_heading:true,use_as_faq:false});
-    else selected.forEach(x=>{if(x.keyword===newMain){x.use_in_heading=true;x.use_as_faq=false;}});}
+    if(existing){existing.use_in_heading=true;existing.use_as_faq=false;newMain=existing.keyword;}
+    else selected.push({keyword:newMain,list:list,use_in_heading:true,use_as_faq:false});
+  }
   const payload={selected:selected,new_main_keyword:newMain};
   document.getElementById('msg').textContent="Saving…";
   try{await fetch('/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});

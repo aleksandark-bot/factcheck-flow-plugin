@@ -401,8 +401,8 @@ CASE C — total_kw > 10:
       - set use_in_heading = true where the keyword maps cleanly to a heading topic.
     Continue to Stage 4 (no proceed gate — there is plenty to do).
   • is_draft == false → PICKER PATH: launch the local web picker (see below), which opens a
-    clean page in the browser with a per-keyword role dropdown and a "new main" selector. STOP
-    until the user clicks Save; then read the selection JSON it writes.
+    clean page in the browser with a per-keyword role dropdown and a free-text "new main" keyword
+    box. STOP until the user clicks Save; then read the selection JSON it writes.
 
 ── PROCEED GATE (Cases A and B only) ──
 Final question of this step, via AskUserQuestion:
@@ -413,7 +413,8 @@ handoff). This is the escape hatch for when there aren't enough keywords to matt
 ── BROWSER PICKER (Case C, published) ──
 Do NOT write a markdown/Obsidian file. Launch the shipped local web picker: it renders the
 lists as a clean page with clickable controls (a per-keyword "Use as" dropdown — skip / Text /
-Heading / FAQ — plus one "New main keyword" selector) and writes the selection back automatically.
+Heading / FAQ — plus one free-text "New main keyword" box with type-ahead suggestions, NOT a
+dropdown) and writes the selection back automatically.
 
 1. Write the five lists to a temp JSON at /tmp/seo-<slug>-kw.json, shaped as:
      { "article_title": "<title>", "article_url": "<url>",
@@ -427,7 +428,7 @@ Heading / FAQ — plus one "New main keyword" selector) and writes the selection
    current_main is the CURRENT MAIN KEYWORD determined in Stage 0 (Yoast focus keyphrase, else
    inferred). Enrich its difficulty + volume in Stage 2 alongside the candidates (same no-data
    rule: difficulty is an int or "N/A", never blank). The picker shows it directly above the
-   "New main keyword" selector so the user can compare before promoting a replacement.
+   "New main keyword" box so the user can compare before promoting a replacement.
 2. Run (this BLOCKS until the user clicks Save in the browser):
      python3 "$HOME/.claude/factcheck-flow/bin/keyword_picker.py" \
              --in /tmp/seo-<slug>-kw.json --out /tmp/seo-<slug>-sel.json
@@ -440,10 +441,13 @@ Heading / FAQ — plus one "New main keyword" selector) and writes the selection
 
 ── Gate #2 SELECTION (produced by whichever path ran) ──
 {
-  "selected": [ {"keyword": "...", "list": "related|variation|competitor|highly_relevant|gsc_ranking",
+  "selected": [ {"keyword": "...", "list": "related|variation|competitor|highly_relevant|gsc_ranking|custom",
                  "use_in_heading": true, "use_as_faq": false, "new_main_keyword": false}, ... ],
   "new_main_keyword": "<the one keyword flagged new main, or null>"
 }
+Note: the picker's "New main keyword" control is a FREE-TEXT box, so new_main_keyword may be a
+keyword the user typed that is NOT in any of the five lists — in that case its "selected" entry
+carries list = "custom". Stage 7 applies it (H1/intro/meta/title) regardless of its list.
 Selection semantics (apply in EVERY path — auto, document, picker):
 - selected, use_in_heading = false and use_as_faq = false → weave the keyword into BODY TEXT only.
 - selected, use_in_heading = true  → place it as an EXACT-MATCH heading AND weave it into that
