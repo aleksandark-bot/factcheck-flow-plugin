@@ -59,7 +59,7 @@ For templates, make sure the download box is below Key Takeaways, above intro an
 
 Fix all improperly formatted HTML.
 
-Always check if the FAQ block is malformed. If it is, fix the HTML and apply the proper Yoast FAQ schema.
+Always check if the FAQ block is malformed. If it is, fix the HTML and apply the proper Yoast FAQ schema. (The article-editor's final FAQ pass guarantees the FAQ ends up as a proper Yoast FAQ block regardless, so at minimum leave the FAQ content clean and well-formed here.)
 
 Check for proper capitalization of titles and body text (Titles should be sentence case, except when the title starts with a number (first letter of the first proper word must be capitalized then). Another exception is following a period, colon, semicolon or em-dash.
 

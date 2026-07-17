@@ -59,13 +59,16 @@ articles process concurrently). To each subagent pass:
 - the list of **approved** decisions for that article from Stage 2 (include any
   user-supplied values/edits; omit rejected findings).
 
-Each subagent runs its three sequential passes (approved fact-check fixes → editorial
-→ link audit) on its own article and writes changes via the `wordpress-access` skill.
-They do not ask further questions.
+Each subagent runs its four sequential passes (approved fact-check fixes → editorial
+→ link audit → FAQ block guarantee) on its own article and writes changes via the
+`wordpress-access` skill. They do not ask further questions. The final pass ALWAYS
+runs last: it ensures the article's FAQ is a proper Yoast FAQ block (not plain HTML),
+converting it if it isn't. Articles with no FAQ are left untouched by that pass.
 
 ## Final report
 
 Once all Stage 3 subagents return, compile a single consolidated summary for the user:
 per article — what fact-check fixes were applied, editorial highlights, link changes,
+the FAQ block result (already a Yoast block / converted to Yoast block / no FAQ present),
 and anything skipped. End with the reminder to purge the WP Rocket cache for each
 edited URL.
