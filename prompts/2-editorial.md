@@ -55,6 +55,8 @@ Unless it's a UK-specific article, remove references to Healthcode and replace w
 
 Intro must exist. The proper structure is H1 > Key Takeaways > Intro > H2 > rest of the article. The only exception are template articles, where it's H1 > Key Takeaways > Download box (with built-in H2) > intro > H2 > rest of the article. Add any missing section automatically — including any `missing-section` fixes handed to you from Stage 1 (intro, Key Takeaways, FAQ, conclusion, etc.). Write the section to match the depth and tone of the rest of the article; never ask about it.
 
+Key Takeaways must ALWAYS be a proper WP Key Takeaways block — the self-closing custom block `<!-- wp:gutenberg-custom-blocks/key-takeaways {"items":[{"text":"…"},{"text":"…"}]} /-->`, one `items` entry per takeaway — never a plain heading + bullet list, never a pasted rendered `<div id="key_takeaways">`. Write every takeaway in sentence case (capitalize only the first word and genuine proper nouns; a full sentence, never Title Case or ALL CAPS). When you add or rewrite Key Takeaways here, produce that exact block; if you are unsure of the site's attribute format, copy it from another published article that already has the block. (The article-editor's final block-guarantee pass double-checks this — block form plus sentence case — so at minimum leave the takeaways clean and correctly cased here.)
+
 For templates, make sure the download box is below Key Takeaways, above intro and has a built-in H2 tag (something along the lines of "Download your free [template name]", but make sure it's grammatically correct, not just exact-match.
 
 Fix all improperly formatted HTML.

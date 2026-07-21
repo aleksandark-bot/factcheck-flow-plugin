@@ -35,25 +35,71 @@ Otherwise (the normal case), perform four passes in this exact order, on this on
    follow it in full, then save your edits.
 3. **Pass C — link audit.** Read `~/.claude/factcheck-flow/prompts/3-links.md` and
    follow it in full, then save your edits.
-4. **Pass D — FAQ block guarantee (ALWAYS run this LAST).** This is the final thing you
-   do, after Pass C is saved. Re-fetch the article's raw block markup
-   (`context=edit`) and locate its FAQ section — the question-and-answer block, however
-   it is currently marked up (a `## FAQ` / `<h2>Frequently asked questions</h2>` heading
-   followed by questions as `<h3>`/`<strong>`/paragraphs, a plain `<div>`, an accordion,
-   `wp:heading` + `wp:paragraph` pairs, or any other plain HTML).
+4. **Pass D — block guarantees (ALWAYS run this LAST).** This is the final thing you do,
+   after Pass C is saved. Re-fetch the article's raw block markup (`context=edit`) and
+   enforce **both** guarantees below, in order — Key Takeaways first, then FAQ. Never
+   rewrite the copy; you are only changing wrapper markup and, for Key Takeaways, fixing
+   letter case. Save via `wordpress-access` and confirm both render correctly.
+
+   **D1 — Key Takeaways block guarantee (ALWAYS).** Locate the Key Takeaways section —
+   the block near the top of the article (H1 > Key Takeaways > Intro), however it is
+   currently marked up: the proper custom block, a plain `<h2>`/`<h3>` "Key Takeaways"
+   heading followed by a `<ul>`/paragraphs, a pasted raw `<div id="key_takeaways">`
+   (that is the block's *rendered* output, not real block markup), an Elementor blue
+   panel, or any other HTML.
+   - Every article **must** end with Key Takeaways as a proper WP Key Takeaways block.
+     Pass B adds the section if it was missing (it is a required section), so by now one
+     should exist; if it somehow still does not, add it here.
+   - If it is **already the proper block** — a self-closing
+     `<!-- wp:gutenberg-custom-blocks/key-takeaways {"items":[…]} /-->` comment — leave
+     the markup as-is, and **only** fix the letter case of any `items[].text` that is not
+     in sentence case (see casing rule below). If every item is already sentence case,
+     change nothing.
+   - Otherwise (heading + list, raw rendered div, panel, or any non-block form) —
+     **convert it into the proper block.** Pull each takeaway's text into one `items`
+     entry, preserving wording and any inline links, and drop the old heading/list markup
+     (the block renders its own "Key Takeaways" header and icon — do not keep a separate
+     "Key Takeaways" H2/H3 above it).
+   - **Sentence case rule (ALWAYS):** each takeaway's `text` must be written in sentence
+     case — capitalize only the first word and genuine proper nouns (Pabau, ICD-10, HIPAA,
+     brand/product names), everything else lowercase; end as a full sentence. Never Title
+     Case, never ALL CAPS, never leave a fragment.
+
+   Canonical block to produce (one `items` entry per takeaway; the JSON inside the
+   comment must be valid — escape any `"` in the text):
+
+   ```
+   <!-- wp:gutenberg-custom-blocks/key-takeaways {"items":[{"text":"Takeaway one, written as a full sentence in sentence case."},{"text":"Takeaway two, same treatment."}]} /-->
+   ```
+
+   To stay robust against how the site stores the block's attributes, first fetch another
+   **published article on the same site that already has a working Key Takeaways block**
+   (`context=edit`) and copy its exact delimiter, block name, and attribute format —
+   matching the site's real output beats a hand-built guess.
+
+   **D2 — FAQ block guarantee (ALWAYS).** Locate the FAQ section — the
+   question-and-answer block, however it is currently marked up (a `## FAQ` /
+   `<h2>Frequently asked questions</h2>` heading followed by questions as
+   `<h3>`/`<strong>`/paragraphs, a plain `<div>`, an accordion, `wp:heading` +
+   `wp:paragraph` pairs, or any other plain HTML).
    - If the article has **no FAQ section at all**, do nothing here — this pass never
      invents one (a genuinely missing FAQ is added earlier, in Pass B, only if that
      article type calls for it).
    - If the FAQ is **already a proper Yoast FAQ block** — `<!-- wp:yoast/faq-block -->`
      … `<!-- /wp:yoast/faq-block -->` wrapping `<div class="schema-faq
      wp-block-yoast-faq-block">` with `.schema-faq-section` / `.schema-faq-question` /
-     `.schema-faq-answer` — leave it exactly as-is.
+     `.schema-faq-answer` — leave it exactly as-is. (The Yoast block emits the FAQPage
+     schema automatically, so this is what "proper FAQ schema attached" means — no manual
+     JSON-LD needed.)
    - Otherwise the FAQ exists but is **plain HTML / headings / an accordion / a raw
-     div** — **convert it into a proper Yoast FAQ block.** Keep any introductory FAQ
-     H2 heading (e.g. "Frequently asked questions") above the block; the questions and
-     answers themselves go inside the block. Preserve every question and answer's exact
-     wording and any inline links or formatting inside the answers (links added in Pass
-     C must survive) — you are only changing the wrapper markup, never rewriting copy.
+     div** — **convert it into a proper Yoast FAQ block** so Yoast attaches the FAQPage
+     schema. Keep any introductory FAQ H2 heading (e.g. "Frequently asked questions")
+     above the block; the questions and answers themselves go inside the block. Preserve
+     every question and answer's exact wording and any inline links or formatting inside
+     the answers (links added in Pass C must survive) — you are only changing the wrapper
+     markup, never rewriting copy. If a separate hand-built FAQ `application/ld+json`
+     script exists in a `wp:html` block, remove it once the Yoast block is in place so the
+     page does not carry duplicate FAQ schema.
 
    Canonical block to produce — one `.schema-faq-section` per Q&A pair, each with a
    unique `id`:
@@ -83,7 +129,8 @@ Your returned message is a concise change-log for this article, not chat. Start 
 
 `ARTICLE: <url or post id>`
 
-then short sections: `Fact-check applied:`, `Editorial:`, `Links:`, `FAQ block:`
-(state one of: already a Yoast block / converted to Yoast block / no FAQ present),
-`Skipped:`. End with the reminder to purge the site cache (WP Rocket → Purge this URL)
-for the edited URL.
+then short sections: `Fact-check applied:`, `Editorial:`, `Links:`, `Key Takeaways
+block:` (state one of: already a proper block / converted to block / casing fixed to
+sentence case / block added), `FAQ block:` (state one of: already a Yoast block /
+converted to Yoast block / no FAQ present), `Skipped:`. End with the reminder to purge
+the site cache (WP Rocket → Purge this URL) for the edited URL.
