@@ -201,12 +201,13 @@ user and skip directly to Stage 3.
 
 An article enters the rewrite path in one of two ways: (a) its Stage 1 report is a bare
 `REWRITE_REQUIRED: <reason>` — truncated/incomplete or self-repeating; this is fully
-automatic with no user input and runs before Stage 2; or (b) the user **confirmed a
-grave factual error** during Stage 2 triage (case 3 below). For each such article:
+automatic with no user input and runs before Stage 2; or (b) a grave factual error was
+**independently verified and then approved by the user** during Stage 2 triage (case 3
+below). For each such article:
 
 1. Spawn an **article-editor** subagent in **rewrite mode**: pass the article URL/ID and
-   the reason — the `REWRITE_REQUIRED` reason, or, for a confirmed grave factual error,
-   that confirmed correction — and tell it to complete/rewrite the article so it matches
+   the reason — the `REWRITE_REQUIRED` reason, or, for a verified-and-approved grave
+   factual error, that correction — and tell it to complete/rewrite the article so it matches
    the full structure of similar articles on the same site (fill missing sections, remove
    any duplicated/repeated content, correct the confirmed error) and save via
    `wordpress-access`. In rewrite mode it runs no triage, editorial, or link pass.
@@ -214,8 +215,8 @@ grave factual error** during Stage 2 triage (case 3 below). For each such articl
    Stage 1** (fresh fact-check → triage → editorial + links).
 
 A truncation/repetition rewrite is never asked about — it happens automatically on
-detection. A grave factual error is the one case where a rewrite follows a user
-confirmation (Stage 2, case 3). Guard against loops: rewrite a given article at most
+detection. A grave factual error is the one case where a rewrite follows independent
+verification plus the user's approval (Stage 2, case 3). Guard against loops: rewrite a given article at most
 **twice**. If it still returns `REWRITE_REQUIRED` after the second rewrite, stop looping
 it and flag it for manual attention in the final report. Articles that did not trigger a
 rewrite proceed through Stage 2 as normal (they do not wait on rewriting articles).
@@ -232,7 +233,10 @@ also strips "Uncategorized" — nothing to ask here.)
 
 The human is asked **only** in the three cases below, via the `AskUserQuestion` tool
 (batch up to 4 per call; label each with its article + location). If no finding matches
-these three, skip the questions entirely and go straight to Stage 3.
+these three, skip the questions entirely and go straight to Stage 3. Case 3 is special:
+a flagged grave error reaches the human **only after an independent agent verifies it**.
+Run those verifications first (see case 3) so that a confirmed error joins cases 1–2 in
+the same `AskUserQuestion` batch, while an unconfirmed one is dropped and never asked.
 
 1. **Listicle review scores** — any finding with `NEEDS_USER_VALUE: true`. The reporter
    can't reach Capterra/G2/Trustpilot, so ask the user for the correct current score for
@@ -246,17 +250,32 @@ these three, skip the questions entirely and go straight to Stage 3.
 
 3. **Grave factual error (rewrite-scale)** — a `factual` finding flagged `CONFIRM: true`:
    one whose correction would require a full rewrite or rewriting large parts of the
-   article (e.g. the central ICD/CPT code the article is built on is wrong). Ask the user
-   to **confirm the error is real**:
-   - **Confirmed** → do not apply it as a normal in-place fix; route the article into the
-     Rewrite gate path above (article-editor rewrite mode, then re-run /fact from Stage 1),
-     passing the confirmed correction as the basis for the rewrite.
-   - **Not confirmed** → drop the finding and leave the article unchanged on that point.
+   article (e.g. the central ICD/CPT code the article is built on is wrong). **Do not ask
+   the human about it yet — first verify the error with an independent agent.** Spawn a
+   fresh, read-only fact-checker subagent (a `general-purpose` agent; run all such
+   verifications together in a single message when more than one grave error was caught)
+   and hand it only what it needs to judge the claim from scratch: the article's exact
+   statement, the reporter's proposed `CORRECT` value, and the reporter's evidence. Tell
+   it to research the point independently — actively trying to establish whether the
+   article could in fact be right — to write nothing anywhere, and to return **exactly one
+   verdict line**:
+   `VERIFIED_ERROR: <why the article is genuinely wrong>` **or**
+   `NOT_AN_ERROR: <why the article's statement is actually fine>`.
+   - **Verifier returns `NOT_AN_ERROR`** → the flagged error is not real. **Drop the
+     finding, leave the article unchanged on that point, and do NOT contact the human.**
+     Record it as "grave error flagged but not confirmed on verification" for the summary.
+   - **Verifier returns `VERIFIED_ERROR`** → the error is real, so **contact the human for
+     input** via `AskUserQuestion`: show the article's statement, the verified correction,
+     and that an independent check confirmed it, then ask **Apply (rewrite) / Reject**.
+     - **Apply** → do not apply it as a normal in-place fix; route the article into the
+       Rewrite gate path above (article-editor rewrite mode, then re-run /fact from
+       Stage 1), passing the verified correction as the basis for the rewrite.
+     - **Reject** → drop the finding and leave the article unchanged on that point.
 
 Record a decision for every finding that was asked; everything else is already marked
 Apply. Nothing has been written to WordPress yet. After the last batch, show a short
-summary of what will be applied / rewritten / rejected per article, then proceed to
-Stage 3 automatically (no further prompts).
+summary of what will be applied / rewritten / rejected / dropped-after-verification per
+article, then proceed to Stage 3 automatically (no further prompts).
 
 ## Stage 3 — Apply + editorial + links (parallel, automated)
 
