@@ -93,6 +93,37 @@ Non-negotiables carried over from `/fact`: introduce Pabau on first mention; qua
 names once; never "Pabau Connect" externally (say "online booking"); no feature gating; no
 free trial; lead with outcomes; headings must read naturally (no keyword stuffing).
 
+## Optimization stance (governs S4, S6, S8 — read before writing anything)
+
+Four principles that override any "leave it as-is" instinct elsewhere in this file. When a
+default below says "preserve" or "only if it improves," these win.
+
+1. **Be only as conservative as you NEED to be.** The job is to optimize, not to protect the
+   existing draft. Overwriting, rewriting, and resequencing existing copy to work in the target
+   keywords/entities and match the SERP is the DEFAULT, not the exception. Do not tiptoe: if
+   rewriting a paragraph, merging two weak sections, or replacing a whole section lands the
+   entities and intent better than a light touch, do it. The only things you must NOT change are
+   the guardrails (facts, Pabau positioning/non-negotiables, publish status, and — on a
+   published post — the URL/slug). Everything else is fair game. A timid pass that "preserves"
+   the article but fails to insert the entities or answer the query is a FAILED pass.
+2. **Every question-heading is answered in its FIRST sentence.** Any heading phrased as a
+   question (or that plainly implies one — "How to…", "What is…", "…cost", "…vs…") MUST be
+   answered directly and completely in the first sentence of that section — no throat-clearing,
+   no "There are several factors to consider," no restating the question. Give the answer, then
+   elaborate. This is a hard rule (it also wins featured snippets). Applies to FAQ answers too.
+3. **Answer the reader's problem NEAR THE TOP.** The core payoff must be reachable by a skim
+   reader without scrolling deep. Put the direct answer in the intro (and reflect it in Key
+   Takeaways). For a LISTICLE specifically: name the actual providers/picks in the Key Takeaways
+   block, and start the provider/pick segments IMMEDIATELY after the intro — preceded by a
+   comparison TABLE (the skim-reader's answer) so someone who reads nothing else still gets the
+   ranked shortlist. Do not bury the list behind long "what to look for / why it matters"
+   preamble; move that below the picks or trim it.
+4. **Pull in images where they help.** Add relevant images anywhere a visual materially aids
+   comprehension or matches what the SERP rewards — a comparison/product screenshot per listicle
+   entry, a process diagram for a how-to, a UI screenshot, an "at a glance" visual near the top.
+   See the image rule in Stage 8 for sourcing (site media library first) and the exact block +
+   alt-text format. Missing obvious images is an incomplete optimization.
+
 ---
 
 # STAGE 0 — Draft check, setup & fetch
@@ -510,6 +541,23 @@ whole heading around it for grammar/sense (this is mandatory, not optional). A h
 is ALSO woven into that section's body text in S8 — plan each section's content intent so both
 the heading and its text carry the keyword naturally.
 
+ANSWER-FIRST & TOP-OF-ARTICLE PLACEMENT (Optimization stance #2 + #3 — bake into the outline):
+- For EVERY node whose heading is a question or implies one, note "answer in first sentence" and
+  what that one-sentence answer is, so S8 leads the section with it (not preamble).
+- Put the reader's core answer near the top. Plan the intro to state the direct answer, and plan
+  Key Takeaways to carry it. If the current article buries the payoff behind long preamble,
+  reorder now so the answer surfaces early (this is a structural change you are authorized to make).
+- LISTICLE type: the outline MUST (a) name the actual picks/providers in Key Takeaways;
+  (b) place a comparison [TABLE] node immediately after the intro, before the first pick; and
+  (c) start the per-pick segments right after that table. Push any long "how we chose / what to
+  look for" material BELOW the picks (or trim it). Plan the table's columns now (name + the 2–4
+  axes that actually decide the pick).
+
+IMAGE PLANNING (Optimization stance #4): mark outline nodes that should carry an image with an
+[IMG] note — what the image should show and why it helps (e.g. "product screenshot for pick #1",
+"booking-flow screenshot", "comparison visual near the top"). Sourcing + block format are handled
+in S8; here just decide WHERE images belong and what each depicts.
+
 If new_main_keyword is set: plan the new H1 (exact-match, grammatical) and note that S7 will
 also update meta/intro/SEO title/focus keyphrase.
 
@@ -545,7 +593,9 @@ OUTLINE output — the full heading tree in final document order, each node tagg
   [OPTIMIZED]  existing heading, shown in its NEW exact-match form (+ old form)
   [NEW]        new heading (+ target keyword + one-line content intent)
   [H1-NEW]     new H1 (only if main keyword changed)
-Also list keywords routed to IN-TEXT with their target section.
+  [IMG]        an image to add at/under this node (+ what it shows + why)
+Also list keywords routed to IN-TEXT with their target section, and flag every question-heading
+that S8 must answer in its first sentence.
 This OUTLINE is the reference object for S6 (entity grouping) and S8 (writing).
 ```
 
@@ -670,8 +720,12 @@ For each OUTLINE node:
 - [NEW] heading → write new section copy from scratch covering the content intent, using the
   grouped entities. Match article voice; lead with the outcome; introduce/qualify Pabau
   correctly on first mention.
-- [UNCHANGED] heading → only enrich the body with any grouped entities that clearly improve
-  it; otherwise leave it.
+- [UNCHANGED] heading → still rewrite the body wherever that lands the grouped entities, an
+  answer-first opening, or clearer copy — don't wave a section through untouched just because
+  its heading didn't change. Only genuinely strong, on-target copy should survive verbatim
+  (Optimization stance #1: be only as conservative as you need to be).
+- [IMG] node → insert the planned image here as a real WordPress image block (see the image
+  rule in Hard rules for sourcing + format).
 - IN-TEXT keywords → insert into the most relevant existing sentence/section naturally.
 - FAQ keywords (use_as_faq) → add each as a new Q in the FAQ block (verbatim question, proper
   Yoast FAQ schema; create the block if missing). Write the ANSWER per Selection semantics:
@@ -683,9 +737,20 @@ Hard rules:
 - A keyword placed in a heading MUST also appear in that section's body text (heading + text).
 - A new main keyword must land in the H1, intro, meta description, and SEO title (via S7).
 - No keyword stuffing in body or headings; every sentence must carry information (no fluff).
-- Preserve existing Gutenberg block structure unless a change requires otherwise; fix
-  malformed HTML/FAQ blocks per editorial rules. Respect paragraph (≤4 lines/≤60 words) and
-  sentence-length limits; convert 3+ clause lists to WordPress list blocks.
+- ANSWER-FIRST HEADINGS (Optimization stance #2): any heading that is or implies a question is
+  answered directly and completely in the FIRST sentence of its section — no preamble, no
+  restating the question, no "it depends" hedge before the answer. Answer, then elaborate. Same
+  for every FAQ answer. This is non-negotiable.
+- ANSWER NEAR THE TOP (Optimization stance #3): the intro states the reader's core answer and
+  Key Takeaways reflects it. For a LISTICLE: name the real picks/providers in Key Takeaways, put
+  a comparison TABLE right after the intro, and begin the per-pick segments immediately after
+  that table — never bury the picks behind long preamble (move "how we chose / what to look for"
+  below the picks or trim it).
+- OVERWRITE FREELY (Optimization stance #1): rewrite, resequence, merge, or replace existing copy
+  and blocks whenever that optimizes better than a light edit — do NOT preserve the old structure
+  for its own sake. Keep only the guardrails fixed (facts, Pabau positioning, publish status,
+  published-post URL/slug). Fix malformed HTML/FAQ blocks per editorial rules. Respect paragraph
+  (≤4 lines/≤60 words) and sentence-length limits; convert 3+ clause lists to WordPress list blocks.
 - If the SERP shows a featured-snippet opportunity, format the relevant answer as both a
   short paragraph and a list to compete for it (from the transcript's snippet tactic).
 - EMULATE + IMPROVE ON THE SERP STRUCTURE (S5 profile / S6 final outline): write the planned novel
@@ -701,6 +766,25 @@ Hard rules:
   real-examples, and customer-fit (write for a practice owner/manager who already knows the
   basics, not "anyone"). Cut platitudes, obvious tips, and generic intros. Keep the piece
   matched to the SERP intent throughout.
+- IMAGES (Optimization stance #4): build every [IMG] node planned in S4, and add an image
+  anywhere else a visual clearly helps or the SERP rewards one. Sourcing, in order:
+    1. The site's OWN media library first — query it and reuse a relevant asset already hosted:
+         curl -s -u "$WP_USER:$WP_APP_PASSWORD" \
+           "$WP_BASE_URL/wp-json/wp/v2/media?search=<term>&per_page=20&context=edit"
+       Use the returned `source_url` and note the media `id`.
+    2. If nothing fits and the section genuinely needs one (e.g. a per-provider screenshot/logo
+       in a listicle), use the provider's OWN official image URL. VERIFY the URL resolves (HTTP
+       200, image content-type) before inserting — never insert an unverified or guessed URL,
+       and never hotlink something that will 404.
+  Insert as a proper Gutenberg image block, e.g.:
+       <!-- wp:image {"id":<id>,"sizeSlug":"large"} -->
+       <figure class="wp-block-image size-large"><img src="<source_url>" alt="<descriptive alt>"/>
+       <figcaption class="wp-block-image">…optional caption…</figcaption></figure>
+       <!-- /wp:image -->
+  Alt text is REQUIRED and descriptive — work the relevant entity/keyword in only where it reads
+  naturally (never stuffed). Don't overload a section with images; one purposeful image beats
+  three decorative ones. If the post has NO featured image and a good candidate exists, set it
+  via `featured_media: <id>` in the save. Log every image added (and its source) in the change-log.
 
 Save via wordpress-access: PUT only changed fields (content, title, excerpt/meta description,
 Yoast focus keyphrase meta, categories/tags — append-only, remove "Uncategorized"). Draft
@@ -709,7 +793,8 @@ stays draft; published stays published.
 CHANGE-LOG (hold for the S9 combined report): main keyword (old→new if changed), structural
 changes applied (from the Stage 1 box, if any), headings added/optimized, keywords placed
 (heading vs in-text), entity themes woven in, meta/title/description changes, categories/tags
-added.
+added, images added (with source) + featured image set, and any answer-first/top-of-article
+reordering done.
 ```
 
 ---
