@@ -37,9 +37,11 @@ Otherwise (the normal case), perform four passes in this exact order, on this on
    follow it in full, then save your edits.
 4. **Pass D — block guarantees (ALWAYS run this LAST).** This is the final thing you do,
    after Pass C is saved. Re-fetch the article's raw block markup (`context=edit`) and
-   enforce **both** guarantees below, in order — Key Takeaways first, then FAQ. Never
-   rewrite the copy; you are only changing wrapper markup and, for Key Takeaways, fixing
-   letter case. Save via `wordpress-access` and confirm both render correctly.
+   enforce **all three** guarantees below, in order — Key Takeaways first, then FAQ, then
+   the Continue your research block. Never rewrite the copy; you are only changing wrapper
+   markup, fixing letter case (Key Takeaways), and removing placeholder link items
+   (Continue your research). Save via `wordpress-access` and confirm all three render
+   correctly.
 
    **D1 — Key Takeaways block guarantee (ALWAYS).** Locate the Key Takeaways section —
    the block near the top of the article (H1 > Key Takeaways > Intro), however it is
@@ -119,6 +121,25 @@ Otherwise (the normal case), perform four passes in this exact order, on this on
    attribute format — matching the site's real output beats a hand-built guess. Save via
    `wordpress-access`, then confirm the FAQ now renders as a Yoast block.
 
+   **D3 — Continue your research block guarantee (ALWAYS).** Locate the "Expert picks" /
+   "Continue your research" block — the box near the bottom that lists other articles to
+   visit — however it is marked up (a list block, a styled panel, a plain `<ul>`, etc.).
+   - If the article has **no such block at all**, do nothing here — this pass never
+     invents one.
+   - If the block exists, **every item in it must be a real, working link to a real,
+     existing article, with descriptive anchor text that names the article.** Scan for any
+     placeholder, empty, or dead item and remove it: a literal "list item #1" / "list
+     item #2", a bare "list item", "Article title", "Lorem ipsum", an empty `<li>`, or a
+     link whose href is "#", empty, or a stub like "example.com". Pass C should already
+     have filled the block with genuine links, so by now these should be gone — but if any
+     survive, replace each with a genuine link to a qualifying under-linked article (follow
+     the Expert-picks rules in `3-links.md`) or delete that item outright.
+   - After cleanup, if the block contains **no genuine link items left**, remove the whole
+     block rather than leave an empty shell or stubs. The block must **never** ship with
+     placeholder content — an absent block is acceptable, a block of "list item #N"
+     placeholders is not. Save via `wordpress-access` and confirm the block renders with
+     only real, clickable article links (or is gone).
+
 Rules:
 - Preserve existing HTML/Gutenberg block structure unless an instruction changes it.
 - Do NOT pause to ask questions. If a specific item genuinely cannot be completed
@@ -132,5 +153,7 @@ Your returned message is a concise change-log for this article, not chat. Start 
 then short sections: `Fact-check applied:`, `Editorial:`, `Links:`, `Key Takeaways
 block:` (state one of: already a proper block / converted to block / casing fixed to
 sentence case / block added), `FAQ block:` (state one of: already a Yoast block /
-converted to Yoast block / no FAQ present), `Skipped:`. End with the reminder to purge
-the site cache (WP Rocket → Purge this URL) for the edited URL.
+converted to Yoast block / no FAQ present), `Continue your research block:` (state one of:
+all real links / placeholder items replaced / placeholder items removed / empty block
+removed / no such block present), `Skipped:`. End with the reminder to purge the site
+cache (WP Rocket → Purge this URL) for the edited URL.
