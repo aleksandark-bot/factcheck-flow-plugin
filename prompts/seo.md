@@ -479,6 +479,11 @@ dropdown) and writes the selection back automatically.
 Note: the picker's "New main keyword" control is a FREE-TEXT box, so new_main_keyword may be a
 keyword the user typed that is NOT in any of the five lists — in that case its "selected" entry
 carries list = "custom". Stage 7 applies it (H1/intro/meta/title) regardless of its list.
+Note: the picker also has an "Additional keywords" section — free-text rows (each with a
+Text/Heading/FAQ selector, and a + button to add more) where the user can type keywords that are
+in NO list. Each filled row arrives as a normal "selected" entry with list = "custom" and the
+usual use_in_heading / use_as_faq flags, so it is handled by the Selection semantics below exactly
+like any other selected keyword.
 Selection semantics (apply in EVERY path — auto, document, picker):
 - selected, use_in_heading = false and use_as_faq = false → weave the keyword into BODY TEXT only.
 - selected, use_in_heading = true  → place it as an EXACT-MATCH heading AND weave it into that

@@ -57,6 +57,14 @@ select,#newmain{background:#0f1220;color:#e7e9f2;border:1px solid #2a3050;border
 select.on{border-color:#3fb950;color:#fff}
 #newmain{flex:1;min-width:260px}
 #newmain:focus{outline:none;border-color:#6ea8fe}
+.addkw{margin-top:20px;padding:12px 14px;background:#181c2e;border:1px solid #2a3050;border-radius:10px}
+.addrow{display:flex;gap:10px;align-items:center;margin-top:8px}
+.addkw-in{flex:1;min-width:260px;background:#0f1220;color:#e7e9f2;border:1px solid #2a3050;border-radius:7px;padding:6px 8px;font:inherit}
+.addkw-in:focus{outline:none;border-color:#6ea8fe}
+.addbtn{margin-top:12px;background:#232946;color:#e7e9f2;padding:8px 14px;font:600 13px system-ui;border-radius:8px}
+.addbtn:hover{filter:brightness(1.15)}
+.rmrow{background:transparent;color:#9aa3c0;border:1px solid #2a3050;padding:6px 10px;font:600 13px system-ui;border-radius:7px}
+.rmrow:hover{border-color:#e06c75;color:#e06c75;filter:none}
 .num{font-variant-numeric:tabular-nums;color:#c9d1e6}
 .curmain{margin-top:24px;padding:12px 14px;background:#181c2e;border:1px solid #2a3050;border-radius:10px}
 .cmeta{color:#9aa3c0;font-size:13px;margin-left:10px;font-variant-numeric:tabular-nums}
@@ -118,11 +126,36 @@ nm.innerHTML="<b>New main keyword:</b> "+
   "<datalist id='newmain-opts'>"+allKw.map(k=>"<option value='"+esc(k.keyword)+"'></option>").join("")+"</datalist>"+
   "<span class=why>(applied to H1, intro, meta description & SEO title — implies a heading)</span>";
 lists.appendChild(nm);
+// additional keywords: type any keyword and choose how to use it (Text / Heading / FAQ).
+// The + button adds another row. Each filled row becomes a selected entry with list="custom".
+const ak=document.createElement('div'); ak.className='addkw';
+ak.innerHTML="<b>Additional keywords:</b>"+
+  "<div class=why>Type any keyword and pick how to use it. Click + to add more.</div>"+
+  "<div id='addrows'></div>"+
+  "<button type='button' id='addmore' class='addbtn'>+ Add another keyword</button>";
+lists.appendChild(ak);
+const addrows=document.getElementById('addrows');
+function addRow(){
+  const row=document.createElement('div'); row.className='addrow';
+  row.innerHTML="<input type='text' class='addkw-in' autocomplete='off' placeholder='type a keyword'>"+
+    "<select class='addkw-sel'><option value='text'>Text</option>"+
+      "<option value='heading'>Heading</option><option value='faq'>FAQ</option></select>"+
+    "<button type='button' class='rmrow' title='Remove this keyword'>×</button>";
+  row.querySelector('.rmrow').onclick=()=>{
+    if(addrows.querySelectorAll('.addrow').length>1) row.remove();
+    else{ row.querySelector('.addkw-in').value=''; }
+    refresh();
+  };
+  addrows.appendChild(row);
+}
+addRow();
+document.getElementById('addmore').onclick=()=>{ addRow(); refresh(); };
 function refresh(){
   let n=0; document.querySelectorAll('select[data-id]').forEach(s=>{s.classList.toggle('on',!!s.value); if(s.value)n++;});
+  document.querySelectorAll('.addrow').forEach(row=>{ if((row.querySelector('.addkw-in').value||'').trim()) n++; });
   document.getElementById('count').textContent=n+" keyword"+(n==1?"":"s")+" selected";
 }
-document.addEventListener('change',refresh); refresh();
+document.addEventListener('change',refresh); document.addEventListener('input',refresh); refresh();
 document.getElementById('save').onclick=async()=>{
   const selected=[];
   document.querySelectorAll('select[data-id]').forEach(s=>{ if(s.value){const [list,...kw]=s.dataset.id.split("::");
@@ -139,6 +172,14 @@ document.getElementById('save').onclick=async()=>{
     if(existing){existing.use_in_heading=true;existing.use_as_faq=false;newMain=existing.keyword;}
     else selected.push({keyword:newMain,list:list,use_in_heading:true,use_as_faq:false});
   }
+  // additional keywords the user typed: each filled row → a custom selected entry
+  document.querySelectorAll('.addrow').forEach(row=>{
+    const kw=(row.querySelector('.addkw-in').value||'').trim(); if(!kw) return;
+    const v=row.querySelector('.addkw-sel').value;
+    const existing=selected.find(x=>x.keyword.toLowerCase()===kw.toLowerCase());
+    if(existing){existing.use_in_heading=v==='heading';existing.use_as_faq=v==='faq';}
+    else selected.push({keyword:kw,list:'custom',use_in_heading:v==='heading',use_as_faq:v==='faq'});
+  });
   const payload={selected:selected,new_main_keyword:newMain};
   document.getElementById('msg').textContent="Saving…";
   try{await fetch('/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
