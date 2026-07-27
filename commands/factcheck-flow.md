@@ -123,25 +123,46 @@ articles process concurrently). To each subagent pass:
 
 Each subagent runs its four sequential passes (approved fact-check fixes → editorial
 → link audit → block guarantees) on its own article and writes changes via the
-`wordpress-access` skill. They do not ask further questions. The final pass ALWAYS
-runs last and enforces three guarantees: (1) the article's **Key Takeaways** are a proper
-WP Key Takeaways block (`wp:gutenberg-custom-blocks/key-takeaways`) with every takeaway
-in sentence case — converting or fixing case if not; (2) the article's **FAQ** is a
-proper Yoast FAQ block with the FAQPage schema attached — converting plain HTML if it
-isn't; and (3) the **Continue your research / Expert picks** block contains only real,
-working links to real articles — any placeholder or empty item (e.g. a literal "list
-item #1", a bare "list item", or a "#" link) is replaced with a genuine link or removed,
-and a block left with no real links is deleted entirely. Every article ends with a proper
-Key Takeaways block; articles with no FAQ are left untouched by the FAQ guarantee; and no
-article ever ships a Continue-your-research block full of placeholders.
+`wordpress-access` skill. They do not ask further questions.
+
+The final pass ALWAYS runs last and enforces the block contract in
+`~/.claude/factcheck-flow/guides/WordPress-blocks.md` (reference article:
+https://pabau.com/templates/accutite/) — required document order plus these guarantees:
+
+1. **Key takeaways** — a proper `wp:gutenberg-custom-blocks/key-takeaways` block carrying
+   `"title":"Key takeaways"` (capital K only; without the attribute the block renders the
+   wrong casing) with every takeaway in sentence case. Converted, cased, or added as needed.
+2. **Download box** (template articles only) — the gradient `wp:html` box with its built-in
+   H2, directly below Key takeaways and above the intro, pointing at a download URL that
+   returns 200.
+3. **Pabau section + CTA block** — an H2 section immediately before the Conclusion that
+   promotes Pabau for that article's specific purpose and contains the Pabau CTA block
+   (`wp:gutenberg-custom-blocks/book-demo`). Written, moved, or given the block as needed.
+4. **Conclusion** — an H2 headed exactly `Conclusion` (variants like "The bottom line" are
+   renamed) that genuinely concludes rather than summarizes, ending with an inline
+   `/book-demo/` CTA link.
+5. **FAQ** — a proper Yoast FAQ block with the FAQPage schema attached, converting plain
+   HTML if it isn't. Articles with no FAQ are left untouched by this guarantee.
+6. **Continue your research** — the `wp:gutenberg-custom-blocks/expert-picks` block after
+   the Conclusion, no wrapper H2, at most 5 items, every one a real working link to a real
+   article. Placeholders ("list item #1", a bare "list item", a "#" link) are replaced or
+   removed; a block left with no real links is deleted rather than shipped as stubs.
+7. **Listicle pricing segments** — every provider review ends with a `Pricing` heading plus
+   a pricing table (the `pricing-table` block where the provider is in the site's dataset,
+   otherwise a `wp:table`), with every figure taken from the provider's OWN website, never a
+   third-party listing. Plus the top-of-page comparison table after the intro.
 
 ## Final report
 
 Once all Stage 3 subagents return, compile a single consolidated summary for the user:
-per article — what fact-check fixes were applied, editorial highlights, link changes,
-the Key Takeaways block result (already a proper block / converted to block / casing
-fixed to sentence case / block added), the FAQ block result (already a Yoast block /
-converted to Yoast block / no FAQ present), the Continue-your-research block result (all
-real links / placeholder items replaced / placeholder items removed / empty block removed
-/ no such block present), and anything skipped. End with the reminder to purge the WP
-Rocket cache for each edited URL.
+per article — what fact-check fixes were applied, editorial highlights, link changes, and
+the block-contract results the editor reported: Key takeaways block (already correct /
+converted / title attribute added / casing fixed / added), download box (already correct /
+added / URL fixed / not a template article), Pabau section + CTA block (already correct /
+CTA block added / section written / section moved), Conclusion (already correct / renamed
+from "<old heading>" / rewritten to conclude / written / CTA link added), FAQ block
+(already a Yoast block / converted / no FAQ present), Continue your research block (already
+correct / converted / added / placeholders replaced or removed / trimmed to 5 / wrapper H2
+removed / empty block removed), pricing segments (listicles: all first-party / N added / N
+figures corrected / comparison table added), and anything skipped. End with the reminder to
+purge the WP Rocket cache for each edited URL.

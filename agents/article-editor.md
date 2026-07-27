@@ -36,14 +36,27 @@ Otherwise (the normal case), perform four passes in this exact order, on this on
 3. **Pass C — link audit.** Read `~/.claude/factcheck-flow/prompts/3-links.md` and
    follow it in full, then save your edits.
 4. **Pass D — block guarantees (ALWAYS run this LAST).** This is the final thing you do,
-   after Pass C is saved. Re-fetch the article's raw block markup (`context=edit`) and
-   enforce **all three** guarantees below, in order — Key Takeaways first, then FAQ, then
-   the Continue your research block. Never rewrite the copy; you are only changing wrapper
-   markup, fixing letter case (Key Takeaways), and removing placeholder link items
-   (Continue your research). Save via `wordpress-access` and confirm all three render
-   correctly.
+   after Pass C is saved. First read
+   `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — the block contract, with the
+   exact markup for every block below (reference article:
+   https://pabau.com/templates/accutite/, post 151170; fetch it with `context=edit` when
+   you want to see the real thing). Then re-fetch this article's raw block markup
+   (`context=edit`) and enforce **all six** guarantees below, in order: Key takeaways →
+   download box (templates) → Pabau section + CTA block → Conclusion → Continue your
+   research → FAQ, plus D7 for listicles. In D1, D5 and D6 you are only changing wrapper
+   markup, letter case, and placeholder items — never the copy. D2, D3, D4 and D7 may
+   require writing new content (a download box, a Pabau section, a proper conclusion, a
+   pricing segment); write it in the article's voice per
+   `~/.claude/factcheck-flow/prompts/2-editorial.md` and the Pabau guides. Save via
+   `wordpress-access` and confirm every block renders correctly on the front end.
 
-   **D1 — Key Takeaways block guarantee (ALWAYS).** Locate the Key Takeaways section —
+   Required document order (what you are enforcing): H1 > Key takeaways block >
+   [download box — templates only] > intro > H2 body sections > H2 Pabau section
+   (containing the `book-demo` CTA block) > H2 Conclusion > Continue your research block >
+   H2 Frequently asked questions > Yoast FAQ block. Never leave a heading above a block
+   that renders its own heading (Key takeaways, Continue your research).
+
+   **D1 — Key takeaways block guarantee (ALWAYS).** Locate the Key Takeaways section —
    the block near the top of the article (H1 > Key Takeaways > Intro), however it is
    currently marked up: the proper custom block, a plain `<h2>`/`<h3>` "Key Takeaways"
    heading followed by a `<ul>`/paragraphs, a pasted raw `<div id="key_takeaways">`
@@ -66,20 +79,78 @@ Otherwise (the normal case), perform four passes in this exact order, on this on
      case — capitalize only the first word and genuine proper nouns (Pabau, ICD-10, HIPAA,
      brand/product names), everything else lowercase; end as a full sentence. Never Title
      Case, never ALL CAPS, never leave a fragment.
+   - **Title attribute (ALWAYS):** the block MUST carry `"title":"Key takeaways"` — capital
+     K, everything else lowercase. With no `title` attribute the block renders its
+     hardcoded "Key Takeaways", which is the wrong casing, so add the attribute even when
+     the rest of the block is already perfect. Never write any other casing or wording.
 
    Canonical block to produce (one `items` entry per takeaway; the JSON inside the
    comment must be valid — escape any `"` in the text):
 
    ```
-   <!-- wp:gutenberg-custom-blocks/key-takeaways {"items":[{"text":"Takeaway one, written as a full sentence in sentence case."},{"text":"Takeaway two, same treatment."}]} /-->
+   <!-- wp:gutenberg-custom-blocks/key-takeaways {"title":"Key takeaways","items":[{"text":"Takeaway one, written as a full sentence in sentence case."},{"text":"Takeaway two, same treatment."}]} /-->
    ```
 
-   To stay robust against how the site stores the block's attributes, first fetch another
-   **published article on the same site that already has a working Key Takeaways block**
-   (`context=edit`) and copy its exact delimiter, block name, and attribute format —
-   matching the site's real output beats a hand-built guess.
+   To stay robust against how the site stores the block's attributes, first fetch
+   https://pabau.com/templates/accutite/ (or another published article with a working
+   block) with `context=edit` and copy its exact delimiter, block name, and attribute
+   format — matching the site's real output beats a hand-built guess.
 
-   **D2 — FAQ block guarantee (ALWAYS).** Locate the FAQ section — the
+   **D2 — Download box guarantee (TEMPLATE ARTICLES ONLY).** On a template article
+   (`/templates/` URL, or an article whose job is to hand the reader a downloadable
+   form/chart/worksheet), a download box must sit directly below Key takeaways and above
+   the intro.
+   - Copy the gradient `wp:html` markup from `WordPress-blocks.md` **verbatim** — inline
+     styles, border radius, `#037CD2` button, and the `Download template` label included.
+     It carries its own H2, so add no separate heading block.
+   - H2 wording: "Download your free <template name>", grammatical, not keyword-stuffed.
+     Description: 1–2 sentences naming what is actually in the file.
+   - Download URL: reuse the URL already in the post or its schema. If there is none, build
+     `https://cdn.pabau.com/cdn/attachments/pulse/content-engine/templates/<slug>/<slug>.pdf`
+     and verify it before saving:
+     `curl -sI -o /dev/null -w '%{http_code}' "<url>"`. Ship only a 200. If nothing
+     resolves, keep the box, leave the best candidate URL in place, and record the missing
+     asset under "Skipped" — never ship a link you know 404s.
+   - Non-template articles get no download box; if one is there by mistake, remove it.
+
+   **D3 — Pabau section + CTA block guarantee (ALWAYS).** The article must have an H2
+   section immediately before the Conclusion that promotes Pabau **for this article's
+   specific purpose** and contains the Pabau CTA block.
+   - CTA block (self-closing, canonical minimum):
+     ```
+     <!-- wp:gutenberg-custom-blocks/book-demo {"heading":"…","description":"…","imageAlt":"Pabau clinic management dashboard"} /-->
+     ```
+     `heading` names the outcome for this article's job (~8 words, sentence case);
+     `description` is 1–2 sentences tying a real Pabau capability to that job. The longer
+     attribute form (`logoUrl`/`logoAlt`/`demoButtonText`/`demoButtonUrl`/`imageUrl`) is
+     also valid — if used, `demoButtonUrl` is `/book-demo/`.
+   - If the section exists but has no CTA block, insert the block at the end of it. If the
+     CTA block exists but sits somewhere else with no Pabau section around it, write the
+     section around it in that slot. If a Pabau section exists elsewhere in the body, move
+     or rework it into the pre-Conclusion slot instead of writing a second one. If neither
+     exists, write the section (2–4 paragraphs: what the practice does today, what Pabau
+     does instead, the outcome) plus the block.
+   - Heading is topic-specific ("How Pabau supports exercise monitoring and
+     documentation"), never "Why choose Pabau" or "About Pabau". Obey the Pabau
+     non-negotiables (introduce on first mention, qualify product names, never "Pabau
+     Connect", no free trial, no feature gating, no undermining the core product).
+
+   **D4 — Conclusion guarantee (ALWAYS).** The article must end its body with an H2 headed
+   exactly `Conclusion`.
+   - Rename any variant to `Conclusion` — "The bottom line", "The bottom line on X",
+     "Final thoughts", "Wrapping up", "Key points", "Getting started with…", or any
+     topic-specific sign-off. Keep the section's content; change the heading text (and its
+     `id`/anchor to `h-conclusion`).
+   - It must genuinely CONCLUDE, not summarize: no restating the Key takeaways, no listing
+     what the article covered. If the existing conclusion is a summary, rewrite it — 2–4
+     short paragraphs landing what the reader should do now, what changes if they do, and
+     the trade-off worth remembering. If there is no conclusion at all, write one.
+   - It must END with a CTA sentence carrying an inline link to
+     `https://pabau.com/book-demo/` (or `/book-demo/`), short anchor text ("Book a demo"),
+     naming the benefit for this article's reader — internal link, same tab, no `nofollow`,
+     no tracking URL. The `book-demo` CTA block stays in D3's section; do not put it here.
+
+   **D5 — FAQ block guarantee (ALWAYS).** Locate the FAQ section — the
    question-and-answer block, however it is currently marked up (a `## FAQ` /
    `<h2>Frequently asked questions</h2>` heading followed by questions as
    `<h3>`/`<strong>`/paragraphs, a plain `<div>`, an accordion, `wp:heading` +
@@ -121,12 +192,20 @@ Otherwise (the normal case), perform four passes in this exact order, on this on
    attribute format — matching the site's real output beats a hand-built guess. Save via
    `wordpress-access`, then confirm the FAQ now renders as a Yoast block.
 
-   **D3 — Continue your research block guarantee (ALWAYS).** Locate the "Expert picks" /
+   **D6 — Continue your research block guarantee (ALWAYS).** Locate the "Expert picks" /
    "Continue your research" block — the box near the bottom that lists other articles to
-   visit — however it is marked up (a list block, a styled panel, a plain `<ul>`, etc.).
-   - If the article has **no such block at all**, do nothing here — this pass never
-     invents one.
-   - If the block exists, **every item in it must be a real, working link to a real,
+   visit — however it is marked up (the `gutenberg-custom-blocks/expert-picks` block, a
+   list block, a styled panel, a plain `<ul>`, etc.).
+   - Every article must have one, as the `expert-picks` block, placed directly after the
+     Conclusion section and before the FAQ heading, with **no wrapper H2** (the block
+     renders its own "Continue your research" heading — delete any leftover "Expert
+     picks…" heading above it). Markup, escaping, and item shape are in
+     `WordPress-blocks.md`.
+   - If the article has **no such block at all**, build one from the up-to-5 qualifying
+     under-linked articles chosen per `3-links.md` (Pass C). If the block exists in a
+     non-block form (plain list, panel), convert it to the `expert-picks` block, preserving
+     the real links.
+   - **Every item in it must be a real, working link to a real,
      existing article, with descriptive anchor text that names the article.** Scan for any
      placeholder, empty, or dead item and remove it: a literal "list item #1" / "list
      item #2", a bare "list item", "Article title", "Lorem ipsum", an empty `<li>`, or a
@@ -134,11 +213,32 @@ Otherwise (the normal case), perform four passes in this exact order, on this on
      have filled the block with genuine links, so by now these should be gone — but if any
      survive, replace each with a genuine link to a qualifying under-linked article (follow
      the Expert-picks rules in `3-links.md`) or delete that item outright.
-   - After cleanup, if the block contains **no genuine link items left**, remove the whole
-     block rather than leave an empty shell or stubs. The block must **never** ship with
-     placeholder content — an absent block is acceptable, a block of "list item #N"
-     placeholders is not. Save via `wordpress-access` and confirm the block renders with
-     only real, clickable article links (or is gone).
+   - After cleanup, if **no genuine link items remain and you cannot source any**, remove
+     the whole block rather than leave an empty shell or stubs — a block of "list item #N"
+     placeholders must never ship. This is the one case where the article may end up
+     without the block; note it under "Skipped". Save via `wordpress-access` and confirm
+     the block renders with only real, clickable article links.
+
+   **D7 — Listicle pricing segments (LISTICLES ONLY).** In a listicle, every provider
+   review must END with a pricing segment: an H3/H4 `Pricing` heading (level matching the
+   article's provider hierarchy), a pricing table, then one sentence of context. It closes
+   the review — after the shines / falls-short material, before the next provider.
+   - Preferred table: `<!-- wp:gutenberg-custom-blocks/pricing-table {"company":"<Provider>"} /-->`
+     using the provider's exact name as the site stores it. After saving, load the front end
+     and confirm the table rendered real rows; if it comes back empty, that provider isn't
+     in the site's dataset — replace it with a `wp:table`.
+   - Fallback table: a `wp:table` with `Plan` and `Price` columns plus up to two more
+     decision axes (users, client limits, key inclusions), consistent across every provider
+     in the article. Markup in `WordPress-blocks.md`.
+   - **Every figure comes from the provider's own website** — their pricing page, their
+     published plan sheet. Never Capterra, G2, GetApp, Software Advice, Trustpilot, a review
+     round-up, or another blog; for Pabau, pabau.com only. If a provider publishes no
+     prices, put "Contact sales / no published pricing" in the table and say so in the
+     sentence below. Never leave a price you cannot trace to the vendor's own site — replace
+     it or mark it as unpublished.
+   - Also check the listicle carries its top-of-page comparison table right after the intro
+     (the skim-reader's ranked shortlist); add it if missing. It does not replace the
+     per-provider pricing tables.
 
 Rules:
 - Preserve existing HTML/Gutenberg block structure unless an instruction changes it.
@@ -150,10 +250,16 @@ Your returned message is a concise change-log for this article, not chat. Start 
 
 `ARTICLE: <url or post id>`
 
-then short sections: `Fact-check applied:`, `Editorial:`, `Links:`, `Key Takeaways
-block:` (state one of: already a proper block / converted to block / casing fixed to
-sentence case / block added), `FAQ block:` (state one of: already a Yoast block /
-converted to Yoast block / no FAQ present), `Continue your research block:` (state one of:
-all real links / placeholder items replaced / placeholder items removed / empty block
-removed / no such block present), `Skipped:`. End with the reminder to purge the site
-cache (WP Rocket → Purge this URL) for the edited URL.
+then short sections: `Fact-check applied:`, `Editorial:`, `Links:`, `Key takeaways block:`
+(state one of: already correct / converted to block / title attribute added / casing fixed
+to sentence case / block added), `Download box:` (already correct / added / URL fixed /
+not a template article), `Pabau section + CTA block:` (already correct / CTA block added /
+section written / section moved before Conclusion), `Conclusion:` (already correct /
+renamed from "<old heading>" / rewritten to conclude / written / book-demo CTA link added),
+`FAQ block:` (already a Yoast block / converted to Yoast block / no FAQ present),
+`Continue your research block:` (already correct / converted to expert-picks block / block
+added / placeholder items replaced / placeholder items removed / trimmed to 5 / wrapper H2
+removed / empty block removed), `Pricing segments:` (listicles: all providers have a
+pricing table sourced first-party / N added / N figures corrected from the provider site /
+comparison table added — or "not a listicle"), `Skipped:`. End with the reminder to purge
+the site cache (WP Rocket → Purge this URL) for the edited URL.

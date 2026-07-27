@@ -28,3 +28,11 @@ Once answered, map the choice and then read the full flow and execute it end to 
 
 Follow `seo.md` exactly, including its CONFIG, keyword-selection logic, and the final `/fact`
 hand-off in S9.
+
+Whatever you save must already satisfy the block contract in
+`~/.claude/factcheck-flow/guides/WordPress-blocks.md` (reference article:
+https://pabau.com/templates/accutite/): Key takeaways block with `"title":"Key takeaways"`,
+the download box on template articles, an H2 Pabau section carrying the `book-demo` CTA block
+immediately before an H2 headed exactly `Conclusion` that concludes and links `/book-demo/`,
+the `expert-picks` Continue your research block, the Yoast FAQ block — and, in listicles, a
+`Pricing` heading plus a first-party-sourced pricing table at the end of every provider review.

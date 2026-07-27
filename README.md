@@ -101,13 +101,19 @@ The three passes are plain editable files under `prompts/`:
   minimum internal-link count, the replacement blog source, and the banned-link list**
   to match your own site (the defaults are specific to one site).
 
-Two reference guides under `guides/` define voice and product context, and are read by
-the editorial pass and the fact-check reviewer:
+Reference guides under `guides/` define voice, product context, and the block contract, and
+are read by the editorial pass and the fact-check reviewer:
 
 - `guides/Pabau-style-guide.md` — tone of voice, benefit framing, US/UK terminology,
   formatting mechanics, and a treatments/regulation glossary.
 - `guides/About-Pabau.md` — what the product is, its product family and naming rules,
   pricing model, competitors, and the customer journey.
+- `guides/WordPress-blocks.md` — the block contract every article must satisfy, with exact
+  markup: required document order, the Key takeaways block, the template download box, the
+  Pabau CTA (`book-demo`) block and the section that carries it, the `Conclusion` heading and
+  its CTA link, the Continue your research (`expert-picks`) block, the Yoast FAQ block, and
+  listicle pricing tables. **Site-specific — the custom block names and inline styles are
+  Pabau's; swap them for your own theme's blocks.**
 
 **These defaults are Pabau-specific — replace them with your own brand's voice and
 product context** (keep the filenames, or update the references in `prompts/2-editorial.md`

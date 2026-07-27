@@ -13,7 +13,7 @@ link edits). All approved fixes are applied later by a separate stage.
 You will be given one article URL or post ID. Load the fact-check instructions from
 `~/.claude/factcheck-flow/prompts/1-factcheck.md` (read that file) and follow them
 exactly, including the required per-finding output format (LOCATION / TYPE / ISSUE /
-CORRECT / FIX / NEEDS_USER_VALUE). Use the `wordpress-access` skill only for reading
+CORRECT / FIX / NEEDS_USER_VALUE / CONFIRM). Use the `wordpress-access` skill only for reading
 the article.
 
 Also read `~/.claude/factcheck-flow/guides/About-Pabau.md` and flag any statement that

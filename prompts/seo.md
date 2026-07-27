@@ -76,8 +76,16 @@ Before any stage that changes headings, titles, meta, or body text (S4, S7, S8),
 comply with — these are the source of truth and override anything below on voice/structure:
 
 - `~/.claude/factcheck-flow/prompts/2-editorial.md` — editorial standards (fluff/AI-tell
-  removal, US English, structure H1 > Key Takeaways > Intro > H2, paragraph/sentence
+  removal, US English, structure H1 > Key takeaways > Intro > H2, paragraph/sentence
   limits, meta description ≤140 chars, capitalization, Yoast, categories/tags).
+- `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — the BLOCK CONTRACT every article
+  must satisfy, with exact markup: required document order, the Key takeaways block (with
+  its mandatory `"title":"Key takeaways"` attribute), the template download box, the Pabau
+  CTA (`book-demo`) block and the Pabau section that carries it, the `Conclusion` heading +
+  its inline `/book-demo/` CTA link, the Continue your research (`expert-picks`) block, the
+  Yoast FAQ block, and listicle pricing tables. Reference article:
+  https://pabau.com/templates/accutite/. Whatever /SEO writes must already comply — /fact
+  enforces it afterward, but shipping it right the first time avoids a second rewrite.
 - `~/.claude/factcheck-flow/guides/Meta-title-best-practices.md` — SERP title rules.
 - `~/.claude/factcheck-flow/guides/Pabau-style-guide.md` — voice, US/UK terms, glossary.
 - `~/.claude/factcheck-flow/guides/About-Pabau.md` — product family, naming rules, pricing.
@@ -558,6 +566,22 @@ ANSWER-FIRST & TOP-OF-ARTICLE PLACEMENT (Optimization stance #2 + #3 — bake in
   look for" material BELOW the picks (or trim it). Plan the table's columns now (name + the 2–4
   axes that actually decide the pick).
 
+REQUIRED BLOCKS (per `WordPress-blocks.md` — plan them as outline nodes now, don't discover
+them in S8). The outline's shape must be:
+  Key takeaways block → [download box, template articles only] → intro → body H2s →
+  H2 Pabau section (carrying the `book-demo` CTA block) → H2 `Conclusion` → Continue your
+  research (`expert-picks`) block → H2 Frequently asked questions → Yoast FAQ block.
+Tag each as [UNCHANGED]/[OPTIMIZED]/[NEW] like any other node, and for each note:
+- **Pabau section** — the topic-specific H2 (never "Why choose Pabau") and which Pabau
+  workflow it covers for THIS article's purpose. It always sits immediately before the
+  Conclusion; if the article's Pabau material currently lives elsewhere, plan the move.
+- **Conclusion** — heading text is exactly `Conclusion` (plan the rename if the article says
+  "The bottom line" or similar), and it CONCLUDES rather than summarizes: note the judgment
+  it lands plus the closing inline `/book-demo/` CTA.
+- **Continue your research** — plan the block (max 5 under-linked targets, no wrapper H2).
+- **LISTICLE** — plan a `Pricing` node at the END of every provider review, each carrying a
+  pricing table, and note that its figures come from the provider's own site only.
+
 IMAGE PLANNING (Optimization stance #4): mark outline nodes that should carry an image with an
 [IMG] note — what the image should show and why it helps (e.g. "product screenshot for pick #1",
 "booking-flow screenshot", "comparison visual near the top"). Sourcing + block format are handled
@@ -738,6 +762,23 @@ For each OUTLINE node:
   variation of the FAQ keyword — never duplicate the question phrase or a near-identical one.
 
 Hard rules:
+- BLOCK CONTRACT (per `WordPress-blocks.md`) — the saved article MUST carry, in this order:
+  the Key takeaways block with `"title":"Key takeaways"` (the attribute is mandatory — the
+  block otherwise renders "Key Takeaways", the wrong casing) and sentence-case items; the
+  gradient download box below it on template articles (built-in H2, download URL verified
+  200); the intro; the body; an H2 Pabau section promoting Pabau for THIS article's purpose
+  and containing the `book-demo` CTA block; an H2 headed exactly `Conclusion` that concludes
+  rather than summarizes and ends with an inline `/book-demo/` CTA link; the
+  `expert-picks` Continue your research block (≤5 real links, no wrapper H2); and the Yoast
+  FAQ block under its H2. Copy the markup from that guide — self-closing custom blocks,
+  unicode-escaped inline HTML in `expert-picks`, no heading above a self-heading block.
+  Rename any "The bottom line"/"Final thoughts" heading to `Conclusion` while you're in there.
+- LISTICLE PRICING: every provider review ends with a `Pricing` heading plus a pricing table
+  (the `pricing-table` block where the provider is in the site's dataset — verify it renders
+  real rows — otherwise a `wp:table` with consistent columns). Every figure comes from the
+  PROVIDER'S OWN WEBSITE; never Capterra, G2, GetApp, Software Advice, Trustpilot, or another
+  blog, and pabau.com only for Pabau. No published prices → "Contact sales / no published
+  pricing" plus a sentence saying so. This is in addition to the comparison table after the intro.
 - Keywords placed in headings are EXACT match; headings still read naturally (reword fully).
 - A keyword placed in a heading MUST also appear in that section's body text (heading + text).
 - A new main keyword must land in the H1, intro, meta description, and SEO title (via S7).
@@ -798,8 +839,10 @@ stays draft; published stays published.
 CHANGE-LOG (hold for the S9 combined report): main keyword (old→new if changed), structural
 changes applied (from the Stage 1 box, if any), headings added/optimized, keywords placed
 (heading vs in-text), entity themes woven in, meta/title/description changes, categories/tags
-added, images added (with source) + featured image set, and any answer-first/top-of-article
-reordering done.
+added, images added (with source) + featured image set, any answer-first/top-of-article
+reordering done, and the block-contract work (Key takeaways title/casing, download box, Pabau
+section + CTA block, Conclusion heading/rewrite/CTA link, Continue your research block,
+listicle pricing tables).
 ```
 
 ---
