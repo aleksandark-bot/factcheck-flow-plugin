@@ -121,7 +121,7 @@ default below says "preserve" or "only if it improves," these win.
    elaborate. This is a hard rule (it also wins featured snippets). Applies to FAQ answers too.
 3. **Answer the reader's problem NEAR THE TOP.** The core payoff must be reachable by a skim
    reader without scrolling deep. Put the direct answer in the intro (and reflect it in Key
-   Takeaways). For a LISTICLE specifically: name the actual providers/picks in the Key Takeaways
+   Takeaways). For a LISTICLE specifically: name the actual providers/picks in the Key takeaways
    block, and start the provider/pick segments IMMEDIATELY after the intro — preceded by a
    comparison TABLE (the skim-reader's answer) so someone who reads nothing else still gets the
    ranked shortlist. Do not bury the list behind long "what to look for / why it matters"
@@ -529,7 +529,7 @@ structure and only place keywords." There are two cases, and in BOTH you end up 
   "leave the structure alone" — it means the structural decisions are entirely yours.
 Bake all of this into the OUTLINE now (new/removed/reordered nodes), then layer keyword placement
 on top. Where a structural change conflicts with a keyword-placement default, the structural change
-wins (still obeying 2-editorial.md structure rules — H1 > Key Takeaways > Intro > H2, valid
+wins (still obeying 2-editorial.md structure rules — H1 > Key takeaways > Intro > H2, valid
 hierarchy, natural headings). Note in the outline which nodes exist BECAUSE of structural changes,
 and whether each came from the user's box or your own judgment.
 
@@ -558,9 +558,9 @@ ANSWER-FIRST & TOP-OF-ARTICLE PLACEMENT (Optimization stance #2 + #3 — bake in
 - For EVERY node whose heading is a question or implies one, note "answer in first sentence" and
   what that one-sentence answer is, so S8 leads the section with it (not preamble).
 - Put the reader's core answer near the top. Plan the intro to state the direct answer, and plan
-  Key Takeaways to carry it. If the current article buries the payoff behind long preamble,
+  Key takeaways to carry it. If the current article buries the payoff behind long preamble,
   reorder now so the answer surfaces early (this is a structural change you are authorized to make).
-- LISTICLE type: the outline MUST (a) name the actual picks/providers in Key Takeaways;
+- LISTICLE type: the outline MUST (a) name the actual picks/providers in Key takeaways;
   (b) place a comparison [TABLE] node immediately after the intro, before the first pick; and
   (c) start the per-pick segments right after that table. Push any long "how we chose / what to
   look for" material BELOW the picks (or trim it). Plan the table's columns now (name + the 2–4
@@ -614,7 +614,7 @@ lists, FAQ/step blocks) — runs in S5 and is applied to THIS outline in S6 (nov
 [TABLE]/[LIST] nodes, reorganization to beat the SERP). Plan keyword placement now; leave room for
 those structural improvements rather than locking the format here.
 
-Structure compliance (per 2-editorial.md): keep H1 > Key Takeaways > Intro > H2 order; valid
+Structure compliance (per 2-editorial.md): keep H1 > Key takeaways > Intro > H2 order; valid
 hierarchy H1>H2>H3>H4; headings must read naturally; no keyword stuffing.
 
 OUTLINE output — the full heading tree in final document order, each node tagged:
@@ -695,7 +695,7 @@ just its entity coverage. Emulate what works on the SERP and beat it; never copy
   intended columns/list items as short notes on the relevant node.
 - ORGANIZATION: reorder / merge / split nodes so the flow is more logical than the SERP's, directly
   addressing the WEAKNESSES TO BEAT. Any Stage-1 structural_changes still win, and keep 2-editorial
-  structure rules (H1 > Key Takeaways > Intro > H2, valid hierarchy, natural headings).
+  structure rules (H1 > Key takeaways > Intro > H2, valid hierarchy, natural headings).
 
 Output: the FINAL OUTLINE S8 writes from — the heading tree with any S6 structure revisions and
 planned [TABLE]/[LIST] nodes, each node carrying its grouped entities plus table-column / list-item
@@ -788,7 +788,7 @@ Hard rules:
   restating the question, no "it depends" hedge before the answer. Answer, then elaborate. Same
   for every FAQ answer. This is non-negotiable.
 - ANSWER NEAR THE TOP (Optimization stance #3): the intro states the reader's core answer and
-  Key Takeaways reflects it. For a LISTICLE: name the real picks/providers in Key Takeaways, put
+  Key takeaways reflects it. For a LISTICLE: name the real picks/providers in Key takeaways, put
   a comparison TABLE right after the intro, and begin the per-pick segments immediately after
   that table — never bury the picks behind long preamble (move "how we chose / what to look for"
   below the picks or trim it).

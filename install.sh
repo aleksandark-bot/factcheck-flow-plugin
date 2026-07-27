@@ -438,25 +438,26 @@ Otherwise (the normal case), perform four passes in this exact order, on this on
    H2 Frequently asked questions > Yoast FAQ block. Never leave a heading above a block
    that renders its own heading (Key takeaways, Continue your research).
 
-   **D1 — Key takeaways block guarantee (ALWAYS).** Locate the Key Takeaways section —
-   the block near the top of the article (H1 > Key Takeaways > Intro), however it is
-   currently marked up: the proper custom block, a plain `<h2>`/`<h3>` "Key Takeaways"
+   **D1 — Key takeaways block guarantee (ALWAYS).** Locate the Key takeaways section —
+   the block near the top of the article (H1 > Key takeaways > Intro), however it is
+   currently marked up: the proper custom block, a plain `<h2>`/`<h3>` "Key takeaways"
    heading followed by a `<ul>`/paragraphs, a pasted raw `<div id="key_takeaways">`
    (that is the block's *rendered* output, not real block markup), an Elementor blue
    panel, or any other HTML.
-   - Every article **must** end with Key Takeaways as a proper WP Key Takeaways block.
-     Pass B adds the section if it was missing (it is a required section), so by now one
-     should exist; if it somehow still does not, add it here.
+   - Every article **must** carry Key takeaways as a proper WP Key takeaways block, as the
+     first body element. Pass B adds the section if it was missing (it is a required
+     section), so by now one should exist; if it somehow still does not, add it here.
    - If it is **already the proper block** — a self-closing
-     `<!-- wp:gutenberg-custom-blocks/key-takeaways {"items":[…]} /-->` comment — leave
-     the markup as-is, and **only** fix the letter case of any `items[].text` that is not
-     in sentence case (see casing rule below). If every item is already sentence case,
-     change nothing.
+     `<!-- wp:gutenberg-custom-blocks/key-takeaways {…} /-->` comment — leave the markup
+     otherwise as-is and change only two things: add `"title":"Key takeaways"` if the
+     attribute is absent (see the title rule below), and fix the letter case of any
+     `items[].text` that is not in sentence case. If the title is already set and every
+     item is already sentence case, change nothing.
    - Otherwise (heading + list, raw rendered div, panel, or any non-block form) —
      **convert it into the proper block.** Pull each takeaway's text into one `items`
      entry, preserving wording and any inline links, and drop the old heading/list markup
-     (the block renders its own "Key Takeaways" header and icon — do not keep a separate
-     "Key Takeaways" H2/H3 above it).
+     (the block renders its own "Key takeaways" header and icon — do not keep a separate
+     "Key takeaways" H2/H3 above it).
    - **Sentence case rule (ALWAYS):** each takeaway's `text` must be written in sentence
      case — capitalize only the first word and genuine proper nouns (Pabau, ICD-10, HIPAA,
      brand/product names), everything else lowercase; end as a full sentence. Never Title

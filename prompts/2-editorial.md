@@ -24,7 +24,7 @@ Non-negotiable rules from those guides that must hold in every edit:
 - **Verify Pabau facts** (product family, pricing model, integrations, competitor framing) against About-Pabau; never name specific customers without the team's confirmation.
 - **Fit intent + be original** (per Originality-and-search-intent.md): the article must answer the query's actual question in the SERP-rewarded format AND have a unique angle. To judge this, pull the SERP for the focus keyphrase with **WebSearch** (you don't have DataForSEO in this pass) and read the top ~10 organic results. Flag generic me-too content and mirage fluff (obvious "no shit" advice, platitudes, no real examples) for rewrite. If the article is the wrong format for the SERP, that's a structural change, not a copy tweak.
 
-Precedence: the two guides govern **voice, terminology, and Pabau positioning**. The rules below govern **article structure** (H1 > Key Takeaways > Intro > H2), **meta descriptions**, and **AI-tell removal**. Where a US/UK spelling or term is in question, the style guide's terminology table wins.
+Precedence: the two guides govern **voice, terminology, and Pabau positioning**. The rules below govern **article structure** (H1 > Key takeaways > Intro > H2), **meta descriptions**, and **AI-tell removal**. Where a US/UK spelling or term is in question, the style guide's terminology table wins.
 
 ---
 

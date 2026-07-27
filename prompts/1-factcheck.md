@@ -50,8 +50,9 @@ Report each of these as a `missing-section` finding, `CONFIRM: false`,
 `NEEDS_USER_VALUE: false`:
 
 - **Key takeaways** — missing, not a `wp:gutenberg-custom-blocks/key-takeaways` block, or
-  missing the mandatory `"title":"Key takeaways"` attribute (without it the page renders
-  "Key Takeaways", which is the wrong casing). Also flag takeaways not in sentence case.
+  missing the mandatory `"title":"Key takeaways"` attribute (without it the block falls back
+  to its hardcoded title, which capitalizes the T — the wrong casing). Also flag takeaways
+  not in sentence case.
 - **Download box** (template articles only) — absent, not below Key takeaways / above the
   intro, missing its built-in H2, or pointing at a download URL that does not return 200.
 - **Pabau section** — no H2 section immediately before the Conclusion that promotes Pabau
@@ -87,7 +88,7 @@ body cuts off mid-sentence under the "Documentation requirements" H2`). Do not l
 other findings — a fresh /fact run happens automatically after the rewrite.
 
 A single expected section merely being **absent** from an otherwise-complete article
-(no intro, no Key Takeaways, no FAQ, no conclusion, etc.) is NOT a rewrite — report it
+(no intro, no Key takeaways, no FAQ, no conclusion, etc.) is NOT a rewrite — report it
 as a `missing-section` finding. Those are added automatically in Stage 3 with no user
 approval.
 
