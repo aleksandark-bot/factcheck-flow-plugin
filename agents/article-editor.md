@@ -269,6 +269,15 @@ Otherwise (the normal case), perform four passes in this exact order, on this on
      no feature gating, no free trial).
    - Keep alt text separate and present: alt describes the image, the caption speaks to the
      reader. Don't copy one into the other, and don't drop alt text while adding a caption.
+   - **Every image is followed by a spacer block (800 × 25).** Immediately after each closing
+     `<!-- /wp:image -->`, before the next paragraph or heading, insert:
+     ```
+     <!-- wp:spacer {"width":"800px","height":"25px"} -->
+     <div style="height:25px;width:800px" aria-hidden="true" class="wp-block-spacer"></div>
+     <!-- /wp:spacer -->
+     ```
+     One spacer per image, never two in a row. If a spacer already follows the image, leave it
+     and only correct the dimensions if they aren't 800 × 25.
    - After saving, load the front end and confirm each caption renders as italic text with
      no visible asterisks.
 
