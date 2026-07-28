@@ -41,4 +41,16 @@ Anchor text should be no longer than 4 words. Reduce anchor text that is too lon
 
 When you have finished ALL link changes, read the whole article through once more for flow — this is the last thing you do in the link step. Make sure the interlinking hasn't interrupted the flow of the article, its sections, or any individual paragraph. Watch for link-cluttered paragraphs, awkwardly inserted anchors, and sentences that now exist only to hold a link. Fix anything that blocks flow automatically — rephrase, merge, or cut — without asking.
 
-Note: This is a newly published article or draft that may not yet be indexed by search engines. Fetch the URL directly and review the full article body content. Use a high token limit when fetching because the site has very large navigation menus that consume token space before the article body appears. You have full WordPress access and login via the `wordpress-access` skill (SKILL.md).
+Note: This is a newly published article or draft that may not yet be indexed by search engines, so don't rely on a search index to read it.
+
+**Work from the copy of the article you already hold** — this pass runs inside the article-editor, which fetched it once at the start. Do not re-fetch it, and hold your edits for the single save at the end of the run.
+
+**Checking links cheaply.** You are checking status codes, not reading pages. Never WebFetch a link to see whether it works — that pulls a whole page (nav included) into context for a three-digit answer. Batch the checks in one Bash call and print only the codes:
+
+```bash
+for u in <url1> <url2> <url3>; do
+  printf '%s %s\n' "$(curl -sI -o /dev/null -w '%{http_code}' -L --max-time 15 "$u")" "$u"
+done
+```
+
+Drop `-L` when you specifically want to catch a 3xx rather than follow it. To count inbound internal links to a candidate page (for the orphan/near-orphan rules), query the REST API with `search=` and `_fields=id,link` rather than crawling the site.

@@ -23,40 +23,105 @@ README rather than guessing.
 Given a post ID or URL plus instructions, fetch and/or update that article via the
 WordPress REST API at `$WP_BASE_URL/wp-json/wp/v2/posts/`.
 
+**The REST API is the only way you read article content.** Never `WebFetch` a public
+article URL to read its body — see "Never fetch the front end for content" below.
+
 ## Fetching (read)
 
-Always fetch the current article first, with edit context so you see raw block markup:
+Two rules keep the payload small. Both matter: an article you fetch early stays in
+context for the rest of the job, so every wasted kilobyte is re-read on every later turn.
+
+**1. Always pass `_fields=`.** Without it, `context=edit` returns `content.rendered`
+AND `content.raw` (the whole body twice) plus Yoast's `yoast_head` and
+`yoast_head_json` blobs and a `_links` map — several times the size of what you need.
+
+```bash
+FIELDS='id,slug,link,status,type,title,content,excerpt,categories,tags,meta,featured_media'
+
+curl -s -u "$WP_USER:$WP_APP_PASSWORD" \
+  "$WP_BASE_URL/wp-json/wp/v2/posts/<POST_ID>?context=edit&_fields=$FIELDS"
+```
+
+Some installs honour nested selection, which drops `content.rendered` — a second full
+copy of the body. Test it once per site:
 
 ```bash
 curl -s -u "$WP_USER:$WP_APP_PASSWORD" \
-  "$WP_BASE_URL/wp-json/wp/v2/posts/<POST_ID>?context=edit"
+  "$WP_BASE_URL/wp-json/wp/v2/posts/<POST_ID>?context=edit&_fields=content.raw" | head -c 300
 ```
+
+If that returns `{"content":{"raw":"…"}}`, use `content.raw` in `FIELDS`. If it returns
+the whole content object anyway, keep plain `content`.
+
+**2. Fetch once per article, per job.** You keep the body you fetched; re-fetching it
+between editing passes re-reads something you already hold.
 
 To resolve a URL to a post ID, query by slug:
 
 ```bash
 curl -s -u "$WP_USER:$WP_APP_PASSWORD" \
-  "$WP_BASE_URL/wp-json/wp/v2/posts?slug=<SLUG>&context=edit"
+  "$WP_BASE_URL/wp-json/wp/v2/posts?slug=<SLUG>&context=edit&_fields=$FIELDS"
 ```
 
-Categories/tags list endpoints (use existing terms; do not invent):
+Other endpoints — always scoped with `_fields`, which typically cuts them by ~90%
+(the defaults carry description, count, link, taxonomy and a `_links` map per term):
 
 ```bash
-curl -s -u "$WP_USER:$WP_APP_PASSWORD" "$WP_BASE_URL/wp-json/wp/v2/categories?per_page=100"
-curl -s -u "$WP_USER:$WP_APP_PASSWORD" "$WP_BASE_URL/wp-json/wp/v2/tags?per_page=100"
+# categories / tags (use existing terms; do not invent)
+curl -s -u "$WP_USER:$WP_APP_PASSWORD" "$WP_BASE_URL/wp-json/wp/v2/categories?per_page=100&_fields=id,name,slug"
+curl -s -u "$WP_USER:$WP_APP_PASSWORD" "$WP_BASE_URL/wp-json/wp/v2/tags?per_page=100&_fields=id,name,slug"
+
+# media library search (for sourcing images)
+curl -s -u "$WP_USER:$WP_APP_PASSWORD" "$WP_BASE_URL/wp-json/wp/v2/media?search=<term>&per_page=20&_fields=id,source_url,alt_text,title"
 ```
+
+## Never fetch the front end for content
+
+The site's navigation and footer are very large. A `WebFetch` of a public article URL
+spends most of its budget on that chrome before it reaches the body — which is why older
+versions of these prompts told you to raise the token limit. The REST response above has
+no chrome in it at all, so the workaround is unnecessary: **read via REST, always.**
+
+To verify that a save rendered correctly, do not pull the page into context either.
+Assert against it in Bash and print only the answer:
+
+```bash
+URL="<article URL>"
+
+# how many captions rendered?
+curl -s "$URL" | grep -c 'wp-element-caption'
+
+# did a custom block render, or ship as an empty shell?
+curl -s "$URL" | grep -c 'wp-block-yoast-faq-block'
+curl -s "$URL" | grep -o '<table[^>]*>' | wc -l
+
+# did any literal asterisk-italics leak to the front end?
+curl -s "$URL" | grep -o '>\*[^<]\{0,80\}\*<' | head -5
+```
+
+Each of these returns a number or a couple of short lines instead of a whole page. Only
+pull a real excerpt (`grep -o … -A2 -B2`) when an assertion fails and you need to see why.
 
 ## Saving (write)
 
-Apply changes to the fetched body/fields, then PUT them back. Send only the fields you
-are changing:
+**One save per article, per job.** Apply every change to the body you already hold in
+memory, then PUT once at the end. Saving between passes costs a full extra copy of the
+article in context each time and buys nothing.
+
+Write the payload to a file with the Write tool, then send it by reference:
 
 ```bash
 curl -s -u "$WP_USER:$WP_APP_PASSWORD" \
   -X POST "$WP_BASE_URL/wp-json/wp/v2/posts/<POST_ID>" \
   -H "Content-Type: application/json" \
-  -d @payload.json
+  -d @payload.json \
+  -o /dev/null -w '%{http_code}\n'
 ```
+
+Never paste the article body inline into the shell command: the quoting breaks on real
+content, and it puts a second full copy of the body into context. Discard the response
+body with `-o /dev/null` — you already know what you sent, so the status code is the
+entire signal you need. On a non-2xx code, re-run without `-o /dev/null` to read the error.
 
 ## Rules
 
@@ -68,5 +133,6 @@ curl -s -u "$WP_USER:$WP_APP_PASSWORD" \
   to change it.
 - Do not replace existing categories/tags — append only, using terms that already
   exist in WordPress.
+- Fetch once, save once, and verify with a `grep` assertion rather than a page fetch.
 - After saving, confirm what changed and remind the user to purge the site cache
   (e.g. WP Rocket → Purge this URL).

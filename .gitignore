@@ -8,3 +8,5 @@ settings.local.json
 Thumbs.db
 
 GitHubToken.txt
+__pycache__/
+*.pyc

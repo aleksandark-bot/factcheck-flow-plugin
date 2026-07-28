@@ -216,11 +216,38 @@ heading.
 
 ## 8. FAQ (Yoast block)
 
-`<!-- wp:yoast/faq-block --> … <!-- /wp:yoast/faq-block -->` under an H2 "Frequently asked
-questions", with the `questions` attribute carrying `question` / `answer` /
-`jsonQuestion` / `jsonAnswer` per pair so Yoast emits the FAQPage schema. Never a
-hand-built `application/ld+json` FAQ alongside it. Full conversion rules live in the
-article-editor's block pass.
+The FAQ sits under an H2 "Frequently asked questions" and must be a real Yoast FAQ block —
+that block is what emits the FAQPage schema, so "proper FAQ schema attached" means exactly
+"it is a `wp:yoast/faq-block`". No hand-built `application/ld+json` FAQ alongside it.
+
+One `.schema-faq-section` per Q&A pair, each with a unique `id`:
+
+```
+<!-- wp:yoast/faq-block -->
+<div class="schema-faq wp-block-yoast-faq-block">
+<div class="schema-faq-section" id="faq-question-1700000000001"><strong class="schema-faq-question">Question one?</strong> <p class="schema-faq-answer">Answer one.</p></div>
+<div class="schema-faq-section" id="faq-question-1700000000002"><strong class="schema-faq-question">Question two?</strong> <p class="schema-faq-answer">Answer two.</p></div>
+</div>
+<!-- /wp:yoast/faq-block -->
+```
+
+Yoast versions differ in how the block stores its attributes, so before hand-building one,
+fetch another published article on the same site that already has a working Yoast FAQ block
+(`context=edit`) and copy its exact delimiter and attribute format. Matching the site's real
+output beats a hand-built guess.
+
+Conversion rules:
+
+- **Already a proper Yoast block** → leave it exactly as-is.
+- **Plain HTML, `<h3>`/`<strong>` pairs, an accordion, a raw `<div>`, or `wp:heading` +
+  `wp:paragraph` pairs** → convert to the block above. Keep any introductory FAQ H2 heading
+  above the block; the questions and answers go inside it. **Preserve every question's and
+  answer's exact wording**, plus any inline links or formatting inside the answers — this is
+  a wrapper change, never a rewrite. If a separate hand-built FAQ `application/ld+json`
+  script exists in a `wp:html` block, remove it once the Yoast block is in place, so the page
+  doesn't carry duplicate FAQ schema.
+- **No FAQ section at all** → this contract does not invent one. A genuinely missing FAQ is
+  written in the editorial pass (`2-editorial.md`), only where the article type calls for it.
 
 ---
 

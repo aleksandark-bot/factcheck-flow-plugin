@@ -3,28 +3,28 @@
   Edit freely for your own site's style guide.
 -->
 
-## Read these first — Pabau voice & positioning
+## Read these first
 
-Before applying anything below, read both guides and treat them as the source of truth for voice, terminology, and how we talk about Pabau. They live in the factcheck-flow `guides/` folder — `~/.claude/factcheck-flow/guides/` for a script install, or `${CLAUDE_PLUGIN_ROOT}/guides/` for a plugin install:
+Guides live in `~/.claude/factcheck-flow/guides/` (script install) or `${CLAUDE_PLUGIN_ROOT}/guides/` (plugin install).
 
-- `Pabau-style-guide.md` — tone of voice, benefit framing, US/UK terminology table, formatting mechanics, and the treatments/regulation glossary.
-- `About-Pabau.md` — what Pabau is, the product family and naming rules, pricing model, competitors, and the customer journey.
-- `Meta-title-best-practices.md` — SERP title optimization: listicle numbers, year usage, matching micro-intent, differentiating in the SERP, and solving the pain point in the title.
-- `Originality-and-search-intent.md` — the two-bar rule: every article must fit searcher intent (answer the query's actual question, in the SERP-dominant format and depth) AND carry at least one originality nugget (a unique angle no top-10 result has). Cut mirage/fluff; be specific.
-- `WordPress-blocks.md` — the block contract: required document order, and the exact markup for the Key takeaways block, the template download box, the Pabau CTA (`book-demo`) block, the Continue your research (`expert-picks`) block, the Yoast FAQ block, listicle pricing tables, and the image caption contract. Reference article: https://pabau.com/templates/accutite/. It is the source of truth for block markup; the structure rules below tell you what must exist, that file tells you exactly how to write it.
+**Always, before applying anything below:**
 
-Non-negotiable rules from those guides that must hold in every edit:
+- `core-rules.md` — the always-on baseline: the Pabau non-negotiables, voice and mechanics, the AI tells, the two-bar rule, and the required document order. Everything in it holds in every edit.
+- `Pabau-style-guide.md` — tone of voice, benefit framing, US/UK terminology table, formatting mechanics, and the treatments/regulation glossary. You are rewriting prose, so this one is not optional.
 
-- **Introduce Pabau on first mention** for cold search readers — e.g. "practice management software like Pabau", not a bare "Pabau".
-- **Qualify product names on first mention:** "Pabau GO, our iOS app", "Pabau Scribe, our AI scribe", "Pabau Pay, our card terminals". **Never use "Pabau Connect" externally** — say "online booking" or "our online booking portal".
-- **Don't undermine the core product** when describing Plus add-ons — use "additional"/"specialist", never "advanced"/"basic marketing"/"limited reporting". Every subscription includes a full marketing, patient care, and reporting suite.
-- **No feature gating** — every subscription gets every feature; don't imply lower tiers lock functionality.
-- **No free trial** — frame as structured onboarding; never apologize for a missing trial.
-- **Lead with outcomes, not features.** Spell the benefit out ("so you can…"); don't imply it or leave the reader to join the dots.
+**When their trigger fires — not before, because a guide you open stays in context for the whole pass:**
+
+- `WordPress-blocks.md` — **the moment you touch, add, convert, or move any block.** It is the single source of truth for the block contract: required document order and the exact markup for Key takeaways, the template download box, the `book-demo` CTA block, the required Pabau section, the `Conclusion`, the `expert-picks` block, the Yoast FAQ block, listicle pricing tables, image captions and spacers. The rules below say what must exist and how to write the copy; that file says exactly how to mark it up. Never reconstruct block markup from memory.
+- `About-Pabau.md` — writing new Pabau copy (the Pabau section, CTA text, a Pabau-feature caption) or checking a Pabau claim: product family, naming rules, pricing model, competitors.
+- `Meta-title-best-practices.md` — writing or re-optimizing the SERP title. Only then.
+- `Originality-and-search-intent.md` — judging intent from a SERP or deciding a restructure. `core-rules.md`'s two-bar summary is enough for a light pass; open the full guide when you are actually reshaping the article.
+
+Precedence: the style guide governs **voice, terminology, and Pabau positioning**; `WordPress-blocks.md` governs **block markup and document order**; the rules below govern **copy, meta descriptions, and AI-tell removal**. Where a US/UK spelling or term is in question, the style guide's terminology table wins.
+
+Two rules from `core-rules.md` worth restating because this pass is where they bite:
+
 - **Verify Pabau facts** (product family, pricing model, integrations, competitor framing) against About-Pabau; never name specific customers without the team's confirmation.
-- **Fit intent + be original** (per Originality-and-search-intent.md): the article must answer the query's actual question in the SERP-rewarded format AND have a unique angle. To judge this, pull the SERP for the focus keyphrase with **WebSearch** (you don't have DataForSEO in this pass) and read the top ~10 organic results. Flag generic me-too content and mirage fluff (obvious "no shit" advice, platitudes, no real examples) for rewrite. If the article is the wrong format for the SERP, that's a structural change, not a copy tweak.
-
-Precedence: the two guides govern **voice, terminology, and Pabau positioning**. The rules below govern **article structure** (H1 > Key takeaways > Intro > H2), **meta descriptions**, and **AI-tell removal**. Where a US/UK spelling or term is in question, the style guide's terminology table wins.
+- **Fit intent + be original.** To judge this, pull the SERP for the focus keyphrase with **WebSearch** (you don't have DataForSEO in this pass) and read the top ~10 organic results. Flag generic me-too content and mirage fluff (obvious "no shit" advice, platitudes, no real examples) for rewrite. If the article is the wrong format for the SERP, that's a structural change, not a copy tweak.
 
 ---
 
@@ -65,42 +65,28 @@ Also check for UK spelling / phrasing (it MUST be US English). This includes cha
 
 Unless it's a UK-specific article, remove references to Healthcode and replace with generic claims and billing. Example: OLD: Automate claims through Healthcode. NEW: Automate claims and billing with Pabau. Apply this automatically — never ask about it, just replace. If the reference is in an image caption, don't worry about the image — it's generic enough to just change the caption and be good.
 
-**Every image must have a caption.** Walk every image block in the article; any image without a `<figcaption>` gets one written for it, and any existing caption gets brought up to standard. Never ask about this — write the caption. Full markup is in `WordPress-blocks.md` §10. The rules:
+**Every image must have a caption.** Walk every image block in the article; any image without a `<figcaption>` gets one written for it, and any existing caption gets brought up to standard. Never ask about this — write the caption. **The caption contract, the markup, and the required 800 × 35 spacer block are all in `WordPress-blocks.md` §10** — including the rule that a caption on a Pabau-feature screenshot must name the feature and say how it helps the reader do what this article is about. Follow that section; don't work from memory. What is yours in this pass is the writing: a full sentence in the article's voice, under the 25-word ceiling, that adds information rather than restating the alt text.
 
-- **Full sentences, ending with a period.** No labels, no fragments, no colon-prefixed titles ("Pabau's calendar view" is a failed caption).
-- **Italic, in real markup** — the caption text is wrapped in `<em>`. Never asterisks: `*Ranges follow StatPearls.*` renders a literal `*` on the front end, so strip stray leading/trailing asterisks from existing captions and wrap the text properly.
-- Sentence case, US English, the article's voice. Inline links in a caption are fine.
-- The caption adds information — it never restates the alt text or echoes the heading above the image. Alt text stays separate and stays required.
-- **If the image shows a Pabau feature, the caption must say how that feature helps the reader do the specific thing this article is about.** Name the feature, name the job it does for this article's purpose:
-  - BAD: `<em>Pabau's stock inventory feature.</em>` — a label, says nothing.
-  - BAD: `<em>Pabau is a powerful all-in-one platform for med spas.</em>` — generic, not tied to the article.
-  - GOOD: `<em>Pabau's stock tracking logs every unit of Botox against the treatment note, so your records and inventory stay in step without a second spreadsheet.</em>`
+## Structure and blocks
 
-**Every image is followed by a spacer block.** Immediately after each image's closing `<!-- /wp:image -->`, add a WordPress spacer block sized 800 × 35 — markup in `WordPress-blocks.md` §10. Apply this automatically to every image in the article, never ask. One spacer per image, never two in a row; if a spacer is already there, leave it and only fix the dimensions if they aren't 800 × 35.
+**`WordPress-blocks.md` is the single source of truth for the required document order and for every block's markup.** Open it whenever you add, convert, or move a block, and copy the markup from there.
 
-Intro must exist. The proper structure — see `WordPress-blocks.md` for the exact markup of every block named here — is:
+Your job in this pass is the *copy* inside that structure, and one structural duty:
 
-H1 > Key takeaways block > Intro > H2 body sections > H2 Pabau section (containing the Pabau CTA block) > H2 Conclusion > Continue your research block > H2 Frequently asked questions > Yoast FAQ block.
+**Add any missing section or block automatically** — including any `missing-section` finding handed to you from Stage 1. Write it to match the depth and tone of the rest of the article; never ask about it. This matters most for a **wholly missing FAQ**, because the article-editor's final block pass deliberately never invents one: if the article type calls for an FAQ and there is none, you write it here or it never ships.
 
-Template articles have one extra element: H1 > Key takeaways block > **Download box** (with built-in H2) > Intro > … (rest identical).
+When you write those sections, the content rules are:
 
-Add any missing section or block automatically — including any `missing-section` fixes handed to you from Stage 1 (intro, Key takeaways, download box, Pabau section, Pabau CTA block, Conclusion, Continue your research block, FAQ, etc.). Write the section to match the depth and tone of the rest of the article; never ask about it. Never put a heading above a block that renders its own heading (Key takeaways, Continue your research) — that ships a duplicate title.
-
-Key takeaways must ALWAYS be a proper WP Key takeaways block — the self-closing custom block `<!-- wp:gutenberg-custom-blocks/key-takeaways {"title":"Key takeaways","items":[{"text":"…"},{"text":"…"}]} /-->`, one `items` entry per takeaway — never a plain heading + bullet list, never a pasted rendered `<div id="key_takeaways">`. The `"title":"Key takeaways"` attribute is MANDATORY: the block hardcodes "Key Takeaways" when no title is passed, and the required casing is **Key takeaways** (capital K, everything else lowercase). An existing block that is correct except for the missing title attribute gets the attribute added. Write every takeaway in sentence case (capitalize only the first word and genuine proper nouns; a full sentence, never Title Case or ALL CAPS). If you are unsure of the site's attribute format, copy it from https://pabau.com/templates/accutite/. (The article-editor's final block-guarantee pass double-checks this — block form, title attribute, sentence case — so at minimum leave the takeaways clean and correctly cased here.)
-
-For templates, make sure the download box is below Key takeaways, above intro and has a built-in H2 tag (something along the lines of "Download your free [template name]", but make sure it's grammatically correct, not just exact-match). Copy the gradient `wp:html` wrapper from `WordPress-blocks.md` byte-for-byte (styles, button label, and all) — the wrapper is fixed, but the H2 text, the description, and the download `href` are written fresh for this article, since every template has its own file and wording. Reuse the article's existing PDF URL where one exists, and verify the download URL returns HTTP 200 before you save — never ship a dead download link; if no working file exists, keep the box and record the missing asset under "Skipped".
-
-Every article must have an H2 section immediately before the Conclusion that promotes Pabau **for that article's specific purpose** and contains the Pabau CTA block (`<!-- wp:gutenberg-custom-blocks/book-demo {"heading":"…","description":"…","imageAlt":"Pabau clinic management dashboard"} /-->`). The heading is topic-specific ("How Pabau supports exercise monitoring and documentation"), never "Why choose Pabau". Write 2–4 paragraphs on the actual workflow — what the practice does today, what Pabau does instead, the outcome — obeying the Pabau non-negotiables above. If the article already has a Pabau section elsewhere in the body, move or rework it into this slot instead of writing a second one; if it has none, write it.
-
-Every article must have an H2 headed exactly **Conclusion**. Rename any variant to `Conclusion` ("The bottom line", "The bottom line on X", "Final thoughts", "Wrapping up", "Getting started with…", or any topic-specific sign-off). It must genuinely conclude, not summarize: no restating the Key takeaways, no listing what the article covered. Land the judgment the article earned — what the reader should do now, what changes if they do it, the trade-off worth remembering — in 2–4 short paragraphs. It must end with a CTA sentence carrying an inline link to `https://pabau.com/book-demo/` with short anchor text ("Book a demo") that names the benefit for this article's reader. The CTA block itself stays in the Pabau section above; the Conclusion's CTA is the inline text link.
-
-The Continue your research block (`gutenberg-custom-blocks/expert-picks`) sits directly after the Conclusion, before the FAQ heading, with no wrapper H2 — delete any leftover "Expert picks…" heading above it. Which articles it links to is governed by `3-links.md`; the markup and the 5-item ceiling are in `WordPress-blocks.md`.
-
-In listicles, every provider review ENDS with a pricing segment: an H3/H4 `Pricing` heading, a pricing table, then one sentence of context. Use the site's `<!-- wp:gutenberg-custom-blocks/pricing-table {"company":"<Provider>"} /-->` block where the provider is in the site's pricing dataset (verify it renders real rows on the front end after saving), otherwise build a `wp:table` with `Plan` and `Price` columns plus up to two more decision axes, kept consistent across providers. Pricing figures come from the PROVIDER'S OWN WEBSITE ONLY — never Capterra, G2, GetApp, Software Advice, Trustpilot, review round-ups, or another blog; for Pabau, pabau.com only. If a provider publishes no prices, say "Contact sales / no published pricing" in the table and explain it below. This is in addition to the comparison table that follows the intro.
+- **Key takeaways** — every takeaway a full sentence in sentence case (capitalize only the first word and genuine proper nouns). The block form, the mandatory `"title":"Key takeaways"` attribute, and the casing rule are in §2.
+- **Download box** (template articles) — the H2 reads "Download your free <template name>", grammatical rather than exact-match; the description names what is actually inside this file, in 1–2 sentences. Verify the download URL returns 200 before saving; if nothing resolves, keep the box and record the missing asset under "Skipped". Markup and the URL pattern are in §3.
+- **Pabau section** — 2–4 paragraphs on the actual workflow: what the practice does today, what Pabau does instead, the outcome. Topic-specific H2, never "Why choose Pabau". If a Pabau section already exists elsewhere in the body, move or rework it into this slot rather than writing a second one. Placement, heading rules, and the CTA block are in §4–§5.
+- **Conclusion** — it must genuinely conclude, not summarize: no restating the Key takeaways, no listing what the article covered. Land the judgment the article earned — what the reader should do now, what changes if they do, the trade-off worth remembering — in 2–4 short paragraphs, ending with the inline CTA link. Heading rule and CTA markup are in §6.
+- **Continue your research** — which articles it links to is governed by `3-links.md`; markup and the 5-item ceiling are in §7.
+- **Listicle pricing** — one sentence of context under each pricing table. Every figure comes from the provider's own website only: never Capterra, G2, GetApp, Software Advice, Trustpilot, a round-up, or another blog; pabau.com only for Pabau. If a provider publishes no prices, say "Contact sales / no published pricing" and explain it below. Table forms and columns are in §9.
 
 Fix all improperly formatted HTML.
 
-Always check if the FAQ block is malformed. If it is, fix the HTML and apply the proper Yoast FAQ schema. (The article-editor's final FAQ pass guarantees the FAQ ends up as a proper Yoast FAQ block regardless, so at minimum leave the FAQ content clean and well-formed here.)
+Leave the FAQ's content clean and well-formed. You do not need to convert it to a Yoast block — the article-editor's final pass does that — but a malformed FAQ you can fix here is one less thing for it to untangle.
 
 Check for proper capitalization of titles and body text (Titles should be sentence case, except when the title starts with a number (first letter of the first proper word must be capitalized then). Another exception is following a period, colon, semicolon or em-dash.
 
@@ -136,4 +122,6 @@ When adding categories, always remove the "Uncategorized" category.
 
 Where applicable, check pricing from ONLY the provider website, not third-party sources.
 
-Note: This is a newly published article or draft that may not yet be indexed by search engines. Fetch the URL directly and review the full article body content. Use a high token limit when fetching because the site has very large navigation menus that consume token space before the article body appears. You have full WordPress access and login via the `wordpress-access` skill (SKILL.md).
+Note: This is a newly published article or draft that may not yet be indexed by search engines, so don't rely on a search index to read it.
+
+**Work from the copy of the article you already hold.** This pass runs inside the article-editor, which fetched the article once at the start — do not re-fetch it. If you somehow need to read it fresh, use the REST API via the `wordpress-access` skill (`context=edit` plus that skill's `_fields=` list), never a WebFetch of the public URL: the site's navigation and footer would consume most of the response before the body appears. Hold your edits for the single save at the end of the run.

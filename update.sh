@@ -68,26 +68,38 @@ fetch() { # $1 = repo-relative path, $2 = local destination
   fi
 }
 
-for p in 1-factcheck 2-editorial 3-links seo; do
+for p in 1-factcheck 2-editorial 3-links seo-research seo-write; do
   fetch "prompts/$p.md" "$FF/prompts/$p.md"
 done
-for g in Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent WordPress-blocks; do
+for g in core-rules Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent WordPress-blocks; do
   fetch "guides/$g.md" "$FF/guides/$g.md"
 done
+
+# Retired files. seo.md was split into seo-research.md + seo-write.md; leaving the old copy
+# behind means a stale 63 KB prompt can still be read by mistake. Only remove it once its
+# replacements are actually on disk, so a failed download never leaves the install broken.
+if [ -s "$FF/prompts/seo-research.md" ] && [ -s "$FF/prompts/seo-write.md" ]; then
+  rm -f "$FF/prompts/seo.md" 2>/dev/null || true
+fi
 
 # /fact command + its two subagents. These live outside $FF (Claude Code loads commands
 # from ~/.claude/commands and agents from ~/.claude/agents), and they carry rules that
 # change alongside the prompts — e.g. the article-editor's block-guarantee passes — so a
 # repo change to either has to reach existing installs, not just fresh ones.
+#
+# NOTE: skills/wordpress-access/SKILL.md is deliberately NOT synced. Installs customize its
+# Credentials section (local key file paths, etc.), and overwriting that would break their
+# WordPress access. When the shared part of that skill changes, it has to be applied by hand
+# or via a fresh install.sh run.
 fetch "commands/factcheck-flow.md" "$HOME/.claude/commands/fact.md"
 fetch "agents/article-editor.md" "$HOME/.claude/agents/article-editor.md"
 fetch "agents/factcheck-reporter.md" "$HOME/.claude/agents/factcheck-reporter.md"
 
-# /SEO command + GSC helper (seo.md prompt is fetched in the prompts loop above)
+# /SEO command + helpers (the seo-research/seo-write prompts are fetched in the loop above)
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
-fetch "bin/gsc_query.py" "$FF/bin/gsc_query.py"; chmod +x "$FF/bin/gsc_query.py" 2>/dev/null || true
-fetch "bin/keyword_picker.py" "$FF/bin/keyword_picker.py"; chmod +x "$FF/bin/keyword_picker.py" 2>/dev/null || true
-fetch "bin/serp_picker.py" "$FF/bin/serp_picker.py"; chmod +x "$FF/bin/serp_picker.py" 2>/dev/null || true
+for b in gsc_query keyword_picker serp_picker dfs_lists; do
+  fetch "bin/$b.py" "$FF/bin/$b.py"; chmod +x "$FF/bin/$b.py" 2>/dev/null || true
+done
 
 # 4. Remember the commit we're now in sync with.
 printf '%s\n' "$remote_sha" > "$STATE" 2>/dev/null || true

@@ -73,8 +73,18 @@ Its first question is always **"Is this a draft?"**
 - If very few keywords are found, it falls back to an in-chat multiple-choice picker and asks
   whether to optimize at all before proceeding.
 
-The flow lives in `prompts/seo.md` (auto-synced like the other prompts); the command is
-`commands/SEO.md`; the GSC helper is `bin/gsc_query.py`.
+The flow is split in two so the writing instructions and writing guides stay out of context
+during the research stages: `prompts/seo-research.md` (S0–S3, read at the start) and
+`prompts/seo-write.md` (S4–S9, read only once you pass the proceed gate). Both are auto-synced
+like the other prompts. The command is `commands/SEO.md`. Helpers: `bin/gsc_query.py` (GSC),
+`bin/dfs_lists.py` (builds all five keyword lists in code), `bin/keyword_picker.py` and
+`bin/serp_picker.py` (the browser pickers).
+
+`bin/dfs_lists.py` needs DataForSEO credentials. It resolves them from `$DATAFORSEO_LOGIN` +
+`$DATAFORSEO_PASSWORD`, or `$DATAFORSEO_AUTH` (base64 `login:password`), or
+`~/.claude/factcheck-flow/dataforseo-key.json`, and finally falls back to the `dataforseo` MCP
+server entry in `~/.claude.json` — so if you already have that MCP server configured, it works
+with no extra setup.
 
 ### GSC access (required for published articles)
 
