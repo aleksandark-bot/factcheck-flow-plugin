@@ -50,6 +50,17 @@ Do not talk about things that "most practices miss" or "most [whatevers] miss" �
 
 Also check for keyword stuffing in headings and body text. Especially check if the headings read naturally, as often they could be shoehorning exact-match keywords.
 
+**Template articles (`/templates/`) — do NOT repeat the main keyword across headings.** The template name is the main keyword, so every H2 tends to end up carrying it ("What is a body dysmorphia worksheet?", "How to use a body dysmorphia worksheet", "Benefits of a body dysmorphia worksheet", "Who is the body dysmorphia worksheet for?"). Read the heading tree as a standalone list: if the same phrase repeats down the page, rewrite it. The full keyword belongs in the H1, the download box H2, and the intro; from there on, use alternatives:
+
+- **Short form / category noun** — "the worksheet", "the form", "this chart", "the questionnaire", "the aftercare instructions", "the log".
+- **The reader's task instead of the object** — "What to include", "How to fill it out", "How to score and interpret results", "When to hand it to the patient", "Where it fits in the intake workflow".
+- **The clinical subject the section is really about** — "Cognitive distortions worth challenging", "Blood pressure thresholds in pregnancy", "Documentation that satisfies an inspector".
+- **Implicit reference** — drop the object entirely where the section's parent context already supplies it ("Common scoring mistakes", "Adapting it for teenagers").
+
+Practical ceiling: at most **two body headings** may carry the full keyword, and never two in a row. Everything else varies. Keep coverage identical — this changes heading wording only, never what the article covers or the content under each heading.
+
+This is not permission for awkward phrasing in either direction. Every heading must read like something a person would write: no stacked qualifiers ("Free printable body dysmorphia worksheet template PDF"), no headings that read as a pasted search query, no grammatical contortion to fit an exact-match phrase in ("Body dysmorphia worksheet how to use"), and no vague heading that hides what the section is about just to avoid the keyword. If the only natural way to word a heading uses the keyword, use the keyword — a clean, clear heading beats an ugly one that dodges repetition. Apply the same test to H3s and H4s, and to the FAQ questions (vary the phrasing across questions; don't open all six with the template name).
+
 Also check for UK spelling / phrasing (it MUST be US English). This includes changing "clinic" to "practice" in most cases, as well as changing any other UK-specific medical language to US. When in doubt, go the moderate route. If the article is UK-specific, still go moderate, keeping references to UK legislation, bodies, etc but mostly using "practice" still.
 
 Unless it's a UK-specific article, remove references to Healthcode and replace with generic claims and billing. Example: OLD: Automate claims through Healthcode. NEW: Automate claims and billing with Pabau. Apply this automatically — never ask about it, just replace. If the reference is in an image caption, don't worry about the image — it's generic enough to just change the caption and be good.
