@@ -111,8 +111,9 @@ are read by the editorial pass and the fact-check reviewer:
 - `guides/WordPress-blocks.md` — the block contract every article must satisfy, with exact
   markup: required document order, the Key takeaways block, the template download box, the
   Pabau CTA (`book-demo`) block and the section that carries it, the `Conclusion` heading and
-  its CTA link, the Continue your research (`expert-picks`) block, the Yoast FAQ block, and
-  listicle pricing tables. **Site-specific — the custom block names and inline styles are
+  its CTA link, the Continue your research (`expert-picks`) block, the Yoast FAQ block,
+  listicle pricing tables, and the image caption contract (every image captioned, full
+  sentence, italic). **Site-specific — the custom block names and inline styles are
   Pabau's; swap them for your own theme's blocks.**
 
 **These defaults are Pabau-specific — replace them with your own brand's voice and

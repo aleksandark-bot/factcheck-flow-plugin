@@ -34,5 +34,7 @@ Whatever you save must already satisfy the block contract in
 https://pabau.com/templates/accutite/): Key takeaways block with `"title":"Key takeaways"`,
 the download box on template articles, an H2 Pabau section carrying the `book-demo` CTA block
 immediately before an H2 headed exactly `Conclusion` that concludes and links `/book-demo/`,
-the `expert-picks` Continue your research block, the Yoast FAQ block — and, in listicles, a
-`Pricing` heading plus a first-party-sourced pricing table at the end of every provider review.
+the `expert-picks` Continue your research block, the Yoast FAQ block, a caption on every image
+(full sentence, ends in a period, italic via `<em>`; Pabau-feature screenshots say how the
+feature helps this article's reader) — and, in listicles, a `Pricing` heading plus a
+first-party-sourced pricing table at the end of every provider review.

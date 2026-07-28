@@ -41,12 +41,12 @@ Otherwise (the normal case), perform four passes in this exact order, on this on
    exact markup for every block below (reference article:
    https://pabau.com/templates/accutite/, post 151170; fetch it with `context=edit` when
    you want to see the real thing). Then re-fetch this article's raw block markup
-   (`context=edit`) and enforce **all six** guarantees below, in order: Key takeaways →
-   download box (templates) → Pabau section + CTA block → Conclusion → Continue your
-   research → FAQ, plus D7 for listicles. In D1, D5 and D6 you are only changing wrapper
-   markup, letter case, and placeholder items — never the copy. D2, D3, D4 and D7 may
-   require writing new content (a download box, a Pabau section, a proper conclusion, a
-   pricing segment); write it in the article's voice per
+   (`context=edit`) and enforce **all seven** always-on guarantees below, in order: Key
+   takeaways → download box (templates) → Pabau section + CTA block → Conclusion → Continue
+   your research → FAQ → image captions, plus D7 for listicles. In D1, D5 and D6 you are
+   only changing wrapper markup, letter case, and placeholder items — never the copy. D2,
+   D3, D4, D7 and D8 may require writing new content (a download box, a Pabau section, a
+   proper conclusion, a pricing segment, an image caption); write it in the article's voice per
    `~/.claude/factcheck-flow/prompts/2-editorial.md` and the Pabau guides. Save via
    `wordpress-access` and confirm every block renders correctly on the front end.
 
@@ -245,6 +245,34 @@ Otherwise (the normal case), perform four passes in this exact order, on this on
      (the skim-reader's ranked shortlist); add it if missing. It does not replace the
      per-provider pricing tables.
 
+   **D8 — Image caption guarantee (ALWAYS).** Walk EVERY image block in the article — core
+   `wp:image` blocks, images inside `wp:html`, images in a gallery — and confirm each one
+   carries a caption. Markup is in `WordPress-blocks.md` §10; the site renders captions with
+   the `wp-element-caption` class.
+   - **Any image with no `<figcaption>` gets one written for it.** No image ships bare, and
+     never ask about it. Look at what the image actually shows (fetch the `src` if the alt
+     text and surrounding copy don't tell you) and write the caption for that image in that
+     section — never a caption that would fit any image on any article.
+   - **Every caption is a full sentence that ends with a period**, wrapped in `<em>` for
+     italics. Rewrite labels and fragments into sentences ("Pabau's calendar view" →
+     a sentence that says what it shows and why it matters here). Add the period where it's
+     missing.
+   - **Italics must be real markup.** If a caption is wrapped in asterisks (`*like this*`),
+     strip the asterisks and wrap the text in `<em>` — asterisks render literally on the
+     front end. Also strip a stray single leading or trailing `*`.
+   - **Pabau feature screenshots:** the caption must name the feature AND say how it helps
+     the reader do the specific thing this article is about. A bare label
+     (`<em>Pabau's stock inventory feature.</em>`) or generic praise (`<em>Pabau is a
+     powerful all-in-one platform.</em>`) is not acceptable — rewrite it, e.g.
+     `<em>Pabau's stock tracking logs every unit of Botox against the treatment note, so your
+     face-mapping records and your inventory stay in step without a second spreadsheet.</em>`
+     Obey the Pabau non-negotiables in `2-editorial.md` (introduce/qualify on first mention,
+     no feature gating, no free trial).
+   - Keep alt text separate and present: alt describes the image, the caption speaks to the
+     reader. Don't copy one into the other, and don't drop alt text while adding a caption.
+   - After saving, load the front end and confirm each caption renders as italic text with
+     no visible asterisks.
+
 Rules:
 - Preserve existing HTML/Gutenberg block structure unless an instruction changes it.
 - Do NOT pause to ask questions. If a specific item genuinely cannot be completed
@@ -266,5 +294,7 @@ renamed from "<old heading>" / rewritten to conclude / written / book-demo CTA l
 added / placeholder items replaced / placeholder items removed / trimmed to 5 / wrapper H2
 removed / empty block removed), `Pricing segments:` (listicles: all providers have a
 pricing table sourced first-party / N added / N figures corrected from the provider site /
-comparison table added — or "not a listicle"), `Skipped:`. End with the reminder to purge
+comparison table added — or "not a listicle"), `Image captions:` (N images, all captioned /
+N captions written / N rewritten to full sentences / N asterisk-italics fixed / N Pabau
+feature captions tied to the article's purpose — or "no images"), `Skipped:`. End with the reminder to purge
 the site cache (WP Rocket → Purge this URL) for the edited URL.

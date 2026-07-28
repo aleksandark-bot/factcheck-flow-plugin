@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # factcheck-flow auto-updater (runs from a SessionStart hook)
-# Pulls the latest editable /fact files (prompts + guides) from the repo, but
+# Pulls the latest editable /fact files (prompts, guides, commands, agents) from the repo, but
 # ONLY when the repo has advanced since the last sync. Design goals:
 #   - Fail-silent: a network hiccup, offline laptop, or API rate-limit must never
 #     block or slow a Claude Code session. Every failure path exits 0 quietly.
@@ -18,7 +18,7 @@ API="https://api.github.com/repos/$REPO/commits/$BRANCH"
 FF="$HOME/.claude/factcheck-flow"
 STATE="$FF/.last-sync-sha"
 
-mkdir -p "$FF/prompts" "$FF/guides" "$FF/bin" "$HOME/.claude/commands" 2>/dev/null || true
+mkdir -p "$FF/prompts" "$FF/guides" "$FF/bin" "$HOME/.claude/commands" "$HOME/.claude/agents" 2>/dev/null || true
 
 # 1. Latest commit on main. Bail quietly if we can't reach GitHub.
 remote_sha="$(curl -fsSL --max-time 8 -H 'Accept: application/vnd.github+json' "$API" 2>/dev/null \
@@ -74,6 +74,14 @@ done
 for g in Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent WordPress-blocks; do
   fetch "guides/$g.md" "$FF/guides/$g.md"
 done
+
+# /fact command + its two subagents. These live outside $FF (Claude Code loads commands
+# from ~/.claude/commands and agents from ~/.claude/agents), and they carry rules that
+# change alongside the prompts — e.g. the article-editor's block-guarantee passes — so a
+# repo change to either has to reach existing installs, not just fresh ones.
+fetch "commands/factcheck-flow.md" "$HOME/.claude/commands/fact.md"
+fetch "agents/article-editor.md" "$HOME/.claude/agents/article-editor.md"
+fetch "agents/factcheck-reporter.md" "$HOME/.claude/agents/factcheck-reporter.md"
 
 # /SEO command + GSC helper (seo.md prompt is fetched in the prompts loop above)
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"

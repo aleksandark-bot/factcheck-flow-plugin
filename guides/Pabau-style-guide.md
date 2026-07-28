@@ -279,6 +279,20 @@ Use sentence case, not title case.
 
 ✅ *Why choose Pabau as your practice management software* ❌ *Why Choose Pabau As Your Practice Management Software*
 
+### **Image captions**
+
+Every image gets a caption. Write it as a full sentence, end it with a period, and set it in *italics* (real italic markup — asterisks show up as asterisks on the page).
+
+A caption earns its place by adding something the image alone doesn't say. It isn't the alt text repeated, and it isn't the heading above it repeated.
+
+When the image is a screenshot of a Pabau feature, the caption says how that feature helps the reader do the thing the article is about — name the feature, name the job.
+
+✅ *Pabau's stock tracking logs every unit of Botox against the treatment note, so your face-mapping records and your inventory stay in step without a second spreadsheet.*
+❌ *Pabau's stock inventory feature* (a label, and no period)
+❌ *Pabau is a powerful all-in-one platform for med spas.* (generic, and says nothing about what this article is helping the reader do)
+
+The exact block markup lives in `WordPress-blocks.md`.
+
 ### **Abbreviations**
 
 Write things out in full rather than abbreviating (e.g., *information*, not *info*).

@@ -11,7 +11,7 @@ Before applying anything below, read both guides and treat them as the source of
 - `About-Pabau.md` — what Pabau is, the product family and naming rules, pricing model, competitors, and the customer journey.
 - `Meta-title-best-practices.md` — SERP title optimization: listicle numbers, year usage, matching micro-intent, differentiating in the SERP, and solving the pain point in the title.
 - `Originality-and-search-intent.md` — the two-bar rule: every article must fit searcher intent (answer the query's actual question, in the SERP-dominant format and depth) AND carry at least one originality nugget (a unique angle no top-10 result has). Cut mirage/fluff; be specific.
-- `WordPress-blocks.md` — the block contract: required document order, and the exact markup for the Key takeaways block, the template download box, the Pabau CTA (`book-demo`) block, the Continue your research (`expert-picks`) block, the Yoast FAQ block, and listicle pricing tables. Reference article: https://pabau.com/templates/accutite/. It is the source of truth for block markup; the structure rules below tell you what must exist, that file tells you exactly how to write it.
+- `WordPress-blocks.md` — the block contract: required document order, and the exact markup for the Key takeaways block, the template download box, the Pabau CTA (`book-demo`) block, the Continue your research (`expert-picks`) block, the Yoast FAQ block, listicle pricing tables, and the image caption contract. Reference article: https://pabau.com/templates/accutite/. It is the source of truth for block markup; the structure rules below tell you what must exist, that file tells you exactly how to write it.
 
 Non-negotiable rules from those guides that must hold in every edit:
 
@@ -64,6 +64,17 @@ This is not permission for awkward phrasing in either direction. Every heading m
 Also check for UK spelling / phrasing (it MUST be US English). This includes changing "clinic" to "practice" in most cases, as well as changing any other UK-specific medical language to US. When in doubt, go the moderate route. If the article is UK-specific, still go moderate, keeping references to UK legislation, bodies, etc but mostly using "practice" still.
 
 Unless it's a UK-specific article, remove references to Healthcode and replace with generic claims and billing. Example: OLD: Automate claims through Healthcode. NEW: Automate claims and billing with Pabau. Apply this automatically — never ask about it, just replace. If the reference is in an image caption, don't worry about the image — it's generic enough to just change the caption and be good.
+
+**Every image must have a caption.** Walk every image block in the article; any image without a `<figcaption>` gets one written for it, and any existing caption gets brought up to standard. Never ask about this — write the caption. Full markup is in `WordPress-blocks.md` §10. The rules:
+
+- **Full sentences, ending with a period.** No labels, no fragments, no colon-prefixed titles ("Pabau's calendar view" is a failed caption).
+- **Italic, in real markup** — the caption text is wrapped in `<em>`. Never asterisks: `*Ranges follow StatPearls.*` renders a literal `*` on the front end, so strip stray leading/trailing asterisks from existing captions and wrap the text properly.
+- Sentence case, US English, the article's voice. Inline links in a caption are fine.
+- The caption adds information — it never restates the alt text or echoes the heading above the image. Alt text stays separate and stays required.
+- **If the image shows a Pabau feature, the caption must say how that feature helps the reader do the specific thing this article is about.** Name the feature, name the job it does for this article's purpose:
+  - BAD: `<em>Pabau's stock inventory feature.</em>` — a label, says nothing.
+  - BAD: `<em>Pabau is a powerful all-in-one platform for med spas.</em>` — generic, not tied to the article.
+  - GOOD: `<em>Pabau's stock tracking logs every unit of Botox against the treatment note, so your face-mapping records and your inventory stay in step without a second spreadsheet.</em>`
 
 Intro must exist. The proper structure — see `WordPress-blocks.md` for the exact markup of every block named here — is:
 

@@ -29,6 +29,7 @@ Yoast FAQ block
 Notes on order:
 - Schema JSON-LD in a `wp:html` block may sit above Key takeaways — leave it there.
 - `pro-tip` blocks may appear anywhere in the body; they are optional.
+- Images may appear anywhere in the body; every one of them needs a caption (section 10).
 - The **Pabau section** must come *before* Conclusion. It may be preceded by other body
   sections; nothing may sit between Conclusion and the Continue your research block
   except the conclusion's own paragraphs.
@@ -282,7 +283,54 @@ shortlist right after the intro) — a listicle needs both.
 
 ---
 
-## 10. Quick QA checklist
+## 10. Images — every image carries a caption
+
+**Every image in the body must have a caption.** An image block without a `<figcaption>` is
+an incomplete block: a captionless image gets a caption written for it, never left bare.
+(Images may sit anywhere in the body; the caption requirement is what's fixed, not the
+placement.)
+
+Every caption:
+
+- **Is a full sentence and ends with a period.** Not a label, not a fragment, not a
+  colon-prefixed title. "Pabau's calendar view" is a caption that failed; write the sentence
+  that says what the reader is looking at and why it matters here.
+- **Is italic, in real markup** — wrap the caption text in `<em>`. Never use asterisks:
+  `*Ranges follow StatPearls.*` ships a literal `*` to the front end (this is live on the
+  site today), so when auditing an existing caption, strip stray leading/trailing `*` and
+  wrap the text properly.
+- Is sentence case, US English, in the article's voice. Inline links inside a caption are fine.
+- Adds something. It doesn't restate the alt text or echo the heading above the image.
+
+**Pabau feature screenshots carry one extra requirement:** the caption must say how that
+feature helps the reader do the specific thing *this article* is about. Name the feature,
+name the job it does for this article's purpose. Generic product praise doesn't qualify, and
+neither does a bare feature label.
+
+- BAD: `<em>Pabau's stock inventory feature.</em>` — a label, says nothing.
+- BAD: `<em>Pabau is a powerful all-in-one platform for med spas.</em>` — generic, and not
+  tied to what the article is helping the reader do.
+- GOOD: `<em>Pabau's stock tracking logs every unit of Botox against the treatment note, so
+  your face-mapping records and your inventory stay in step without a second spreadsheet.</em>`
+
+Alt text is still required and stays separate: alt describes the image for screen readers and
+search engines, the caption speaks to the reader. Don't paste one into the other.
+
+Markup — WordPress core image block; the site renders captions with the `wp-element-caption`
+class:
+
+```
+<!-- wp:image {"id":<media id>,"sizeSlug":"large"} -->
+<figure class="wp-block-image size-large"><img src="<source_url>" alt="<descriptive alt>" class="wp-image-<media id>"/><figcaption class="wp-element-caption"><em>Full-sentence caption that ends with a period.</em></figcaption></figure>
+<!-- /wp:image -->
+```
+
+The `id` attribute and `wp-image-<id>` class are present for media-library images and omitted
+when the `src` is an external URL. The `<figcaption>` is required either way.
+
+---
+
+## 11. Quick QA checklist
 
 - [ ] Key takeaways block present, first body element, `"title":"Key takeaways"` set, items in sentence case
 - [ ] Template article: download box below Key takeaways, above intro, built-in H2, download URL returns 200
@@ -292,4 +340,5 @@ shortlist right after the intro) — a listicle needs both.
 - [ ] Continue your research (`expert-picks`) block after the Conclusion, ≤5 real working links, no wrapper H2
 - [ ] FAQ is a Yoast FAQ block with schema, under an H2
 - [ ] Listicle: comparison table after intro; every provider review ends with a `Pricing` heading + pricing table, all figures from the provider's own site
+- [ ] Every image has a `<figcaption>`: full sentence, ends in a period, wrapped in `<em>`, no stray `*`; Pabau-feature screenshots tie the feature to this article's purpose; alt text present and not duplicated into the caption
 - [ ] No duplicate headings above self-heading blocks; no placeholder items anywhere

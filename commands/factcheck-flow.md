@@ -151,6 +151,12 @@ https://pabau.com/templates/accutite/) — required document order plus these gu
    a pricing table (the `pricing-table` block where the provider is in the site's dataset,
    otherwise a `wp:table`), with every figure taken from the provider's OWN website, never a
    third-party listing. Plus the top-of-page comparison table after the intro.
+8. **Image captions** — every image in the article carries a `<figcaption>`: a full sentence
+   ending in a period, wrapped in `<em>` for italics (asterisk italics are converted — they
+   render literally). Captionless images get a caption written for them. Where the image
+   shows a Pabau feature, the caption names the feature and says how it helps the reader do
+   what this article is about, never a bare label or generic praise. Alt text stays present
+   and separate.
 
 ## Final report
 
@@ -164,5 +170,6 @@ from "<old heading>" / rewritten to conclude / written / CTA link added), FAQ bl
 (already a Yoast block / converted / no FAQ present), Continue your research block (already
 correct / converted / added / placeholders replaced or removed / trimmed to 5 / wrapper H2
 removed / empty block removed), pricing segments (listicles: all first-party / N added / N
-figures corrected / comparison table added), and anything skipped. End with the reminder to
+figures corrected / comparison table added), image captions (all captioned / N written / N
+rewritten / N asterisk-italics fixed / no images), and anything skipped. End with the reminder to
 purge the WP Rocket cache for each edited URL.

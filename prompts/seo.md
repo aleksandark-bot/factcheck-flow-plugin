@@ -129,8 +129,9 @@ default below says "preserve" or "only if it improves," these win.
 4. **Pull in images where they help.** Add relevant images anywhere a visual materially aids
    comprehension or matches what the SERP rewards — a comparison/product screenshot per listicle
    entry, a process diagram for a how-to, a UI screenshot, an "at a glance" visual near the top.
-   See the image rule in Stage 8 for sourcing (site media library first) and the exact block +
-   alt-text format. Missing obvious images is an incomplete optimization.
+   See the image rule in Stage 8 for sourcing (site media library first) and the exact block,
+   alt-text, and caption format — every image needs a caption, including ones already in the
+   article. Missing obvious images is an incomplete optimization.
 
 ---
 
@@ -584,8 +585,8 @@ Tag each as [UNCHANGED]/[OPTIMIZED]/[NEW] like any other node, and for each note
 
 IMAGE PLANNING (Optimization stance #4): mark outline nodes that should carry an image with an
 [IMG] note — what the image should show and why it helps (e.g. "product screenshot for pick #1",
-"booking-flow screenshot", "comparison visual near the top"). Sourcing + block format are handled
-in S8; here just decide WHERE images belong and what each depicts.
+"booking-flow screenshot", "comparison visual near the top"). Sourcing, block format, and the
+required caption are handled in S8; here just decide WHERE images belong and what each depicts.
 
 If new_main_keyword is set: plan the new H1 (exact-match, grammatical) and note that S7 will
 also update meta/intro/SEO title/focus keyphrase.
@@ -824,11 +825,19 @@ Hard rules:
        and never hotlink something that will 404.
   Insert as a proper Gutenberg image block, e.g.:
        <!-- wp:image {"id":<id>,"sizeSlug":"large"} -->
-       <figure class="wp-block-image size-large"><img src="<source_url>" alt="<descriptive alt>"/>
-       <figcaption class="wp-block-image">…optional caption…</figcaption></figure>
+       <figure class="wp-block-image size-large"><img src="<source_url>" alt="<descriptive alt>" class="wp-image-<id>"/><figcaption class="wp-element-caption"><em>Full-sentence caption that ends with a period.</em></figcaption></figure>
        <!-- /wp:image -->
   Alt text is REQUIRED and descriptive — work the relevant entity/keyword in only where it reads
-  naturally (never stuffed). Don't overload a section with images; one purposeful image beats
+  naturally (never stuffed).
+  A CAPTION IS REQUIRED on every image — no image ships without a `<figcaption>` (contract in
+  `WordPress-blocks.md` §10). Every caption is a full sentence ending in a period, wrapped in
+  `<em>` for italics (real markup — never `*asterisks*`, which render literally), in sentence
+  case and the article's voice. The caption adds information; it never restates the alt text.
+  If the image shows a PABAU FEATURE, the caption must name the feature and say how it helps the
+  reader do the specific thing this article is about — not a bare label ("Pabau's stock inventory
+  feature.") and not generic praise ("Pabau is a powerful all-in-one platform."). This applies to
+  images you add AND to any captionless image already in the article: caption those too.
+  Don't overload a section with images; one purposeful image beats
   three decorative ones. If the post has NO featured image and a good candidate exists, set it
   via `featured_media: <id>` in the save. Log every image added (and its source) in the change-log.
 
@@ -839,10 +848,10 @@ stays draft; published stays published.
 CHANGE-LOG (hold for the S9 combined report): main keyword (old→new if changed), structural
 changes applied (from the Stage 1 box, if any), headings added/optimized, keywords placed
 (heading vs in-text), entity themes woven in, meta/title/description changes, categories/tags
-added, images added (with source) + featured image set, any answer-first/top-of-article
-reordering done, and the block-contract work (Key takeaways title/casing, download box, Pabau
-section + CTA block, Conclusion heading/rewrite/CTA link, Continue your research block,
-listicle pricing tables).
+added, images added (with source) + featured image set + captions written or fixed, any
+answer-first/top-of-article reordering done, and the block-contract work (Key takeaways
+title/casing, download box, Pabau section + CTA block, Conclusion heading/rewrite/CTA link,
+Continue your research block, listicle pricing tables).
 ```
 
 ---
