@@ -330,17 +330,17 @@ class:
 The `id` attribute and `wp-image-<id>` class are present for media-library images and omitted
 when the `src` is an external URL. The `<figcaption>` is required either way.
 
-**Every image is followed by a spacer block (800 × 25).** Immediately after the closing
+**Every image is followed by a spacer block (800 × 35).** Immediately after the closing
 `<!-- /wp:image -->`, before the next paragraph or heading, add:
 
 ```
-<!-- wp:spacer {"width":"800px","height":"25px"} -->
-<div style="height:25px;width:800px" aria-hidden="true" class="wp-block-spacer"></div>
+<!-- wp:spacer {"width":"800px","height":"35px"} -->
+<div style="height:35px;width:800px" aria-hidden="true" class="wp-block-spacer"></div>
 <!-- /wp:spacer -->
 ```
 
 One spacer per image, never two in a row. If a spacer already follows the image, leave it —
-only correct the dimensions if they differ from 800 × 25.
+only correct the dimensions if they differ from 800 × 35.
 
 ---
 
@@ -355,5 +355,5 @@ only correct the dimensions if they differ from 800 × 25.
 - [ ] FAQ is a Yoast FAQ block with schema, under an H2
 - [ ] Listicle: comparison table after intro; every provider review ends with a `Pricing` heading + pricing table, all figures from the provider's own site
 - [ ] Every image has a `<figcaption>`: full sentence, ends in a period, wrapped in `<em>`, no stray `*`; Pabau-feature screenshots tie the feature to this article's purpose; alt text present and not duplicated into the caption
-- [ ] Every image is followed by one 800 × 25 `wp:spacer` block
+- [ ] Every image is followed by one 800 × 35 `wp:spacer` block
 - [ ] No duplicate headings above self-heading blocks; no placeholder items anywhere

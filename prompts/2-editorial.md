@@ -76,7 +76,7 @@ Unless it's a UK-specific article, remove references to Healthcode and replace w
   - BAD: `<em>Pabau is a powerful all-in-one platform for med spas.</em>` — generic, not tied to the article.
   - GOOD: `<em>Pabau's stock tracking logs every unit of Botox against the treatment note, so your records and inventory stay in step without a second spreadsheet.</em>`
 
-**Every image is followed by a spacer block.** Immediately after each image's closing `<!-- /wp:image -->`, add a WordPress spacer block sized 800 × 25 — markup in `WordPress-blocks.md` §10. Apply this automatically to every image in the article, never ask. One spacer per image, never two in a row; if a spacer is already there, leave it and only fix the dimensions if they aren't 800 × 25.
+**Every image is followed by a spacer block.** Immediately after each image's closing `<!-- /wp:image -->`, add a WordPress spacer block sized 800 × 35 — markup in `WordPress-blocks.md` §10. Apply this automatically to every image in the article, never ask. One spacer per image, never two in a row; if a spacer is already there, leave it and only fix the dimensions if they aren't 800 × 35.
 
 Intro must exist. The proper structure — see `WordPress-blocks.md` for the exact markup of every block named here — is:
 

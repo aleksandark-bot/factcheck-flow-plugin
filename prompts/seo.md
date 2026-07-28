@@ -830,10 +830,10 @@ Hard rules:
        <!-- wp:image {"id":<id>,"sizeSlug":"large"} -->
        <figure class="wp-block-image size-large"><img src="<source_url>" alt="<descriptive alt>" class="wp-image-<id>"/><figcaption class="wp-element-caption"><em>Full-sentence caption that ends with a period.</em></figcaption></figure>
        <!-- /wp:image -->
-       <!-- wp:spacer {"width":"800px","height":"25px"} -->
-       <div style="height:25px;width:800px" aria-hidden="true" class="wp-block-spacer"></div>
+       <!-- wp:spacer {"width":"800px","height":"35px"} -->
+       <div style="height:35px;width:800px" aria-hidden="true" class="wp-block-spacer"></div>
        <!-- /wp:spacer -->
-  AN 800 × 25 SPACER BLOCK FOLLOWS EVERY IMAGE, exactly as above — one per image, never two in a row.
+  AN 800 × 35 SPACER BLOCK FOLLOWS EVERY IMAGE, exactly as above — one per image, never two in a row.
   Alt text is REQUIRED and descriptive — work the relevant entity/keyword in only where it reads
   naturally (never stuffed).
   A CAPTION IS REQUIRED on every image — no image ships without a `<figcaption>` (contract in
