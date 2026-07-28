@@ -101,11 +101,15 @@ Otherwise (the normal case), perform four passes in this exact order, on this on
    (`/templates/` URL, or an article whose job is to hand the reader a downloadable
    form/chart/worksheet), a download box must sit directly below Key takeaways and above
    the intro.
-   - Copy the gradient `wp:html` markup from `WordPress-blocks.md` **verbatim** — inline
-     styles, border radius, `#037CD2` button, and the `Download template` label included.
-     It carries its own H2, so add no separate heading block.
+   - Copy the gradient `wp:html` **wrapper** from `WordPress-blocks.md` byte-for-byte —
+     inline styles, border radius, `#037CD2` button, `target="_blank" rel="noopener"`, and
+     the `Download template` label. It carries its own H2, so add no separate heading block.
+     The wrapper is fixed; the H2 text, the description, and the `href` are written fresh
+     for THIS article. The example in the guide is AccuTite's — never carry its heading,
+     description, or PDF URL (or another article's) into a different post.
    - H2 wording: "Download your free <template name>", grammatical, not keyword-stuffed.
-     Description: 1–2 sentences naming what is actually in the file.
+     Description: 1–2 sentences naming what is actually in this article's file — its
+     sections, fields, or guidance — not a generic blurb.
    - Download URL: reuse the URL already in the post or its schema. If there is none, build
      `https://cdn.pabau.com/cdn/attachments/pulse/content-engine/templates/<slug>/<slug>.pdf`
      and verify it before saving:

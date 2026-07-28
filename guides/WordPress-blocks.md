@@ -59,7 +59,12 @@ hardcodes "Key Takeaways" when no title is passed, so the `title` attribute is
 ## 3. Download box — template articles only
 
 Sits directly below Key takeaways and above the intro. Raw `wp:html`, with a built-in H2
-(so no separate heading block):
+(so no separate heading block).
+
+The example below is the live AccuTite box — **the wrapper is fixed, the content is not.**
+Reuse the markup and styling exactly; write the H2, the description, and the `href` fresh
+for each article. Never carry another article's heading text, description, or PDF URL into
+a new download box.
 
 ```
 <!-- wp:html -->
@@ -72,12 +77,19 @@ Sits directly below Key takeaways and above the intro. Raw `wp:html`, with a bui
 ```
 
 Rules:
-- Keep the inline styles, the gradient, the border radius, and the `Download template`
-  button label byte-for-byte — this is the site's download box, not a design decision.
+- **Fixed (copy byte-for-byte):** the `wp:html` wrapper, the gradient, border radius,
+  padding and margins, the `<h2>`/`<p>`/`<a>` inline styles, the `#037CD2` button, the
+  `target="_blank" rel="noopener"`, and the `Download template` button label. This is the
+  site's download box, not a design decision — don't restyle it, don't rename the button.
+- **Written per article:** the H2 text, the description, and the download `href`. Every
+  template has its own file and its own wording; nothing article-specific is ever carried
+  over from the example or from another post.
 - H2 wording: "Download your free <template name>", grammatical, not exact-match keyword
   stuffing ("Download your free doctor's note for work", not "Download your free doctors
   note for work template free").
-- The description is 1–2 sentences naming what is actually inside the file.
+- The description is 1–2 sentences naming what is actually inside THIS file — the sections,
+  fields, or guidance a reader gets when they open it. Never a generic blurb, and never the
+  neighbouring article's description with the template name swapped.
 - **Download URL:** reuse the article's existing PDF URL if one is already present
   anywhere in the post or its schema. If there is none, use the site pattern
   `https://cdn.pabau.com/cdn/attachments/pulse/content-engine/templates/<slug>/<slug>.pdf`
