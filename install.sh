@@ -94,7 +94,7 @@ API="https://api.github.com/repos/$REPO/commits/$BRANCH"
 FF="$HOME/.claude/factcheck-flow"
 STATE="$FF/.last-sync-sha"
 
-mkdir -p "$FF/prompts" "$FF/guides" "$FF/bin" "$HOME/.claude/commands" "$HOME/.claude/agents" 2>/dev/null || true
+mkdir -p "$FF/prompts" "$FF/guides" "$FF/bin" "$HOME/.claude/commands" "$HOME/.claude/agents" "$HOME/.claude/skills/wordpress-access" 2>/dev/null || true
 
 # 1. Latest commit on main. Bail quietly if we can't reach GitHub.
 remote_sha="$(curl -fsSL --max-time 8 -H 'Accept: application/vnd.github+json' "$API" 2>/dev/null \
@@ -162,14 +162,14 @@ fi
 # from ~/.claude/commands and agents from ~/.claude/agents), and they carry rules that
 # change alongside the prompts — e.g. the article-editor's block-guarantee passes — so a
 # repo change to either has to reach existing installs, not just fresh ones.
-#
-# NOTE: skills/wordpress-access/SKILL.md is deliberately NOT synced. Installs customize its
-# Credentials section (local key file paths, etc.), and overwriting that would break their
-# WordPress access. When the shared part of that skill changes, it has to be applied by hand
-# or via a fresh install.sh run.
 fetch "commands/factcheck-flow.md" "$HOME/.claude/commands/fact.md"
 fetch "agents/article-editor.md" "$HOME/.claude/agents/article-editor.md"
 fetch "agents/factcheck-reporter.md" "$HOME/.claude/agents/factcheck-reporter.md"
+
+# The wordpress-access skill. Safe to sync: it holds only the credential RESOLUTION ORDER
+# (env vars → $WP_CREDENTIALS_FILE → ~/.claude/factcheck-flow/wp-credentials), never a
+# secret and never an install-specific path, so every install wants the same copy.
+fetch "skills/wordpress-access/SKILL.md" "$HOME/.claude/skills/wordpress-access/SKILL.md"
 
 # /SEO command + helpers (the seo-research/seo-write prompts are fetched in the loop above)
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
@@ -632,23 +632,54 @@ echo "  - agents installed"
 cat > "$CLAUDE/skills/wordpress-access/SKILL.md" <<'EOF'
 ---
 name: wordpress-access
-description: Read and update WordPress articles via the REST API using HTTP Basic Auth. Provides the site URL, credentials, and rules for fetching and saving posts. Used by /factcheck-flow.
+description: Read and update WordPress articles via the REST API using HTTP Basic Auth. Provides the site URL, credentials, and rules for fetching and saving posts. Used by /fact and /SEO.
 ---
 
 # WordPress access
 
 ## Credentials
 
-This skill reads credentials from environment variables so no secret is committed to
-the shared plugin. Set these once in your own `.claude/settings.local.json` (which is
-gitignored) — see the plugin README:
+No secret is committed to the shared plugin — this file carries only the *resolution
+order*, which is identical on every install, so it can be auto-synced like the prompts.
 
-- `WP_BASE_URL`   — e.g. `https://example.com` (no trailing `/wp-json`)
-- `WP_USER`       — your WordPress username
-- `WP_APP_PASSWORD` — a WordPress Application Password (Users → Profile → Application Passwords)
+Resolve credentials in this order and stop at the first that yields all three values:
 
-If those variables are not set, stop and tell the user to configure them per the
-README rather than guessing.
+1. **Environment variables** `WP_BASE_URL`, `WP_USER`, `WP_APP_PASSWORD`.
+2. **The file named by `$WP_CREDENTIALS_FILE`**, if that variable is set.
+3. **`~/.claude/factcheck-flow/wp-credentials`** — the conventional path the installer
+   writes to (mode 600, gitignored, never in the repo).
+
+Both file forms are accepted, so an existing credentials file usually works as-is:
+
+```
+WP_BASE_URL=https://example.com
+WP_USER=someone
+WP_APP_PASSWORD=xxxx xxxx xxxx xxxx
+```
+
+or a plain document containing lines like `Site URL:`, `Username:`, and
+`Application Password:` (the labels are matched case-insensitively).
+
+Load them without echoing the values, e.g.:
+
+```bash
+CREDS="${WP_CREDENTIALS_FILE:-$HOME/.claude/factcheck-flow/wp-credentials}"
+[ -n "$WP_APP_PASSWORD" ] || { set -a; . "$CREDS" 2>/dev/null; set +a; }
+```
+
+(That `.` form only works for the `KEY=VALUE` shape; for the labelled-document shape,
+parse the three labels instead. Either way, never print a password to stdout, never
+paste it into a URL you log, and never write it into a file inside the repo.)
+
+The values you need:
+
+- Site base URL, e.g. `https://pabau.com` (used as `$WP_BASE_URL`; no trailing `/wp-json`)
+- WordPress username (`$WP_USER`)
+- WordPress Application Password (`$WP_APP_PASSWORD`) — from WordPress → your Profile →
+  Application Passwords. This is NOT the normal login password.
+
+If none of the three sources yields credentials, stop and ask the user to run the
+installer or set `$WP_CREDENTIALS_FILE`. Never guess, and never proceed unauthenticated.
 
 ## What you do
 

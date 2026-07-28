@@ -30,12 +30,34 @@ local testing before pushing to a git host.)
 
 ## One-time setup: WordPress credentials
 
-Credentials are **not** stored in this plugin. Each user provides their own via
-environment variables in their local, gitignored settings file.
+Credentials are **not** stored in this plugin. The `wordpress-access` skill carries only
+the resolution order, which is the same on every install — that's what lets the skill be
+auto-synced along with the prompts. Pick whichever of the three sources suits you:
 
 1. In WordPress, create an **Application Password**: Users → Profile → Application
    Passwords.
-2. In your project's `.claude/settings.local.json` (create it if needed), add:
+2. Then either:
+
+**a) The installer's file (simplest).** `install.sh` prompts for the three values and
+writes them to `~/.claude/factcheck-flow/wp-credentials` (mode 600, never in the repo).
+Nothing else to configure — the skill looks there by default.
+
+**b) Point at a credentials file you already have.** Set `WP_CREDENTIALS_FILE` to its
+path in `~/.claude/settings.json`:
+
+```json
+{
+  "env": {
+    "WP_CREDENTIALS_FILE": "/path/to/your/wp-credentials"
+  }
+}
+```
+
+The file may be `KEY=VALUE` lines (`WP_BASE_URL=…`, `WP_USER=…`, `WP_APP_PASSWORD=…`) or
+a plain document with `Site URL:`, `Username:`, and `Application Password:` labels.
+Only the *path* goes in settings — the secret stays in the file.
+
+**c) Environment variables**, if you prefer them, in `.claude/settings.local.json`:
 
 ```json
 {
@@ -47,8 +69,9 @@ environment variables in their local, gitignored settings file.
 }
 ```
 
+Env vars win over `$WP_CREDENTIALS_FILE`, which wins over the default path.
 `settings.local.json` is git-ignored — never commit real credentials. Restart the
-session so the env vars load.
+session after any of these so the settings load.
 
 ## Use
 

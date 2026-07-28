@@ -10,3 +10,7 @@ Thumbs.db
 GitHubToken.txt
 __pycache__/
 *.pyc
+
+# WordPress credentials written by install.sh
+wp-credentials
+wp-credentials.*

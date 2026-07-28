@@ -18,7 +18,7 @@ API="https://api.github.com/repos/$REPO/commits/$BRANCH"
 FF="$HOME/.claude/factcheck-flow"
 STATE="$FF/.last-sync-sha"
 
-mkdir -p "$FF/prompts" "$FF/guides" "$FF/bin" "$HOME/.claude/commands" "$HOME/.claude/agents" 2>/dev/null || true
+mkdir -p "$FF/prompts" "$FF/guides" "$FF/bin" "$HOME/.claude/commands" "$HOME/.claude/agents" "$HOME/.claude/skills/wordpress-access" 2>/dev/null || true
 
 # 1. Latest commit on main. Bail quietly if we can't reach GitHub.
 remote_sha="$(curl -fsSL --max-time 8 -H 'Accept: application/vnd.github+json' "$API" 2>/dev/null \
@@ -86,14 +86,14 @@ fi
 # from ~/.claude/commands and agents from ~/.claude/agents), and they carry rules that
 # change alongside the prompts — e.g. the article-editor's block-guarantee passes — so a
 # repo change to either has to reach existing installs, not just fresh ones.
-#
-# NOTE: skills/wordpress-access/SKILL.md is deliberately NOT synced. Installs customize its
-# Credentials section (local key file paths, etc.), and overwriting that would break their
-# WordPress access. When the shared part of that skill changes, it has to be applied by hand
-# or via a fresh install.sh run.
 fetch "commands/factcheck-flow.md" "$HOME/.claude/commands/fact.md"
 fetch "agents/article-editor.md" "$HOME/.claude/agents/article-editor.md"
 fetch "agents/factcheck-reporter.md" "$HOME/.claude/agents/factcheck-reporter.md"
+
+# The wordpress-access skill. Safe to sync: it holds only the credential RESOLUTION ORDER
+# (env vars → $WP_CREDENTIALS_FILE → ~/.claude/factcheck-flow/wp-credentials), never a
+# secret and never an install-specific path, so every install wants the same copy.
+fetch "skills/wordpress-access/SKILL.md" "$HOME/.claude/skills/wordpress-access/SKILL.md"
 
 # /SEO command + helpers (the seo-research/seo-write prompts are fetched in the loop above)
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
