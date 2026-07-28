@@ -74,7 +74,7 @@ Unless it's a UK-specific article, remove references to Healthcode and replace w
 - **If the image shows a Pabau feature, the caption must say how that feature helps the reader do the specific thing this article is about.** Name the feature, name the job it does for this article's purpose:
   - BAD: `<em>Pabau's stock inventory feature.</em>` — a label, says nothing.
   - BAD: `<em>Pabau is a powerful all-in-one platform for med spas.</em>` — generic, not tied to the article.
-  - GOOD: `<em>Pabau's stock tracking logs every unit of Botox against the treatment note, so your face-mapping records and your inventory stay in step without a second spreadsheet.</em>`
+  - GOOD: `<em>Pabau's stock tracking logs every unit of Botox against the treatment note, so your records and inventory stay in step without a second spreadsheet.</em>`
 
 Intro must exist. The proper structure — see `WordPress-blocks.md` for the exact markup of every block named here — is:
 
@@ -115,6 +115,10 @@ Break up long paragraphs (no more than 4 lines or 60 words).
 If you find a sentence that lists three or more long items (as in, entire clauses of three or more words are list items), turn that into a wordpress list block instead of a paragraph.
 
 Shorten long sentences to make them more legible. Split off clauses from longer sentences into their own sentences, rather than separating them with em dashes, colons or semicolons.
+
+**Hard ceiling: 25 words per sentence.** Go to 30 only where the sentence genuinely cannot be split without breaking the meaning — that's a rare exception, not a second budget. Count every sentence in the article and rewrite the ones over the limit. Splitting one long sentence into two shorter ones is almost always the fix. This applies to every piece of prose in the article: intro, body, Key takeaways items, image captions, the Pabau section, the Conclusion, FAQ answers, meta description, table cells.
+
+Short does not mean choppy. Vary the length, per the style guide — a run of same-length sentences reads like a metronome. And don't buy brevity with a dropped subject, a telegraphic fragment, or a clause welded on with a semicolon to dodge the count.
 
 Ensure headings have correct hierarchy (H1 > H2 > H3 > H4).
 

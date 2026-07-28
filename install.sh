@@ -661,8 +661,7 @@ Otherwise (the normal case), perform four passes in this exact order, on this on
      the reader do the specific thing this article is about. A bare label
      (`<em>Pabau's stock inventory feature.</em>`) or generic praise (`<em>Pabau is a
      powerful all-in-one platform.</em>`) is not acceptable — rewrite it, e.g.
-     `<em>Pabau's stock tracking logs every unit of Botox against the treatment note, so your
-     face-mapping records and your inventory stay in step without a second spreadsheet.</em>`
+     `<em>Pabau's stock tracking logs every unit of Botox against the treatment note, so your records and inventory stay in step without a second spreadsheet.</em>`
      Obey the Pabau non-negotiables in `2-editorial.md` (introduce/qualify on first mention,
      no feature gating, no free trial).
    - Keep alt text separate and present: alt describes the image, the caption speaks to the
@@ -808,7 +807,7 @@ When writing, editing, or fact-checking Pabau content, read these guides first:
 
 Block rules every article must satisfy: "Key takeaways" (capital K only, via the block's \`title\` attribute); an H2 Pabau section with the CTA block immediately before an H2 headed exactly "Conclusion" that concludes (not summarizes) and ends with a \`/book-demo/\` CTA link; a Continue your research block; a download box on template articles; a caption on every image (full sentence, ends with a period, italic via \`<em>\` — and if it shows a Pabau feature, it says how that feature helps the reader do what the article is about); and in listicles a \`Pricing\` heading + pricing table closing every provider review, with figures from the provider's own website only.
 
-Quick rules: US English (say "practice", not "clinic"); introduce Pabau on first mention ("practice management software like Pabau"); qualify product names once ("Pabau GO, our iOS app"); never say "Pabau Connect" externally (say "online booking"); no free trial (structured onboarding); every subscription includes every feature (no gating); don't undermine the core product when describing Plus add-ons. Every article must fit searcher intent AND have a unique angle (originality nugget) — never publish generic, me-too content.
+Quick rules: keep sentences to 25 words max (30 only where a split would break the meaning); US English (say "practice", not "clinic"); introduce Pabau on first mention ("practice management software like Pabau"); qualify product names once ("Pabau GO, our iOS app"); never say "Pabau Connect" externally (say "online booking"); no free trial (structured onboarding); every subscription includes every feature (no gating); don't undermine the core product when describing Plus add-ons. Every article must fit searcher intent AND have a unique angle (originality nugget) — never publish generic, me-too content.
 $GUIDE_END
 EOF
 echo "  - CLAUDE.md editing guidance installed"

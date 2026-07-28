@@ -76,8 +76,9 @@ Before any stage that changes headings, titles, meta, or body text (S4, S7, S8),
 comply with — these are the source of truth and override anything below on voice/structure:
 
 - `~/.claude/factcheck-flow/prompts/2-editorial.md` — editorial standards (fluff/AI-tell
-  removal, US English, structure H1 > Key takeaways > Intro > H2, paragraph/sentence
-  limits, meta description ≤140 chars, capitalization, Yoast, categories/tags).
+  removal, US English, structure H1 > Key takeaways > Intro > H2, paragraph ≤4 lines/≤60 words,
+  sentences ≤25 words, image captions, meta description ≤140 chars, capitalization, Yoast,
+  categories/tags).
 - `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — the BLOCK CONTRACT every article
   must satisfy, with exact markup: required document order, the Key takeaways block (with
   its mandatory `"title":"Key takeaways"` attribute), the template download box, the Pabau
@@ -797,7 +798,9 @@ Hard rules:
   and blocks whenever that optimizes better than a light edit — do NOT preserve the old structure
   for its own sake. Keep only the guardrails fixed (facts, Pabau positioning, publish status,
   published-post URL/slug). Fix malformed HTML/FAQ blocks per editorial rules. Respect paragraph
-  (≤4 lines/≤60 words) and sentence-length limits; convert 3+ clause lists to WordPress list blocks.
+  (≤4 lines/≤60 words) and sentence (≤25 words; 30 only where a split would break the meaning)
+  limits — in every piece of prose you write or leave standing, captions and FAQ answers
+  included; convert 3+ clause lists to WordPress list blocks.
 - If the SERP shows a featured-snippet opportunity, format the relevant answer as both a
   short paragraph and a list to compete for it (from the transcript's snippet tactic).
 - EMULATE + IMPROVE ON THE SERP STRUCTURE (S5 profile / S6 final outline): write the planned novel

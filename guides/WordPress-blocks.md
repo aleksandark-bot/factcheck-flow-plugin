@@ -294,7 +294,8 @@ Every caption:
 
 - **Is a full sentence and ends with a period.** Not a label, not a fragment, not a
   colon-prefixed title. "Pabau's calendar view" is a caption that failed; write the sentence
-  that says what the reader is looking at and why it matters here.
+  that says what the reader is looking at and why it matters here. The article's sentence
+  ceiling applies — 25 words, 30 only where a split would break the meaning.
 - **Is italic, in real markup** — wrap the caption text in `<em>`. Never use asterisks:
   `*Ranges follow StatPearls.*` ships a literal `*` to the front end (this is live on the
   site today), so when auditing an existing caption, strip stray leading/trailing `*` and
@@ -311,7 +312,8 @@ neither does a bare feature label.
 - BAD: `<em>Pabau is a powerful all-in-one platform for med spas.</em>` — generic, and not
   tied to what the article is helping the reader do.
 - GOOD: `<em>Pabau's stock tracking logs every unit of Botox against the treatment note, so
-  your face-mapping records and your inventory stay in step without a second spreadsheet.</em>`
+  your records and inventory stay in step without a second spreadsheet.</em>` (24 words — the
+  25-word sentence ceiling applies to captions too)
 
 Alt text is still required and stays separate: alt describes the image for screen readers and
 search engines, the caption speaks to the reader. Don't paste one into the other.

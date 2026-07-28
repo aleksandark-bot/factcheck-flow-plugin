@@ -36,6 +36,11 @@ Use contractions (*we've*, *it's*, *you'll*) to make your writing flow. They sou
 
 Vary your sentence length. Lots of long sentences make the reader work too hard. Mix it up. Even a one-word sentence can land hard.
 
+Keep every sentence to **25 words or fewer**. Stretch to 30 only when a sentence truly can't be split without losing the meaning, and treat that as rare. When one runs long, split it into two rather than hiding the length behind a semicolon or an em dash.
+
+✅ *Most no-shows happen because the reminder arrived too late. Send it 48 hours out and you give the patient time to rebook.*
+❌ *Most no-shows happen because the reminder arrived too late, so sending it 48 hours out gives the patient enough time to rebook, which protects the slot and keeps your calendar full.* (31 words)
+
 ### **Always introduce Pabau**
 
 If someone arrives at a blog from Google, they've probably never heard of us. Don't write just *"Pabau"* — write *"Practice management software like Pabau...."*
@@ -287,7 +292,7 @@ A caption earns its place by adding something the image alone doesn't say. It is
 
 When the image is a screenshot of a Pabau feature, the caption says how that feature helps the reader do the thing the article is about — name the feature, name the job.
 
-✅ *Pabau's stock tracking logs every unit of Botox against the treatment note, so your face-mapping records and your inventory stay in step without a second spreadsheet.*
+✅ *Pabau's stock tracking logs every unit of Botox against the treatment note, so your records and inventory stay in step without a second spreadsheet.*
 ❌ *Pabau's stock inventory feature* (a label, and no period)
 ❌ *Pabau is a powerful all-in-one platform for med spas.* (generic, and says nothing about what this article is helping the reader do)
 

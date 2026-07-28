@@ -264,8 +264,7 @@ Otherwise (the normal case), perform four passes in this exact order, on this on
      the reader do the specific thing this article is about. A bare label
      (`<em>Pabau's stock inventory feature.</em>`) or generic praise (`<em>Pabau is a
      powerful all-in-one platform.</em>`) is not acceptable — rewrite it, e.g.
-     `<em>Pabau's stock tracking logs every unit of Botox against the treatment note, so your
-     face-mapping records and your inventory stay in step without a second spreadsheet.</em>`
+     `<em>Pabau's stock tracking logs every unit of Botox against the treatment note, so your records and inventory stay in step without a second spreadsheet.</em>`
      Obey the Pabau non-negotiables in `2-editorial.md` (introduce/qualify on first mention,
      no feature gating, no free trial).
    - Keep alt text separate and present: alt describes the image, the caption speaks to the
