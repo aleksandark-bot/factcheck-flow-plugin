@@ -57,6 +57,12 @@ if curl -fsSL "$REPO_RAW/bin/dfs_lists.py" -o "$FF/bin/dfs_lists.py"; then
 else
   echo "  NOTE: could not download bin/dfs_lists.py — /SEO Stage 2 will have no helper." >&2
 fi
+if curl -fsSL "$REPO_RAW/bin/sentence_check.py" -o "$FF/bin/sentence_check.py"; then
+  chmod +x "$FF/bin/sentence_check.py" 2>/dev/null || true
+  echo "  - sentence checker installed"
+else
+  echo "  NOTE: could not download bin/sentence_check.py — the /fact sentence gate will be unavailable." >&2
+fi
 
 # --- 1b. Download the Pabau reference guides from the repo -----------------
 # These define voice/terminology (Pabau-style-guide), product/positioning
@@ -173,7 +179,7 @@ fetch "skills/wordpress-access/SKILL.md" "$HOME/.claude/skills/wordpress-access/
 
 # /SEO command + helpers (the seo-research/seo-write prompts are fetched in the loop above)
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
-for b in gsc_query keyword_picker serp_picker dfs_lists; do
+for b in gsc_query keyword_picker serp_picker dfs_lists sentence_check; do
   fetch "bin/$b.py" "$FF/bin/$b.py"; chmod +x "$FF/bin/$b.py" 2>/dev/null || true
 done
 
@@ -333,12 +339,20 @@ captions). That file and the article-editor's own Pass D own the detail; you are
 orchestrator and never perform this work, so do not restate the contract to the subagents
 — they read it themselves.
 
+After that, and before the single save, each editor must clear the **sentence gate** (Pass E):
+`bin/sentence_check.py` counts every sentence in the body and the editor rewrites until the
+script exits 0 — nothing over 30 words ships, and 26–30 needs a per-sentence justification.
+Sentence length is measured by script precisely because it cannot be eyeballed. Every editor
+reports the checker's final summary line verbatim; an article whose change-log has no
+`Sentence gate:` line did not run it, and that is a failed job worth flagging in your report.
+
 ## Final report
 
 Once all Stage 3 subagents return, compile a single consolidated summary for the user.
 Each editor returns a compact change-log; relay it, don't re-derive it. Per article:
 fact-check fixes applied, editorial highlights, link changes, the one-line block-contract
-status the editor reported for each of the eight guarantees, and anything skipped. Note
+status the editor reported for each of the eight guarantees, the sentence gate's summary line
+(longest sentence + how many were rewritten), and anything skipped. Note
 any article whose grave error was flagged but dropped after independent verification, and
 any article that hit the two-rewrite ceiling and needs manual attention. End with the
 reminder to purge the WP Rocket cache for each edited URL.
@@ -426,10 +440,12 @@ This is the rule that governs the whole job.
    the article: the site's nav and footer would consume most of the response.
 2. **Run all four passes against the copy you hold**, in memory, in order. Do not re-fetch
    between passes — you already have the body, including every edit you just made to it.
-3. **Save ONCE**, at the end, with a single PUT. Write `payload.json` with the Write tool and
+3. **Clear the sentence gate BEFORE you save** (Pass E below). The article does not go out
+   over the ceiling.
+4. **Save ONCE**, at the end, with a single PUT. Write `payload.json` with the Write tool and
    send it with `-d @payload.json -o /dev/null -w '%{http_code}\n'`. A draft stays a draft;
    a published post stays published.
-4. **Verify with grep assertions, not page fetches** (see "Verifying the save" below).
+5. **Verify with grep assertions, not page fetches** (see "Verifying the save" below).
 
 The old four-fetch / four-save shape cost six full copies of the article per run and bought
 nothing. If a pass genuinely cannot proceed without re-reading something, re-read that one
@@ -574,6 +590,47 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
      it helps the reader do the specific thing this article is about.
    - Keep alt text present and separate. Ensure exactly one spacer follows each image.
 
+## Pass E — sentence-length gate (MANDATORY, blocks the save)
+
+Sentence length is not checked by eye. You cannot count words reliably while writing, so a
+script does it. Run it, fix what it lists, run it again. **This gate is not optional and not
+negotiable: while it exits non-zero, the article is not finished and you may not PUT it.**
+
+After Pass D, before you write `payload.json`:
+
+```bash
+# 1. Dump the body you are about to save (write it with the Write tool, never echo/heredoc).
+#    Then check it:
+python3 ~/.claude/factcheck-flow/bin/sentence_check.py --file /tmp/body.html
+```
+
+It prints one line per offending sentence — word count, where it lives, and the sentence
+itself — then a summary and PASS/FAIL. Exit 0 means clean; exit 1 means you have rewriting to
+do. Rewrite every sentence it lists **in the body you hold**, then re-run. Repeat until it
+exits 0. Splitting one long sentence into two is almost always the fix.
+
+Rules for clearing the gate:
+
+- **Nothing over 30 words ships. Ever.** There is no judgment call here — split it.
+- **26–30 is a justified exception, not a second budget.** A sentence may stay in that band
+  only where splitting genuinely breaks the meaning. For each one you keep, name it and say
+  why in your change-log. If you cannot articulate why, it does not qualify — split it.
+- **Never buy the word count with damage:** no dropped subjects, no telegraphic fragments, no
+  clause welded on with a semicolon or an em dash to make one sentence read as two. The
+  checker counts words; you still own the prose. A gate-passing article that reads like a
+  telegram has failed Pass B, and the style guide's "vary your sentence length" still holds.
+- The gate covers everything the checker sees: body paragraphs, list items, table cells, image
+  captions, Key takeaways items, CTA and download-box copy, FAQ answers.
+- If the script is missing (an older install), fetch it once:
+  `curl -fsSL https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/bin/sentence_check.py -o ~/.claude/factcheck-flow/bin/sentence_check.py`
+
+After the save lands, re-run it against what actually shipped and paste that summary line
+into your change-log verbatim:
+
+```bash
+python3 ~/.claude/factcheck-flow/bin/sentence_check.py --post <POST_ID>
+```
+
 ## Verifying the save
 
 After the single PUT returns a 2xx, confirm the blocks rendered — **without pulling the page
@@ -621,6 +678,10 @@ then these sections, one line each:
 - `Continue your research block:` already correct / converted / added / placeholders replaced / placeholders removed / trimmed to 5 / wrapper H2 removed / empty block removed
 - `Pricing segments:` all first-party / N added / N figures corrected / comparison table added / not a listicle
 - `Image captions:` N images, all captioned / N written / N rewritten / N asterisk fixes / no images
+- `Sentence gate:` the checker's final summary line, pasted verbatim (e.g. `175 sentences |
+  longest 24w | 0 over 25`), then `N rewritten`. If any sentence sits in the 26–30 band, list
+  each one and why it can't be split. An empty or absent line means the gate was not run,
+  which is a failed job — run it.
 - `Verified:` the assertion counts you got back
 - `Skipped:` anything you couldn't complete, and why
 

@@ -97,7 +97,7 @@ fetch "skills/wordpress-access/SKILL.md" "$HOME/.claude/skills/wordpress-access/
 
 # /SEO command + helpers (the seo-research/seo-write prompts are fetched in the loop above)
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
-for b in gsc_query keyword_picker serp_picker dfs_lists; do
+for b in gsc_query keyword_picker serp_picker dfs_lists sentence_check; do
   fetch "bin/$b.py" "$FF/bin/$b.py"; chmod +x "$FF/bin/$b.py" 2>/dev/null || true
 done
 

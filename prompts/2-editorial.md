@@ -104,9 +104,19 @@ If you find a sentence that lists three or more long items (as in, entire clause
 
 Shorten long sentences to make them more legible. Split off clauses from longer sentences into their own sentences, rather than separating them with em dashes, colons or semicolons.
 
-**Hard ceiling: 25 words per sentence.** Go to 30 only where the sentence genuinely cannot be split without breaking the meaning — that's a rare exception, not a second budget. Count every sentence in the article and rewrite the ones over the limit. Splitting one long sentence into two shorter ones is almost always the fix. This applies to every piece of prose in the article: intro, body, Key takeaways items, image captions, the Pabau section, the Conclusion, FAQ answers, meta description, table cells.
+**Hard ceiling: 25 words per sentence. This one is measured, not eyeballed.** You cannot count words reliably while writing, so don't try — a script does it:
 
-Short does not mean choppy. Vary the length, per the style guide — a run of same-length sentences reads like a metronome. And don't buy brevity with a dropped subject, a telegraphic fragment, or a clause welded on with a semicolon to dodge the count.
+```bash
+python3 ~/.claude/factcheck-flow/bin/sentence_check.py --file /tmp/body.html
+```
+
+Run it on the body you hold, rewrite every sentence it lists, re-run, and repeat until it exits 0. **Nothing over 30 words ships, ever.** The 26–30 band is a per-sentence exception you have to justify, not a second budget — if you can't say why a split would break the meaning, split it. Splitting one long sentence into two is almost always the fix.
+
+The ceiling covers every piece of prose the checker sees: body paragraphs, list items, table cells, image captions, Key takeaways items, CTA and download-box copy, FAQ answers, meta description.
+
+Short does not mean choppy, and the gate is not an excuse for damage. No dropped subjects, no telegraphic fragments, no clause welded on with a semicolon or em dash so one sentence can pass as two. Vary the length, per the style guide — a run of same-length sentences reads like a metronome. The script counts words; you still own the prose.
+
+(In `/fact` the article-editor runs this as a hard gate before saving — Pass E. Leave the copy clean here and that gate has nothing left to do.)
 
 Ensure headings have correct hierarchy (H1 > H2 > H3 > H4).
 

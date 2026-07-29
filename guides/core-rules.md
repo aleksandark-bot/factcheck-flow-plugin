@@ -50,11 +50,14 @@ These hold in every edit, with no exceptions.
 
 - **US English.** "Practice", not "clinic", in most cases. Convert UK medical terms. On a
   UK-specific article keep UK legislation and bodies, but still prefer "practice".
-- **25 words per sentence, hard ceiling.** 30 only where a split would genuinely break the
-  meaning — a rare exception, not a second budget. Applies to every piece of prose:
-  intro, body, Key takeaways items, captions, FAQ answers, meta description, table cells.
+- **25 words per sentence, hard ceiling — measured, not eyeballed.** Never over 30. The
+  26–30 band is a per-sentence exception you must justify, not a second budget. Applies to
+  every piece of prose: intro, body, Key takeaways items, captions, FAQ answers, meta
+  description, table cells. Don't count by eye — run the checker and fix what it lists:
+  `python3 ~/.claude/factcheck-flow/bin/sentence_check.py --file <body>` (or `--post <id>`),
+  and keep going until it exits 0. In `/fact` this is a gate that blocks the save.
 - Short does not mean choppy. Vary sentence length; don't buy brevity with a dropped
-  subject or a clause welded on with a semicolon.
+  subject, a telegraphic fragment, or a clause welded on with a semicolon.
 - **Paragraphs: 4 lines / 60 words maximum.**
 - Three or more clause-length list items in a sentence → make it a WordPress list block.
 - Split clauses into their own sentences rather than joining them with em dashes, colons,

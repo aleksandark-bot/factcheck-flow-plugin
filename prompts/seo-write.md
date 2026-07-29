@@ -373,6 +373,14 @@ Hard rules:
   a good candidate exists, set it via `featured_media: <id>`. Log every image added (and its
   source) in the change-log.
 
+SENTENCE GATE — run BEFORE the save, and do not save while it fails. You cannot count words by
+eye, so a script does it. Dump the body you are about to PUT to a file, then:
+  python3 ~/.claude/factcheck-flow/bin/sentence_check.py --file /tmp/body.html
+Rewrite every sentence it lists, re-run, repeat until it exits 0. Nothing over 30 words ships;
+26–30 is a per-sentence exception you must be able to justify, not a second budget. Don't buy the
+count with fragments or semicolon-welded clauses. Paste the final summary line into the
+change-log. If the script is missing, fetch it from the repo's `bin/` once.
+
 SAVE — ONE save for the whole run. Hold S7's changes and all of S8's edits in memory and PUT
 them together, per the wordpress-access skill: write payload.json with the Write tool, send it
 with `-d @payload.json -o /dev/null -w '%{http_code}\n'`, and change only the fields you touched
@@ -384,7 +392,8 @@ CHANGE-LOG (hold for the S9 combined report): main keyword (old→new if changed
 changes applied (from the Stage 1 box vs your own judgment), headings added/optimized, keywords
 placed (heading vs in-text), entity themes woven in, meta/title/description changes,
 categories/tags added, images added (with source) + featured image set + captions written or
-fixed, any answer-first/top-of-article reordering done, and the block-contract work.
+fixed, any answer-first/top-of-article reordering done, the block-contract work, and the sentence
+gate's final summary line (verbatim) plus how many sentences you rewrote to clear it.
 ```
 
 ---

@@ -143,12 +143,20 @@ captions). That file and the article-editor's own Pass D own the detail; you are
 orchestrator and never perform this work, so do not restate the contract to the subagents
 — they read it themselves.
 
+After that, and before the single save, each editor must clear the **sentence gate** (Pass E):
+`bin/sentence_check.py` counts every sentence in the body and the editor rewrites until the
+script exits 0 — nothing over 30 words ships, and 26–30 needs a per-sentence justification.
+Sentence length is measured by script precisely because it cannot be eyeballed. Every editor
+reports the checker's final summary line verbatim; an article whose change-log has no
+`Sentence gate:` line did not run it, and that is a failed job worth flagging in your report.
+
 ## Final report
 
 Once all Stage 3 subagents return, compile a single consolidated summary for the user.
 Each editor returns a compact change-log; relay it, don't re-derive it. Per article:
 fact-check fixes applied, editorial highlights, link changes, the one-line block-contract
-status the editor reported for each of the eight guarantees, and anything skipped. Note
+status the editor reported for each of the eight guarantees, the sentence gate's summary line
+(longest sentence + how many were rewritten), and anything skipped. Note
 any article whose grave error was flagged but dropped after independent verification, and
 any article that hit the two-rewrite ceiling and needs manual attention. End with the
 reminder to purge the WP Rocket cache for each edited URL.
