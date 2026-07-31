@@ -1,38 +1,44 @@
-# /SEO — part 2: outline, entities & writing (S4–S9)
+# /SEO — part 2: outline, entities & the writing brief (S4–S9)
 
 > Read at the START OF S4, after `prompts/seo-research.md` has produced the Gate #2 selection.
 > If the Stage-3 proceed gate was skipped, this file is never read.
+> The actual writing happens in the `seo-writer` subagent (S8), not in this conversation.
 
-## Read these NOW — the writing guides
+## You PLAN here. You do not write.
 
-You are about to change headings, titles, meta, and body copy. These are the source of truth
-and override anything below on voice and structure. Read all of them before S4:
+This half of the flow ends with a brief, not with copy. S4–S6 produce the outline; S7–S8 are
+executed by the **`seo-writer` subagent**, which reads the writing guides and the article body
+in ITS context and saves the result. You never load them.
 
-- `~/.claude/factcheck-flow/prompts/2-editorial.md` — editorial standards: fluff/AI-tell
-  removal, US English, structure, paragraph and sentence limits, image captions, meta
-  description, capitalization, Yoast, categories/tags.
-- `~/.claude/factcheck-flow/guides/Pabau-style-guide.md` — voice, benefit framing, US/UK
-  terminology, formatting mechanics, glossary.
-- `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — **the block contract and the exact
-  markup for every block.** It is the single source of truth: whatever /SEO saves must already
-  comply. /fact enforces it afterward, but shipping it right the first time avoids a rewrite.
+That split is deliberate and it is the main cost control in this flow. The writing guides are
+roughly 40k tokens; the article body is thousands more. Held here they would sit in context
+through S4, S5, S6, the whole of the writing stage, and the /fact hand-off — re-read on every
+turn. Held by the writer, they are read once and discarded when it returns.
+
+**So: read NO writing guide here.** Not `Pabau-style-guide.md`, not `WordPress-blocks.md`, not
+`2-editorial.md`, not `About-Pabau.md`, not `Meta-title-best-practices.md`. The one guide this
+half does need is:
+
 - `~/.claude/factcheck-flow/guides/Originality-and-search-intent.md` — the two-bar rule in
-  full, the mirage battery, and the specificity tests. Drives S4's outline and S8's writing.
-- `~/.claude/factcheck-flow/guides/About-Pabau.md` — product family, naming rules, pricing,
-  competitors. Needed the moment you write Pabau copy.
+  full, the mirage battery, and the specificity tests. **Read it now.** S4's outline lives or
+  dies on it, and the originality nugget has to be named at planning time or it never happens.
 
-Read `Meta-title-best-practices.md` when you reach the SERP title (S7 step 3, or the S8 meta
-work) — not before; it is about titles and nothing else.
+You have already read `core-rules.md` in part 1; its non-negotiables still bind everything you
+plan (introduce Pabau on first mention; qualify product names once; never "Pabau Connect"
+externally; no feature gating; no free trial; lead with outcomes; headings read naturally;
+25-word sentence ceiling). The writer enforces them in the prose — you make sure the outline
+doesn't require breaking them.
 
-Non-negotiables carried over from `core-rules.md` and `/fact`: introduce Pabau on first
-mention; qualify product names once; never "Pabau Connect" externally (say "online booking");
-no feature gating; no free trial; lead with outcomes; headings read naturally; 25-word
-sentence ceiling everywhere.
+Planning-time structure rules, so you don't need `2-editorial.md` to lay out a heading tree:
+keep a valid hierarchy (no H2 → H4 jumps), headings must read naturally rather than as
+keyword fragments, and one section covers one concrete idea. Anything finer-grained than that
+is the writer's call, not yours.
 
-## Optimization stance (governs S4, S6, S8 — read before writing anything)
+## Optimization stance (governs S4 and S6 — and is passed to the writer)
 
 Four principles that override any "leave it as-is" instinct elsewhere in this file. When a
-default below says "preserve" or "only if it improves," these win.
+default below says "preserve" or "only if it improves," these win. The writer carries its own
+copy of these; yours is what shapes the outline it receives.
 
 1. **Be only as conservative as you NEED to be.** The job is to optimize, not to protect the
    existing draft. Overwriting, rewriting, and resequencing existing copy to work in the target
@@ -57,8 +63,8 @@ default below says "preserve" or "only if it improves," these win.
 4. **Pull in images where they help.** Add relevant images anywhere a visual materially aids
    comprehension or matches what the SERP rewards — a comparison/product screenshot per listicle
    entry, a process diagram for a how-to, a UI screenshot, an "at a glance" visual near the top.
-   See the image rule in Stage 8 for sourcing; the block, alt-text, and caption format live in
-   `WordPress-blocks.md` §10. Every image needs a caption, including ones already in the
+   Plan WHERE images belong and what each depicts; the writer sources them and owns the block,
+   alt-text, and caption contract. Every image needs a caption, including ones already in the
    article. Missing obvious images is an incomplete optimization.
 
 ---
@@ -82,7 +88,7 @@ structure and only place keywords." There are two cases, and in BOTH you end up 
   "leave the structure alone" — it means the structural decisions are entirely yours.
 Bake all of this into the OUTLINE now (new/removed/reordered nodes), then layer keyword placement
 on top. Where a structural change conflicts with a keyword-placement default, the structural change
-wins (still obeying 2-editorial.md structure rules — valid hierarchy, natural headings).
+wins (still obeying the planning-time structure rules above — valid hierarchy, natural headings).
 Note in the outline which nodes exist BECAUSE of structural changes, and whether each came from
 the user's box or your own judgment.
 
@@ -103,7 +109,7 @@ Placement decision per selected keyword:
 
 Exact-match rule: any keyword placed in a heading must appear verbatim; you MUST reword the
 whole heading around it for grammar/sense (this is mandatory, not optional). A heading keyword
-is ALSO woven into that section's body text in S8 — plan each section's content intent so both
+is ALSO woven into that section's body text by the writer — plan each section's content intent so both
 the heading and its text carry the keyword naturally.
 
 ANSWER-FIRST & TOP-OF-ARTICLE PLACEMENT (Optimization stance #2 + #3 — bake into the outline):
@@ -118,10 +124,13 @@ ANSWER-FIRST & TOP-OF-ARTICLE PLACEMENT (Optimization stance #2 + #3 — bake in
   look for" material BELOW the picks (or trim it). Plan the table's columns now (name + the 2–4
   axes that actually decide the pick).
 
-REQUIRED BLOCKS — plan them as outline nodes now, don't discover them in S8. The required
-document order and the markup for every block are in `WordPress-blocks.md` (§1 for the order,
-§2–§10 for each block). Do not restate the contract here; open that file and plan to the shape
-it defines. Tag each block node [UNCHANGED]/[OPTIMIZED]/[NEW] like any other node, and note:
+REQUIRED BLOCKS — plan them as outline nodes now, don't leave them to be discovered during
+writing. **Do not open `WordPress-blocks.md` to do this.** You are deciding WHICH block nodes
+exist and roughly where they sit; the writer owns their exact markup and reconciles your
+ordering against the required document order in that file's §1. Plan these nodes by name —
+Key takeaways, template download box (template articles only), the Pabau section + its CTA
+block, Conclusion, Continue your research, FAQ, and (listicles) a Pricing node per provider —
+tag each [UNCHANGED]/[OPTIMIZED]/[NEW] like any other node, and note:
 - **Pabau section** (§5) — the topic-specific H2 (never "Why choose Pabau") and which Pabau
   workflow it covers for THIS article's purpose. If the article's Pabau material currently
   lives elsewhere, plan the move.
@@ -132,9 +141,9 @@ it defines. Tag each block node [UNCHANGED]/[OPTIMIZED]/[NEW] like any other nod
 
 IMAGE PLANNING (Optimization stance #4): mark outline nodes that should carry an image with an
 [IMG] note — what the image should show and why it helps (e.g. "product screenshot for pick #1",
-"booking-flow screenshot", "comparison visual near the top"). Sourcing is in S8; the block format
-and caption contract are in `WordPress-blocks.md` §10. Here just decide WHERE images belong and
-what each depicts.
+"booking-flow screenshot", "comparison visual near the top"). The writer sources the image and
+owns the block markup and caption contract. Here just decide WHERE images belong and what each
+depicts.
 
 If new_main_keyword is set: plan the new H1 (exact-match, grammatical) and note that S7 will
 also update meta/intro/SEO title/focus keyphrase.
@@ -171,7 +180,7 @@ OUTLINE output — the full heading tree in final document order, each node tagg
   [IMG]        an image to add at/under this node (+ what it shows + why)
 Also list keywords routed to IN-TEXT with their target section, and flag every question-heading
 that S8 must answer in its first sentence.
-This OUTLINE is the reference object for S6 (entity grouping) and S8 (writing).
+This OUTLINE is the reference object for S6 (entity grouping) and for the S7 brief.
 ```
 
 ---
@@ -182,9 +191,14 @@ This OUTLINE is the reference object for S6 (entity grouping) and S8 (writing).
 Do NOT open the competitor pages in this conversation. A parsed article page is 15–25k tokens
 and there are several of them; loaded here they stay resident for every remaining turn of the
 run. Instead, dispatch one `general-purpose` subagent PER selected_competitor_url — ALL IN A
-SINGLE MESSAGE so they run concurrently — and keep only what they return.
+SINGLE MESSAGE so they run concurrently.
 
-Give each subagent exactly one URL and these instructions:
+**The reports go to disk, not into this conversation.** Each is ~600 words, there are up to
+ten of them, and the merge below is the only thing that ever needs the full text. Have each
+subagent write its report to a file and return one short line; then a single merge subagent
+reads the files. That way the raw reports never enter this context at all.
+
+Give each subagent exactly one URL, its index `<n>`, and these instructions:
 
     Open <URL> (use on_page_content_parsing, or WebFetch with a high token limit) and read the
     MAIN CONTENT only — ignore nav, footer, cookie banners, and CTA boilerplate. Return a
@@ -206,24 +220,34 @@ Give each subagent exactly one URL and these instructions:
     WEAKNESSES: vague or keyword-stuffed headings, missing or thin tables/lists, disorganized
     flow, obvious subtopics with no heading of their own.
 
-    Total under 600 words. Your reply IS the data — no preamble, no commentary.
+    Total under 600 words. Write it to /tmp/seo-<slug>-entity-<n>.md and write nothing else
+    there — no preamble, no commentary, no page text. Then return ONE line and nothing else:
+    DONE: <n> | <url> | entities=<count> headings=<count> formats=<short comma list>
 
-When the reports come back, merge them yourself:
+Then dispatch ONE `general-purpose` merge subagent. Give it the file paths (not the contents)
+and these instructions:
 
-ENTITY LIST — keep a term only if it appears on ALL pages, or at minimum on ≥ 2 of them. Match
-SEMANTICALLY, not by exact string: group synonyms and paraphrases that mean the same thing into
-one entity and record the variants. Output per entity: canonical label, variants seen, and page
-coverage count (e.g. "3/3 pages"). Order by coverage desc, then salience.
+    Read every /tmp/seo-<slug>-entity-*.md file listed below. They are competitor analyses of
+    the <N> pages currently ranking for "<CURRENT MAIN KEYWORD>". Merge them into ONE profile
+    and return it as your entire reply. Do not quote the source files.
 
-SERP STRUCTURE PROFILE — built from the merged HEADINGS/FORMATS/WEAKNESSES:
-- consensus heading map: the subtopics/entities the SERP consistently gives headings to, with the
-  dominant heading pattern for each (this is the structural "floor" the article must match);
-- format inventory: which structured formats dominate (e.g. "5/6 pages use a comparison table";
-  "all use a numbered step list"), plus any featured-snippet opportunity;
-- WEAKNESSES TO BEAT: the pooled weaknesses — and, most important, what NEW useful data we could
-  present as a table/list that none of the ranking pages offer.
+    ENTITY LIST — keep a term only if it appears on ALL pages, or at minimum on ≥ 2 of them.
+    Match SEMANTICALLY, not by exact string: group synonyms and paraphrases that mean the same
+    thing into one entity and record the variants. Output per entity: canonical label, variants
+    seen, and page coverage count (e.g. "3/3 pages"). Order by coverage desc, then salience.
 
-This profile is consumed by S6 (outline structure refinement) and S8 (writing).
+    SERP STRUCTURE PROFILE:
+    - consensus heading map: the subtopics/entities the SERP consistently gives headings to,
+      with the dominant heading pattern for each (the structural "floor" we must match);
+    - format inventory: which structured formats dominate (e.g. "5/6 pages use a comparison
+      table"; "all use a numbered step list"), plus any featured-snippet opportunity;
+    - WEAKNESSES TO BEAT: the pooled weaknesses — and, most important, what NEW useful data we
+      could present as a table/list that none of the ranking pages offer.
+
+    Keep the whole reply under 800 words. It is the only thing that survives this stage.
+
+What that subagent returns IS the profile. Keep it — S6 turns it into structure revisions and
+the writer receives it in the brief. Delete the /tmp/seo-<slug>-entity-*.md files at S9.
 ```
 
 ---
@@ -250,166 +274,120 @@ just its entity coverage. Emulate what works on the SERP and beat it; never copy
   intended columns/list items as short notes on the relevant node.
 - ORGANIZATION: reorder / merge / split nodes so the flow is more logical than the SERP's, directly
   addressing the WEAKNESSES TO BEAT. Any Stage-1 structural_changes still win, and keep the
-  2-editorial structure rules and the document order in `WordPress-blocks.md` §1.
+  planning-time structure rules; the writer reconciles final block ordering against §1.
 
-Output: the FINAL OUTLINE S8 writes from — the heading tree with any S6 structure revisions and
+Output: the FINAL OUTLINE the writer works from — the heading tree with any S6 revisions and
 planned [TABLE]/[LIST] nodes, each node carrying its grouped entities plus table-column / list-item
 notes beneath it. Still no prose written.
 ```
 
 ---
 
-# STAGE 7 — Main-keyword swap (only if new_main_keyword is set)
+# STAGE 7 — Write the brief
 
 ```
-Skip this stage entirely if new_main_keyword is null.
+The outline is final. Serialize everything the writer needs into ONE file and stop planning.
 
-Otherwise update, in line with the guides (editorial + style + About-Pabau):
-1. H1 → the new main keyword as an exact match, reworded to be natural/grammatical.
-2. Yoast focus keyphrase (post meta) → the new main keyword.
-3. SEO/meta title → NOW read `~/.claude/factcheck-flow/guides/Meta-title-best-practices.md`
-   and re-optimize per it (listicle number if applicable, current year if time-sensitive,
-   match micro-intent, differentiate in SERP, lead with the pain point). Don't just mirror
-   the H1 if a stronger SERP title exists.
-4. Meta description → rewrite to answer the searcher query as an article excerpt, ≤140 chars.
-5. Intro text → rework so the new main keyword appears naturally in the first paragraph;
-   keep the OLD main keyword nearby as a secondary keyword if still valuable (don't shoehorn).
+Write /tmp/seo-<slug>-brief.md with the Write tool. It must be self-contained: the writer
+starts with an empty context and cannot see this conversation. Include, in this order:
 
-Do NOT write to WordPress here — hold these changes for the single save in S8.
-```
+1. ARTICLE — URL, post ID, slug, status, is_draft, article type (listicle / code article /
+   template article / standard guide).
+2. MAIN KEYWORD — the current one, and the new one if the selection set a new_main_keyword
+   (state "unchanged" if not). If it changed, say explicitly that the writer must land it in
+   the H1, the intro, the meta description, and the SEO title.
+3. SEARCH INTENT — your one-paragraph Stage-1 note: the question the query actually asks, the
+   SERP-dominant format, and the depth the SERP rewards.
+4. STRUCTURAL CHANGES — the user's Stage-1 box text verbatim (or "empty box — structure was my
+   call"), plus which structural decisions in the outline are yours. The writer needs to know
+   which parts are the user's instruction and which are judgment it may refine.
+5. ORIGINALITY NUGGET — the nugget you named in S4, and which node delivers it. Mark it as
+   REQUIRED: the writer must not let it evaporate into generic copy.
+6. SERP STRUCTURE PROFILE — the merge subagent's output from S5: consensus heading map, format
+   inventory, featured-snippet opportunity, and the WEAKNESSES TO BEAT.
+7. FINAL OUTLINE — the S6 heading tree in document order, every node carrying its tag
+   ([UNCHANGED]/[OPTIMIZED]/[NEW]/[H1-NEW]/[IMG]/[TABLE]/[LIST]), its grouped entities, its
+   content intent, and — for [OPTIMIZED] nodes — the old heading text so the writer can find
+   the section. Flag every question-heading that must be answered in its first sentence.
+8. KEYWORD PLACEMENT — every selected keyword with its role (heading / in-text / FAQ) and its
+   target node. Exact-match rule stated. Note that a heading keyword also goes in that
+   section's body text.
+9. BLOCK NODES — which required blocks you planned as [NEW] vs [UNCHANGED], and the note that
+   the writer owns their markup and final ordering per WordPress-blocks.md §1.
 
----
+Keep it dense and factual — it is instructions, not prose. Do NOT paste the article body into
+it; the writer fetches that itself. Do NOT restate block markup; the writer reads the contract.
 
-# STAGE 8 — Optimize & write to WordPress
-
-```
-Now produce and apply the actual copy, using the OUTLINE + grouped entities + S7 changes.
-EVERYTHING written here must comply with 2-editorial.md, the style guide, About-Pabau, and
-`WordPress-blocks.md`.
-
-STRUCTURAL CHANGES: EXECUTE the Stage 4 structural plan here in full — it is already baked into
-the Stage 4 outline, so write to that restructured outline. On the manual (Refresh) branch there
-is ALWAYS a structural plan to execute: whatever the user put in the box (do it in full) PLUS your
-own structural improvements, or — if the box was empty — the changes you decided under carte
-blanche. This may mean a LARGER REWRITE than a normal optimization pass: reformatting the article,
-re-sequencing or replacing whole sections, or rewriting substantial copy to match the format the
-SERPs reward. Never half-apply a change to "preserve" the old structure. Keep the SEO keyword work
-intact on top of the new structure. If the changes imply the article's TYPE changed, re-check the
-meta title per Meta-title-best-practices.md. Summarize the structural changes in the S9 change-log
-(noting which came from the user's box vs your own judgment).
-
-For each OUTLINE node:
-- [OPTIMIZED] heading → apply the new heading text; then rewrite that section's existing
-  copy to naturally weave in the grouped entities (don't just append; integrate).
-- [NEW] heading → write new section copy from scratch covering the content intent, using the
-  grouped entities. Match article voice; lead with the outcome; introduce/qualify Pabau
-  correctly on first mention.
-- [UNCHANGED] heading → still rewrite the body wherever that lands the grouped entities, an
-  answer-first opening, or clearer copy — don't wave a section through untouched just because
-  its heading didn't change. Only genuinely strong, on-target copy should survive verbatim
-  (Optimization stance #1: be only as conservative as you need to be).
-- [IMG] node → insert the planned image here as a real WordPress image block (sourcing below;
-  markup, alt text and caption contract in `WordPress-blocks.md` §10).
-- IN-TEXT keywords → insert into the most relevant existing sentence/section naturally.
-- FAQ keywords (use_as_faq) → add each as a new Q in the FAQ block (verbatim question, proper
-  Yoast FAQ schema; create the block if missing). Write the ANSWER per Selection semantics:
-  reuse a related SELECTED keyword in the answer if one exists; otherwise use a sensible
-  variation of the FAQ keyword — never duplicate the question phrase or a near-identical one.
-
-Hard rules:
-- BLOCK CONTRACT — the saved article MUST satisfy `WordPress-blocks.md` in full: the required
-  document order (§1) and the exact markup for the Key takeaways block (§2), the template
-  download box (§3), the `book-demo` CTA block (§4) inside the required Pabau section (§5), the
-  `Conclusion` heading and its inline CTA link (§6), the `expert-picks` Continue your research
-  block (§7), the Yoast FAQ block (§8), listicle pricing segments (§9), and image captions +
-  spacers (§10). Copy the markup from that file — do not reconstruct it from memory, and do not
-  rely on a summary. Rename any "The bottom line"/"Final thoughts" heading to `Conclusion` while
-  you are in there.
-- LISTICLE PRICING (§9): every figure comes from the PROVIDER'S OWN WEBSITE; never Capterra, G2,
-  GetApp, Software Advice, Trustpilot, or another blog, and pabau.com only for Pabau. No
-  published prices → "Contact sales / no published pricing" plus a sentence saying so.
-- Keywords placed in headings are EXACT match; headings still read naturally (reword fully).
-- A keyword placed in a heading MUST also appear in that section's body text.
-- A new main keyword must land in the H1, intro, meta description, and SEO title (via S7).
-- No keyword stuffing in body or headings; every sentence must carry information (no fluff).
-- ANSWER-FIRST HEADINGS (stance #2): any heading that is or implies a question is answered
-  directly and completely in the FIRST sentence of its section. Same for every FAQ answer.
-- ANSWER NEAR THE TOP (stance #3): the intro states the reader's core answer and Key takeaways
-  reflects it. For a LISTICLE: name the real picks in Key takeaways, put a comparison TABLE right
-  after the intro, and begin the per-pick segments immediately after that table.
-- OVERWRITE FREELY (stance #1): rewrite, resequence, merge, or replace existing copy and blocks
-  whenever that optimizes better than a light edit. Keep only the guardrails fixed (facts, Pabau
-  positioning, publish status, published-post URL/slug). Fix malformed HTML/FAQ blocks. Respect
-  the paragraph (≤4 lines/≤60 words) and sentence (≤25 words; 30 only where a split would break
-  the meaning) limits in every piece of prose you write or leave standing, captions and FAQ
-  answers included; convert 3+ clause lists to WordPress list blocks.
-- If the SERP shows a featured-snippet opportunity, format the relevant answer as both a
-  short paragraph and a list to compete for it.
-- EMULATE + IMPROVE ON THE SERP STRUCTURE (S5 profile / S6 final outline): write the planned novel
-  headings (clearer and more natural than the ranking pages', never mirrored or keyword-stuffed);
-  build every planned [TABLE]/[LIST] node as a real WordPress table/list block that delivers NEW
-  useful information — never a decorative rehash of a competitor's table; and organize each
-  section more logically than the SERP, fixing the WEAKNESSES TO BEAT.
-- ORIGINALITY + ANTI-MIRAGE: actually DELIVER the nugget planned in Stage 4 (don't let it
-  evaporate into generic copy), and run every new/rewritten section through the mirage battery
-  in Originality-and-search-intent.md — reader's-shoes ("no shit" vs "no one told me this"),
-  real-examples, and customer-fit (write for a practice owner/manager who already knows the
-  basics, not "anyone"). Cut platitudes, obvious tips, and generic intros.
-- IMAGES (stance #4): build every [IMG] node planned in S4, and add an image anywhere else a
-  visual clearly helps or the SERP rewards one. Sourcing, in order:
-    1. The site's OWN media library first — reuse a relevant asset already hosted:
-         curl -s -u "$WP_USER:$WP_APP_PASSWORD" \
-           "$WP_BASE_URL/wp-json/wp/v2/media?search=<term>&per_page=20&_fields=id,source_url,alt_text,title"
-       Use the returned `source_url` and note the media `id`.
-    2. If nothing fits and the section genuinely needs one (e.g. a per-provider screenshot/logo
-       in a listicle), use the provider's OWN official image URL. VERIFY it resolves before
-       inserting: `curl -sI -o /dev/null -w '%{http_code}' "<url>"` — ship only a 200. Never
-       insert a guessed URL, and never hotlink something that will 404.
-  The image block markup, the mandatory `<figcaption>` rules, and the required 800 × 35 spacer
-  are all in `WordPress-blocks.md` §10 — including the rule that a caption on a PABAU FEATURE
-  screenshot must name the feature and say how it helps the reader do what this article is about.
-  Alt text is required, descriptive, and separate from the caption. Don't overload a section with
-  images; one purposeful image beats three decorative ones. If the post has NO featured image and
-  a good candidate exists, set it via `featured_media: <id>`. Log every image added (and its
-  source) in the change-log.
-
-SENTENCE GATE — run BEFORE the save, and do not save while it fails. You cannot count words by
-eye, so a script does it. Dump the body you are about to PUT to a file, then:
-  python3 ~/.claude/factcheck-flow/bin/sentence_check.py --file /tmp/body.html
-Rewrite every sentence it lists, re-run, repeat until it exits 0. Nothing over 30 words ships;
-26–30 is a per-sentence exception you must be able to justify, not a second budget. Don't buy the
-count with fragments or semicolon-welded clauses. Paste the final summary line into the
-change-log. If the script is missing, fetch it from the repo's `bin/` once.
-
-SAVE — ONE save for the whole run. Hold S7's changes and all of S8's edits in memory and PUT
-them together, per the wordpress-access skill: write payload.json with the Write tool, send it
-with `-d @payload.json -o /dev/null -w '%{http_code}\n'`, and change only the fields you touched
-(content, title, excerpt/meta description, Yoast focus keyphrase meta, categories/tags —
-append-only, remove "Uncategorized", featured_media if you set one). Draft stays draft; published
-stays published. Verify the save with a grep assertion, not a page fetch.
-
-CHANGE-LOG (hold for the S9 combined report): main keyword (old→new if changed), structural
-changes applied (from the Stage 1 box vs your own judgment), headings added/optimized, keywords
-placed (heading vs in-text), entity themes woven in, meta/title/description changes,
-categories/tags added, images added (with source) + featured image set + captions written or
-fixed, any answer-first/top-of-article reordering done, the block-contract work, and the sentence
-gate's final summary line (verbatim) plus how many sentences you rewrote to clear it.
+Then stop. The next stage dispatches the writer; you write no article copy at any point.
 ```
 
 ---
 
-# STAGE 9 — Save, cleanup, hand off to /fact
+# STAGE 8 — Dispatch the writer
 
 ```
-1. Confirm the S8 save returned a 2xx. Draft stays draft; a post someone accidentally
-   published is still handled as draft content — NEVER change publish status.
-2. Delete the run's temp files: /tmp/seo-<slug>-kw.json, -sel.json, -gsc.json,
-   -headings.txt, -body.txt (and the SERP picker's files if they still exist).
-3. Run /fact on the SAME article (its URL/ID). /SEO ALWAYS finishes by handing off to /fact —
-   including when the PROCEED GATE was skipped and no optimization happened. /fact re-runs the
-   editorial and block passes independently; that duplication is deliberate.
-4. Produce ONE combined report covering the /SEO change-log (if any) + the /fact results,
-   ending with the reminder to purge the WP Rocket cache for the URL.
+Spawn ONE `seo-writer` subagent. It performs the main-keyword swap, writes every section,
+enforces the block contract, sources images, clears the sentence gate, and saves the article
+in a single PUT. You do none of that yourself and you never see the article body.
+
+Pass it exactly this — paths and short facts, nothing bulky:
+- the brief path: /tmp/seo-<slug>-brief.md   (tell it to read this FIRST)
+- the selection path: /tmp/seo-<slug>-sel.json
+- the article URL or post ID, its status, and is_draft
+
+Then wait. The writer reads its own guides, fetches the article itself, and returns a
+change-log. Do NOT re-explain the block contract, the style guide, the sentence gate, or the
+optimization stance in the dispatch message — the agent carries all of it, and restating it
+here would pull into this context the very material the split exists to keep out.
+
+If the writer reports it could not complete something under "Skipped", relay that verbatim in
+S9. Do not try to fix it here by loading the guides and editing the article yourself — that
+undoes the whole arrangement. If a genuine re-run is needed, dispatch a fresh seo-writer with
+the same brief plus a note on what to correct.
+
+Keep the returned change-log. It is the /SEO half of the S9 report.
+```
+
+---
+
+# STAGE 9 — Cleanup, hand off to /fact
+
+```
+1. Confirm the writer reported a 2xx save, and that it preserved status and slug. Draft stays
+   draft; a post someone accidentally published is still handled as draft content — NEVER
+   change publish status.
+2. Delete the run's temp files: /tmp/seo-<slug>-kw.json, -sel.json, -gsc.json, -serp.json,
+   -serp-sel.json, -headings.txt, -body.txt, -brief.md, and every -entity-*.md.
+3. HAND OFF TO /fact — IN A FRESH SUBAGENT, NOT IN THIS CONVERSATION.
+   /SEO ALWAYS finishes by handing off to /fact, including when the PROCEED GATE was skipped
+   and no optimization happened. /fact re-runs the editorial and block passes independently;
+   that duplication is deliberate.
+
+   Do NOT run /fact inline here. By this point this context holds the research, the keyword
+   work, the entity profile, the outline, and the writer's change-log — and /fact is itself a
+   multi-stage orchestration with its own subagent fan-outs and human gates. Running it on top
+   of this context re-reads all of the above on every one of its turns, for no benefit: the two
+   flows share nothing but the article ID.
+
+   Instead spawn ONE `general-purpose` subagent and tell it, in substance:
+
+       Run the /fact flow on <article URL or post ID> by following
+       ~/.claude/commands/fact.md exactly, as the orchestrator. That file is your
+       instructions. Return its final consolidated report and nothing else.
+
+   ONE EXCEPTION — the triage gate. /fact Stage 2 asks the human about listicle review scores,
+   Pabau's own ranking position, and verified grave factual errors. A subagent cannot run that
+   gate. So:
+     - If you expect findings that need triage, prefer telling the user plainly: "/SEO is done
+       and saved. Run `/fact <url>` next — in a NEW session, so it starts with a clean
+       context." That is the cheapest and most correct hand-off, and it keeps the human in the
+       loop where the design puts them.
+     - Only dispatch the subagent version when running unattended, and have it treat an empty
+       ASK bucket as the normal case and surface any ASK findings in its report instead of
+       deciding them itself.
+4. Produce ONE combined report: the writer's change-log + the /fact results (or the instruction
+   to run /fact next, if you took that route), ending with the reminder to purge the WP Rocket
+   cache for the URL.
 ```
 
 ---
@@ -418,14 +396,19 @@ gate's final summary line (verbatim) plus how many sentences you rewrote to clea
 
 - Competitor keywords: pooled into ONE deduped list, tagged with which competitor(s) rank.
 - SERP structure analysis (S5): reuses the SAME pages opened for entity NLP, via one subagent
-  per page — headings, heading keyword/entity use, and structured-data formats → a SERP
-  structure profile that S6 turns into novel headings + [TABLE]/[LIST] nodes + reorganization,
-  and S8 writes and improves on. No extra fetches beyond the entity pass, and no page text in
-  the main context.
+  per page writing to /tmp, then ONE merge subagent → a SERP structure profile that S6 turns
+  into novel headings + [TABLE]/[LIST] nodes + reorganization, and the writer improves on. No
+  extra fetches beyond the entity pass, and neither the page text nor the per-page reports ever
+  enter the main context.
 - GSC list: built by `dfs_lists.py` — top 20 by clicks over a trailing 90-day window, enriched
   with difficulty + volume (display only, never filtered), displayed by position ascending.
   "opportunity" flags the two target categories, both requiring `present_on_page == false`:
   (1) RANKING, NOT ON-PAGE — position ≤ 10, weave into a heading/body; (2) WINNABLE, NEEDS
   CONTENT — position > 10, win it with a new dedicated heading + content.
-- Save cadence: exactly one save, in S8 (S7's changes ride along with it).
+- Save cadence: exactly one save, made by the `seo-writer` subagent (the main-keyword swap
+  rides along with it). This conversation never PUTs to WordPress.
+- Division of labour: S4–S7 PLAN (this context, no writing guides loaded); S8 WRITES (the
+  `seo-writer` subagent, which loads the guides and the body); S9 hands off. The writing guides
+  are ~40k tokens and the body thousands more — kept out of here, they are read once by an
+  agent that then discards them, instead of being re-read on every remaining turn.
 - After the keyword gate, S4–S8 run straight through to the /fact handoff (S9).

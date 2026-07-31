@@ -8,10 +8,11 @@
 **Read `~/.claude/factcheck-flow/guides/core-rules.md` now, and nothing else yet.** It
 carries the always-on rules plus the map of which full guide to open at which stage. The
 writing guides (`Pabau-style-guide.md`, `2-editorial.md`, `WordPress-blocks.md`,
-`Meta-title-best-practices.md`, `About-Pabau.md`, `Originality-and-search-intent.md`) are
-read in part 2, where the writing happens. Loading them now would keep ~40k tokens resident
-through every turn of the research stages, which is the single most expensive mistake in
-this flow.
+`Meta-title-best-practices.md`, `About-Pabau.md`) are read by the `seo-writer` subagent at
+S8 — never in this conversation. Part 2 reads exactly one of them,
+`Originality-and-search-intent.md`, because the outline depends on it. Loading the rest here
+would keep ~40k tokens resident through every remaining turn, which is the single most
+expensive mistake in this flow.
 
 **Batch your tool calls.** Independent calls go in ONE message: the Stage-1 SERP fetch is
 one call, Stage 2 is one script call, and Stage 5's page reads (part 2) fan out together.
@@ -43,8 +44,12 @@ strict JSON contracts, so these prompts also drop into a future modal app with n
 
 Stages: **S0** draft-check + setup → **S1** SERP pick → **S2** build lists → **S3** keyword
 selection (routing above) → *[read part 2]* → **S4** Outline → **S5** entities + SERP structure
-→ **S6** group entities + structure refine → **S7** main-keyword swap → **S8** optimize + write
-→ **S9** save, cleanup, hand off to /fact.
+→ **S6** group entities + structure refine → **S7** write the brief → **S8** dispatch the
+`seo-writer` subagent (it writes and saves) → **S9** cleanup, hand off to /fact.
+
+Note the shape: this conversation RESEARCHES and PLANS; a subagent WRITES. The writing guides
+(~40k tokens) and the article body are never loaded here — they live in the writer's context
+and are discarded when it returns.
 
 ---
 
@@ -73,6 +78,7 @@ scarce_total_threshold: 10  # ≤ this many keywords TOTAL → Claude Code picke
 site_domain: "pabau.com"    # used to identify our own result + our own ranked keywords
 
 # Helpers (all ship with the command)
+serp_fetch_script: "$HOME/.claude/factcheck-flow/bin/serp_fetch.py"
 dfs_lists_script: "$HOME/.claude/factcheck-flow/bin/dfs_lists.py"
 gsc_query_script: "$HOME/.claude/factcheck-flow/bin/gsc_query.py"
 gsc_key: "$HOME/.claude/factcheck-flow/gsc-key.json"  # SECRET; not in repo. Override: $PABAU_GSC_KEY
@@ -124,11 +130,24 @@ You are running the /SEO optimization flow for a single article: $ARGUMENTS
 Goal: let the user choose which SERP results to mine for Competitor Keywords. These SAME
 URLs are reused for entity NLP in Stage 5, so choose once.
 
-1. Call serp_organic_live_advanced:
-     keyword = CURRENT MAIN KEYWORD, location_name/language_code/search_engine from CONFIG,
-     depth = serp_depth.
-2. Keep ORGANIC results only. Drop: our own domain (site_domain), pure aggregators/SERP
-   features, and anything paywalled/login-gated you can't open. Keep the ranked order.
+1. Fetch the SERP IN CODE, not in context. The raw `serp_organic_live_advanced` response is
+   deeply nested — SERP features, rich-snippet sub-objects, per-result metadata — and this
+   stage keeps four fields per result. Loaded here it would sit in context for the whole run,
+   the same mistake Stage 2 already avoids. Run:
+     python3 "$HOME/.claude/factcheck-flow/bin/serp_fetch.py" \
+             --keyword "<CURRENT MAIN KEYWORD>" \
+             --location "United States" --language en --depth 10 \
+             --exclude-domain pabau.com \
+             --out /tmp/seo-<slug>-serp.json
+   It prints one summary line — {"out","kept","dropped_own","keyword"} — and writes the Gate #1
+   payload, already in the shape step 3 describes and `serp_picker.py --in` expects. It has
+   already dropped paid results, People-also-ask, and other SERP features, and flagged our own
+   domain with `own_domain: true` (kept, not removed, so you can see where we rank).
+   On a non-zero exit read the stderr message and fix it (usually credentials); do NOT fall
+   back to calling the DataForSEO MCP tool by hand — that reintroduces the cost this avoids.
+2. Read that file (it is a short list) and apply the two judgments the script cannot make.
+   First, drop from consideration any pure aggregator or anything paywalled/login-gated you
+   can't open, and ignore rows flagged `own_domain`. Keep the ranked order.
    ASSESS INTENT using the two-bar summary and the query-pattern mapping in core-rules.md —
    the full Originality-and-search-intent.md is read in part 2 at S4, where the outline and
    the originality nugget are planned. FIRST read the focus keyphrase as a literal question
@@ -142,12 +161,14 @@ URLs are reused for entity NLP in Stage 5, so choose once.
    but our article is a list of qualifications rather than a step-by-step route), say so now:
    on the published path the user can spell out the fix in the Structural-changes box; on the
    auto/draft path YOU own the restructure in Stage 4.
-3. Build the SERP-pick JSON (Gate #1 OUTPUT):
+3. The SERP-pick JSON (Gate #1 OUTPUT) already exists at /tmp/seo-<slug>-serp.json — step 1's
+   script wrote it. Do not rebuild it by hand. Its shape is:
 
    {
      "main_keyword": "<string>",
      "serp": [
-       {"rank": 1, "title": "<title>", "url": "<full exact live page URL, incl https://>"},
+       {"rank": 1, "title": "<title>", "url": "<full exact live page URL, incl https://>",
+        "domain": "<host>", "description": "<snippet>", "own_domain": false},
        ...
      ]
    }
@@ -168,8 +189,8 @@ URLs are reused for entity NLP in Stage 5, so choose once.
    4b. is_draft == false (MANUAL): launch the browser SERP picker — a clean page listing every
        ranking result as a checkbox row whose title is a CLICKABLE live link (opens in a new
        tab), with Select all / Select none. It writes the chosen URLs back automatically.
-       1. Write the SERP JSON (from step 3) to /tmp/seo-<slug>-serp.json:
-            { "main_keyword": "<kw>", "serp": [ {"rank","title","url"}, ... ] }
+       1. The input file already exists: /tmp/seo-<slug>-serp.json, written by step 1's script.
+          Nothing to build here.
        2. Run (this BLOCKS until the user clicks Save):
             python3 "$HOME/.claude/factcheck-flow/bin/serp_picker.py" \
                     --in /tmp/seo-<slug>-serp.json --out /tmp/seo-<slug>-serp-sel.json
@@ -252,14 +273,34 @@ five lists, and writes the picker payload. Raw API JSON never enters the convers
        (priority gsc > competitor > related > variations > highly_relevant, overlap noted in
        the row's "why"). Lists shorter than 20 after dedupe are expected — never backfill.
 
-3. THE ONE JUDGMENT THE SCRIPT CANNOT MAKE: topical relevance. Read the payload (it is ~100
-   short rows) and STRIKE any row that is off-topic, off-intent, or a brand term that doesn't
-   fit Pabau — the discovery endpoints happily return things like "minute clinic" or "the
-   patient" for a clinic-software seed. Borderline stays, tagged "review". Relevance is never
-   relaxed, not even in Tier 3. Rewrite the JSON file with the survivors before Stage 3, and
-   say how many rows you struck.
+3. THE ONE JUDGMENT THE SCRIPT CANNOT MAKE: topical relevance. **Delegate it — do NOT read the
+   payload yourself.** It is ~100 rows, and once the picker has run the only keywords that
+   matter are the handful the user selects; reading all 100 here would keep them resident for
+   the rest of the run for nothing.
 
-4. Report the per-list counts and total_kw. That total drives the Stage 3 routing.
+   Spawn ONE `general-purpose` subagent and give it exactly this job:
+
+       Read /tmp/seo-<slug>-kw.json. It holds five keyword lists for an article about
+       <one-line topic>, whose main keyword is "<CURRENT MAIN KEYWORD>". The site is
+       pabau.com — practice management software for aesthetic and healthcare practices.
+
+       STRIKE any row that is off-topic, off-intent, or a brand term that doesn't fit Pabau.
+       The discovery endpoints happily return things like "minute clinic" or "the patient"
+       for a clinic-software seed. Borderline rows STAY, with "review" appended to their
+       "why" field. Relevance is never relaxed, not even in Tier 3.
+
+       Rewrite /tmp/seo-<slug>-kw.json in place with the survivors, preserving the file's
+       exact schema and every remaining row's fields verbatim. Do not reorder, re-rank,
+       re-score, or backfill — only remove rows and tag borderline ones.
+
+       Return ONE line and nothing else:
+       STRUCK: <n> | REMAINING: <total> | LISTS: related=<n> variations=<n> competitor=<n> highly_relevant=<n> gsc_ranking=<n>
+
+   Take the returned counts at face value; the picker reads the pruned file from disk, so you
+   never need the rows themselves.
+
+4. Report the per-list counts and total_kw from the subagent's line. That total drives the
+   Stage 3 routing (recount from REMAINING, not from the pre-strike summary).
 ```
 
 ---

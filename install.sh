@@ -63,6 +63,12 @@ if curl -fsSL "$REPO_RAW/bin/sentence_check.py" -o "$FF/bin/sentence_check.py"; 
 else
   echo "  NOTE: could not download bin/sentence_check.py — the /fact sentence gate will be unavailable." >&2
 fi
+if curl -fsSL "$REPO_RAW/bin/serp_fetch.py" -o "$FF/bin/serp_fetch.py"; then
+  chmod +x "$FF/bin/serp_fetch.py" 2>/dev/null || true
+  echo "  - SERP fetcher installed"
+else
+  echo "  NOTE: could not download bin/serp_fetch.py — /SEO Stage 1 will have no helper." >&2
+fi
 
 # --- 1b. Download the Pabau reference guides from the repo -----------------
 # These define voice/terminology (Pabau-style-guide), product/positioning
@@ -171,6 +177,7 @@ fi
 fetch "commands/factcheck-flow.md" "$HOME/.claude/commands/fact.md"
 fetch "agents/article-editor.md" "$HOME/.claude/agents/article-editor.md"
 fetch "agents/factcheck-reporter.md" "$HOME/.claude/agents/factcheck-reporter.md"
+fetch "agents/seo-writer.md" "$HOME/.claude/agents/seo-writer.md"
 
 # The wordpress-access skill. Safe to sync: it holds only the credential RESOLUTION ORDER
 # (env vars → $WP_CREDENTIALS_FILE → ~/.claude/factcheck-flow/wp-credentials), never a
@@ -179,7 +186,7 @@ fetch "skills/wordpress-access/SKILL.md" "$HOME/.claude/skills/wordpress-access/
 
 # /SEO command + helpers (the seo-research/seo-write prompts are fetched in the loop above)
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
-for b in gsc_query keyword_picker serp_picker dfs_lists sentence_check; do
+for b in gsc_query keyword_picker serp_picker dfs_lists sentence_check serp_fetch; do
   fetch "bin/$b.py" "$FF/bin/$b.py"; chmod +x "$FF/bin/$b.py" 2>/dev/null || true
 done
 
@@ -362,6 +369,11 @@ echo "  - /fact command installed"
 # --- 2b. The /SEO command -------------------------------------------------
 if curl -fsSL "$REPO_RAW/commands/SEO.md" -o "$CLAUDE/commands/SEO.md"; then
   echo "  - /SEO command installed"
+  if curl -fsSL "$REPO_RAW/agents/seo-writer.md" -o "$CLAUDE/agents/seo-writer.md"; then
+    echo "  - seo-writer agent installed"
+  else
+    echo "  NOTE: could not download agents/seo-writer.md — /SEO cannot write without it." >&2
+  fi
 else
   echo "  ERROR: could not download commands/SEO.md — check your internet connection." >&2
   exit 1

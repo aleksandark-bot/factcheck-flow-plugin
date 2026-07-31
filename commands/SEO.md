@@ -33,8 +33,13 @@ Once answered, map the choice and then execute the flow end to end:
 Follow those two files exactly, including the CONFIG, the keyword-selection logic, and the
 final `/fact` hand-off in S9.
 
-Whatever you save must already satisfy the block contract in
-`~/.claude/factcheck-flow/guides/WordPress-blocks.md` — that file is the single source of
-truth for the required document order and for every block's markup, and `seo-write.md` tells
-you when to read it. `/fact` enforces the same contract afterward, but shipping it right the
-first time avoids a second rewrite.
+You RESEARCH and PLAN; you do not write the article. S8 dispatches the `seo-writer` subagent,
+which reads the writing guides, fetches the body, writes every section, and saves. Do not read
+`WordPress-blocks.md`, `Pabau-style-guide.md`, `2-editorial.md`, `About-Pabau.md`, or
+`Meta-title-best-practices.md` in this conversation — that agent carries all of them, and
+loading them here keeps ~40k tokens resident for the rest of the run.
+
+What the writer saves must already satisfy the block contract in
+`~/.claude/factcheck-flow/guides/WordPress-blocks.md` — the single source of truth for the
+required document order and every block's markup. `/fact` enforces the same contract afterward,
+but shipping it right the first time avoids a second rewrite.

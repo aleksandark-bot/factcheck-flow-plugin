@@ -89,6 +89,7 @@ fi
 fetch "commands/factcheck-flow.md" "$HOME/.claude/commands/fact.md"
 fetch "agents/article-editor.md" "$HOME/.claude/agents/article-editor.md"
 fetch "agents/factcheck-reporter.md" "$HOME/.claude/agents/factcheck-reporter.md"
+fetch "agents/seo-writer.md" "$HOME/.claude/agents/seo-writer.md"
 
 # The wordpress-access skill. Safe to sync: it holds only the credential RESOLUTION ORDER
 # (env vars → $WP_CREDENTIALS_FILE → ~/.claude/factcheck-flow/wp-credentials), never a
@@ -97,7 +98,7 @@ fetch "skills/wordpress-access/SKILL.md" "$HOME/.claude/skills/wordpress-access/
 
 # /SEO command + helpers (the seo-research/seo-write prompts are fetched in the loop above)
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
-for b in gsc_query keyword_picker serp_picker dfs_lists sentence_check; do
+for b in gsc_query keyword_picker serp_picker dfs_lists sentence_check serp_fetch; do
   fetch "bin/$b.py" "$FF/bin/$b.py"; chmod +x "$FF/bin/$b.py" 2>/dev/null || true
 done
 
