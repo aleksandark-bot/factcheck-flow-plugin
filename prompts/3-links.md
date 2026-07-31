@@ -28,6 +28,8 @@ Internal links open in the same tab and are NOT nofollow.
 
 Keep up to 5 external links ONLY. Choose the ones with the greatest impact, keep those, and remove the rest, while fixing the context around them to make sense without the link.
 
+**NEVER link to a competitor's pricing page.** Reading a competitor's pricing page to source their figures is still required — the link itself never ships. Check every external link for a pricing destination: `/pricing`, `/pricing-plans`, `/plans`, `/packages`, `/cost`, a `#pricing` anchor, or any page whose purpose is to sell their plans. Where you find one, **change the URL to that competitor's homepage** (root domain, e.g. `https://www.zenoti.com/`) and keep it nofollow + new tab. Then fix the anchor text and the surrounding sentence so both still make sense pointing at a homepage — anchor text like "Zenoti's pricing page" becomes "Zenoti". If the sentence existed only to send the reader to that pricing page, delete the sentence. If the homepage version of the link then adds nothing, drop the link entirely rather than keep a hollow one. This applies to every provider that isn't us, including in listicle pricing segments; `pabau.com/pricing/` is our own page and is unaffected.
+
 Remove any links to these articles and replace them with something else:
 - …/intraparenchymal-hemorrhage-icd-10-codes/
 - …/blog/acne-face-mapping/

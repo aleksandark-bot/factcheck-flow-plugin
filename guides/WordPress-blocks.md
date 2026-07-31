@@ -266,6 +266,12 @@ in the table and explain it in the sentence below. Never carry a number you cann
 to the vendor's own site, and never leave a stale price in place because it was already
 there.
 
+**Read their pricing page, never link to it.** The sourcing rule above is about where the
+numbers come from, not about where the article points. A competitor's pricing page is never
+a link destination: if the context sentence names their site, link their **homepage**
+(nofollow, new tab) or nothing at all. Only `pabau.com/pricing/` may be linked as a pricing
+page, as in the example below.
+
 Two acceptable table forms:
 
 **a) The site's pricing-table block** (preferred when the provider is in the site's

@@ -45,6 +45,9 @@ These hold in every edit, with no exceptions.
 - **Never name a specific customer** without the team's confirmation.
 - **Pricing comes from the provider's own website only** — never Capterra, G2, GetApp,
   Software Advice, Trustpilot, a round-up, or another blog. For Pabau, pabau.com only.
+- **Never link to a competitor's pricing page.** Read it for the figures, but link their
+  homepage instead — never `/pricing`, `/plans`, or a pricing anchor. Details in
+  `3-links.md`.
 
 ## Voice and mechanics
 
