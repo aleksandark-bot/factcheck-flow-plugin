@@ -141,9 +141,11 @@ Hard rules:
   (§9), image captions + spacers (§10), and video placement (§11). **Copy the markup from that
   file — never reconstruct it from memory or from a summary.** Rename any "The bottom line" /
   "Final thoughts" heading to `Conclusion` while you are in there.
-- **VIDEO (§11):** a YouTube embed never breaks up a prose section. Its only slot is the end of
-  the intro — after every intro paragraph, before the first H2. If the article you are
-  optimizing has one sitting mid-section, move it there, markup unchanged.
+- **VIDEO (§11):** a YouTube embed never breaks up a run of prose. Its only slot is the last
+  block of the opening prose run, immediately before the next heading. Most articles have a
+  `wp:embed` (search the body for `<!-- wp:embed`) and about half have it misplaced — between
+  intro paragraphs, above the intro, or mid-section. Move it, markup byte-for-byte, no spacer
+  after it, and never add a video that wasn't there.
 - **LISTICLE PRICING (§9):** every figure comes from the PROVIDER'S OWN WEBSITE; never
   Capterra, G2, GetApp, Software Advice, Trustpilot, or another blog, and pabau.com only for
   Pabau. No published prices → "Contact sales / no published pricing" plus a sentence saying so.

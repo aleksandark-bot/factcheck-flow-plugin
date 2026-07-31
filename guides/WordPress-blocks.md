@@ -18,7 +18,7 @@ H1 (post title)
 Key takeaways block                 ← required, always first body element
 [Download box]                      ← TEMPLATE ARTICLES ONLY (has its own built-in H2)
 Intro paragraphs                    ← required, no heading of its own
-[YouTube embed]                     ← IF the article has a video: after ALL intro paragraphs, before the first H2
+[YouTube embed]                     ← IF the article has a video: last block of the intro, immediately before the next heading
 H2 … body sections                  ← the article itself
 H2 <Pabau-for-this-purpose section> ← required; contains the Pabau CTA block
 H2 Conclusion                       ← required, exactly this word, concludes + links book-demo
@@ -31,8 +31,9 @@ Notes on order:
 - Schema JSON-LD in a `wp:html` block may sit above Key takeaways — leave it there.
 - `pro-tip` blocks may appear anywhere in the body; they are optional.
 - Images may appear anywhere in the body; every one of them needs a caption (section 10).
-- **A YouTube video belongs at the end of the intro, never inside a prose section** — see
-  section 11. It sits after the last intro paragraph and before the first H2.
+- **A YouTube video belongs at the end of the opening run of prose, never inside it** — the
+  last block before the next heading. Most articles have one and about half have it in the
+  wrong place; section 11 is the rule and the fix.
 - The **Pabau section** must come *before* Conclusion. It may be preceded by other body
   sections; nothing may sit between Conclusion and the Continue your research block
   except the conclusion's own paragraphs.
@@ -380,45 +381,74 @@ only correct the dimensions if they differ from 800 × 35.
 
 ---
 
-## 11. YouTube videos — intro only, never mid-section
+## 11. YouTube videos — end of the intro, never mid-prose
 
-A video is optional; its **placement is not**. When an article carries a YouTube embed, it
-goes **at the end of the intro**: after every intro paragraph, immediately before the first
-H2. One video per article is the norm, and that is the only slot for it.
+Most articles already carry a `wp:embed` YouTube block, and roughly half of them have it in
+the wrong place. The video is optional; its **placement is not**.
 
-**A video must never break up a prose section.** Dropping an embed between two paragraphs
-splits an argument in half — the reader hits a player mid-thought, and the paragraph after it
-reads like the start of something new. So:
+**The one legal slot: the last block of the opening run of prose, immediately before the next
+heading.** Two article shapes, one rule:
 
-- Never between paragraphs, anywhere in the article.
-- Never between a heading and the first paragraph of its section.
-- Never inside the Pabau section, the Conclusion, or the FAQ.
-- Never after the Conclusion or between the Conclusion and the Continue your research block.
+```
+Key takeaways                       Key takeaways
+Intro paragraph                     H2 <opening section>      ← code articles start on an H2
+Intro paragraph                     Paragraph
+Intro paragraph                     Paragraph
+YouTube embed          ←            Paragraph
+H2 <first body section>             YouTube embed          ←
+                                    H2 <next section>
+```
 
-If an existing article has a video sitting mid-section, **move it** to the end of the intro.
-Move the block as-is — don't rewrite the surrounding copy to accommodate where it used to be,
-and don't leave behind a "watch the video below" sentence that now points nowhere. If the
-paragraph the video was interrupting was split around it, rejoin the halves.
+Either way the reader finishes the intro, then meets the player, then moves on to the next
+heading. Nothing else goes between the embed and that heading.
 
-Markup — WordPress core embed block. Keep an existing embed's block type unchanged; only move
-it:
+**A video must never break up a run of prose.** An embed between two paragraphs splits an
+argument in half: the reader hits a player mid-thought, and the paragraph after it reads like
+the start of something new. The three misplacements that are live on the site today, all of
+which get fixed by moving the block:
+
+- **Between intro paragraphs** (the most common) — the intro continues below the player.
+  Move the embed down past every remaining intro paragraph.
+- **Mid body section** — the embed sits between two paragraphs under a later H2. Move it up to
+  the end of the opening run.
+- **Between Key takeaways and the intro** — the player lands before the article has said
+  anything. Move it down past the whole intro.
+
+And never inside the Pabau section, the Conclusion, or the FAQ; never after the Conclusion or
+between the Conclusion and the Continue your research block.
+
+When you move one, **move the block byte-for-byte** — do not rewrite the markup or re-embed
+the URL. Then clean up after it: if a paragraph was split around the video, rejoin the halves,
+and delete any "watch the video below" sentence that no longer points at anything. Never
+rewrite surrounding copy to justify the old position, and never add a video to an article that
+doesn't have one.
+
+Markup — WordPress core embed block, as it exists on the site:
 
 ```
 <!-- wp:embed {"url":"https://www.youtube.com/watch?v=<VIDEO_ID>","type":"video","providerNameSlug":"youtube","responsive":true,"className":"wp-embed-aspect-16-9 wp-has-aspect-ratio"} -->
-<figure class="wp-block-embed is-type-video is-provider-youtube wp-block-embed-youtube wp-embed-aspect-16-9 wp-has-aspect-ratio"><div class="wp-block-embed__wrapper">
+<figure class="wp-block-embed is-type-video is-provider-youtube wp-block-embed-youtube wp-embed-aspect-16-9 wp-has-aspect-ratio">
+<div class="wp-block-embed__wrapper">
 https://www.youtube.com/watch?v=<VIDEO_ID>
-</div></figure>
+</div>
+</figure>
 <!-- /wp:embed -->
 ```
 
-- Use the plain `youtube.com/watch?v=` URL on its own line inside the wrapper — not an
-  `<iframe>` hand-rolled into a `wp:html` block, which loses the responsive wrapper.
-- **Follow the embed with one 800 × 35 spacer block** (same markup as section 10), so the
-  first H2 doesn't butt up against the player.
-- A `<figcaption>` is optional on a video — unlike images, which always need one. If you add
-  one, it follows the section 10 caption contract: full sentence, ends with a period, `<em>`.
-- The embedded video must be relevant to the article's topic and actually still available on
-  YouTube. A dead or private video is a broken block: remove it.
+- Both forms are live and both render: some blocks carry the `"className"` attribute, some
+  don't. **Leave whichever form the article already has** — this is not something to normalize.
+- The URL is the plain `youtube.com/watch?v=` form on its own line inside the wrapper. Never
+  hand-roll an `<iframe>` into a `wp:html` block; it loses the responsive wrapper.
+- **No spacer after an embed.** Unlike images (section 10), the embed block carries its own
+  margins and no article spaces one manually. Don't add one.
+- A `<figcaption>` is optional on a video, unlike images, which always need one. If one is
+  there, it follows the section 10 caption contract: full sentence, period, `<em>`.
+- The video must be relevant to the article's topic and still playable. A dead or private
+  video is a broken block: remove it rather than move it.
+
+To find every embed in a body you hold, search for `<!-- wp:embed` — WordPress's REST `search`
+parameter does **not** match block markup, so searching the API for "youtube" returns nothing
+even on articles that have one.
 
 ---
 
@@ -434,5 +464,5 @@ https://www.youtube.com/watch?v=<VIDEO_ID>
 - [ ] Listicle: comparison table after intro; every provider review ends with a `Pricing` heading + pricing table, all figures from the provider's own site
 - [ ] Every image has a `<figcaption>`: full sentence, ends in a period, wrapped in `<em>`, no stray `*`; Pabau-feature screenshots tie the feature to this article's purpose; alt text present and not duplicated into the caption
 - [ ] Every image is followed by one 800 × 35 `wp:spacer` block
-- [ ] Any YouTube embed sits at the END of the intro (after all intro paragraphs, before the first H2) — never between paragraphs or inside a section; followed by one spacer
+- [ ] Any YouTube embed is the LAST block of the opening prose run, immediately before the next heading — never between paragraphs, never before the intro, never mid-section; markup unchanged, no spacer added
 - [ ] No duplicate headings above self-heading blocks; no placeholder items anywhere
