@@ -18,6 +18,7 @@ H1 (post title)
 Key takeaways block                 ← required, always first body element
 [Download box]                      ← TEMPLATE ARTICLES ONLY (has its own built-in H2)
 Intro paragraphs                    ← required, no heading of its own
+[YouTube embed]                     ← IF the article has a video: after ALL intro paragraphs, before the first H2
 H2 … body sections                  ← the article itself
 H2 <Pabau-for-this-purpose section> ← required; contains the Pabau CTA block
 H2 Conclusion                       ← required, exactly this word, concludes + links book-demo
@@ -30,6 +31,8 @@ Notes on order:
 - Schema JSON-LD in a `wp:html` block may sit above Key takeaways — leave it there.
 - `pro-tip` blocks may appear anywhere in the body; they are optional.
 - Images may appear anywhere in the body; every one of them needs a caption (section 10).
+- **A YouTube video belongs at the end of the intro, never inside a prose section** — see
+  section 11. It sits after the last intro paragraph and before the first H2.
 - The **Pabau section** must come *before* Conclusion. It may be preceded by other body
   sections; nothing may sit between Conclusion and the Continue your research block
   except the conclusion's own paragraphs.
@@ -377,7 +380,49 @@ only correct the dimensions if they differ from 800 × 35.
 
 ---
 
-## 11. Quick QA checklist
+## 11. YouTube videos — intro only, never mid-section
+
+A video is optional; its **placement is not**. When an article carries a YouTube embed, it
+goes **at the end of the intro**: after every intro paragraph, immediately before the first
+H2. One video per article is the norm, and that is the only slot for it.
+
+**A video must never break up a prose section.** Dropping an embed between two paragraphs
+splits an argument in half — the reader hits a player mid-thought, and the paragraph after it
+reads like the start of something new. So:
+
+- Never between paragraphs, anywhere in the article.
+- Never between a heading and the first paragraph of its section.
+- Never inside the Pabau section, the Conclusion, or the FAQ.
+- Never after the Conclusion or between the Conclusion and the Continue your research block.
+
+If an existing article has a video sitting mid-section, **move it** to the end of the intro.
+Move the block as-is — don't rewrite the surrounding copy to accommodate where it used to be,
+and don't leave behind a "watch the video below" sentence that now points nowhere. If the
+paragraph the video was interrupting was split around it, rejoin the halves.
+
+Markup — WordPress core embed block. Keep an existing embed's block type unchanged; only move
+it:
+
+```
+<!-- wp:embed {"url":"https://www.youtube.com/watch?v=<VIDEO_ID>","type":"video","providerNameSlug":"youtube","responsive":true,"className":"wp-embed-aspect-16-9 wp-has-aspect-ratio"} -->
+<figure class="wp-block-embed is-type-video is-provider-youtube wp-block-embed-youtube wp-embed-aspect-16-9 wp-has-aspect-ratio"><div class="wp-block-embed__wrapper">
+https://www.youtube.com/watch?v=<VIDEO_ID>
+</div></figure>
+<!-- /wp:embed -->
+```
+
+- Use the plain `youtube.com/watch?v=` URL on its own line inside the wrapper — not an
+  `<iframe>` hand-rolled into a `wp:html` block, which loses the responsive wrapper.
+- **Follow the embed with one 800 × 35 spacer block** (same markup as section 10), so the
+  first H2 doesn't butt up against the player.
+- A `<figcaption>` is optional on a video — unlike images, which always need one. If you add
+  one, it follows the section 10 caption contract: full sentence, ends with a period, `<em>`.
+- The embedded video must be relevant to the article's topic and actually still available on
+  YouTube. A dead or private video is a broken block: remove it.
+
+---
+
+## 12. Quick QA checklist
 
 - [ ] Key takeaways block present, first body element, `"title":"Key takeaways"` set, items in sentence case
 - [ ] Template article: download box below Key takeaways, above intro, built-in H2, download URL returns 200
@@ -389,4 +434,5 @@ only correct the dimensions if they differ from 800 × 35.
 - [ ] Listicle: comparison table after intro; every provider review ends with a `Pricing` heading + pricing table, all figures from the provider's own site
 - [ ] Every image has a `<figcaption>`: full sentence, ends in a period, wrapped in `<em>`, no stray `*`; Pabau-feature screenshots tie the feature to this article's purpose; alt text present and not duplicated into the caption
 - [ ] Every image is followed by one 800 × 35 `wp:spacer` block
+- [ ] Any YouTube embed sits at the END of the intro (after all intro paragraphs, before the first H2) — never between paragraphs or inside a section; followed by one spacer
 - [ ] No duplicate headings above self-heading blocks; no placeholder items anywhere

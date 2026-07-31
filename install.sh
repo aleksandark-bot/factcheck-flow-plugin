@@ -502,14 +502,14 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — the contract, with the exact
    markup for every block (reference article: https://pabau.com/templates/accutite/, post
    151170; fetch it with `context=edit` if you want to see the real thing). Then enforce all
-   eight guarantees below, in order, against the block markup you hold: Key takeaways →
+   nine guarantees below, in order, against the block markup you hold: Key takeaways →
    download box (templates) → Pabau section + CTA block → Conclusion → Continue your
-   research → FAQ → listicle pricing → image captions.
+   research → FAQ → listicle pricing → image captions → video placement.
 
-   In D1, D5 and D6 you are only changing wrapper markup, letter case, and placeholder items
-   — never the copy. D2, D3, D4, D7 and D8 may require writing new content (a download box,
-   a Pabau section, a proper conclusion, a pricing segment, an image caption); write it in
-   the article's voice per `2-editorial.md` and the Pabau guides.
+   In D1, D5, D6 and D9 you are only changing wrapper markup, letter case, placeholder items,
+   and block position — never the copy. D2, D3, D4, D7 and D8 may require writing new content
+   (a download box, a Pabau section, a proper conclusion, a pricing segment, an image caption);
+   write it in the article's voice per `2-editorial.md` and the Pabau guides.
 
    The required document order you are enforcing is `WordPress-blocks.md` §1. Never leave a
    heading above a block that renders its own heading (Key takeaways, Continue your research).
@@ -605,6 +605,15 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
      it helps the reader do the specific thing this article is about.
    - Keep alt text present and separate. Ensure exactly one spacer follows each image.
 
+   **D9 — Video placement (ONLY IF the article has a video).** Contract: §11. A YouTube embed
+   belongs at the END of the intro — after every intro paragraph, immediately before the first
+   H2. It must never break up a prose section: not between two paragraphs, not between a
+   heading and its first paragraph, not inside the Pabau section, Conclusion, or FAQ, and not
+   after the Conclusion. Find every embed in the body and move any that is misplaced, block
+   markup unchanged. If a paragraph was split around it, rejoin the halves, and drop any
+   "watch the video below" line left pointing at nothing. Ensure one 800 × 35 spacer follows
+   the embed. No video in the article → nothing to do; never add one.
+
 ## Pass E — sentence-length gate (MANDATORY, blocks the save)
 
 Sentence length is not checked by eye. You cannot count words reliably while writing, so a
@@ -693,6 +702,7 @@ then these sections, one line each:
 - `Continue your research block:` already correct / converted / added / placeholders replaced / placeholders removed / trimmed to 5 / wrapper H2 removed / empty block removed
 - `Pricing segments:` all first-party / N added / N figures corrected / comparison table added / not a listicle
 - `Image captions:` N images, all captioned / N written / N rewritten / N asterisk fixes / no images
+- `Video:` already at end of intro / moved to end of intro from "<old location>" / spacer added / no video
 - `Sentence gate:` the checker's final summary line, pasted verbatim (e.g. `175 sentences |
   longest 24w | 0 over 25`), then `N rewritten`. If any sentence sits in the 26–30 band, list
   each one and why it can't be split. An empty or absent line means the gate was not run,
@@ -909,7 +919,7 @@ When writing, editing, or fact-checking Pabau content, read these guides first:
 - \`~/.claude/factcheck-flow/guides/Originality-and-search-intent.md\` — the two-bar rule for every article: fit searcher intent (answer the actual query, in the SERP-dominant format) AND carry an originality nugget (a unique angle no top-10 result has). Kill mirage/fluff; be specific.
 - \`~/.claude/factcheck-flow/guides/WordPress-blocks.md\` — the block contract + exact markup: document order, Key takeaways block (mandatory \`"title":"Key takeaways"\`), template download box, Pabau CTA (\`book-demo\`) block and the Pabau section before the Conclusion, the \`Conclusion\` heading + its \`/book-demo/\` link, Continue your research (\`expert-picks\`), Yoast FAQ, listicle pricing tables, image captions. Reference article: https://pabau.com/templates/accutite/.
 
-Block rules every article must satisfy: "Key takeaways" (capital K only, via the block's \`title\` attribute); an H2 Pabau section with the CTA block immediately before an H2 headed exactly "Conclusion" that concludes (not summarizes) and ends with a \`/book-demo/\` CTA link; a Continue your research block; a download box on template articles; a caption on every image (full sentence, ends with a period, italic via \`<em>\` — and if it shows a Pabau feature, it says how that feature helps the reader do what the article is about); and in listicles a \`Pricing\` heading + pricing table closing every provider review, with figures from the provider's own website only.
+Block rules every article must satisfy: "Key takeaways" (capital K only, via the block's \`title\` attribute); an H2 Pabau section with the CTA block immediately before an H2 headed exactly "Conclusion" that concludes (not summarizes) and ends with a \`/book-demo/\` CTA link; a Continue your research block; a download box on template articles; a caption on every image (full sentence, ends with a period, italic via \`<em>\` — and if it shows a Pabau feature, it says how that feature helps the reader do what the article is about); any YouTube video placed at the end of the intro (after all intro paragraphs, before the first H2) and never breaking up a prose section; and in listicles a \`Pricing\` heading + pricing table closing every provider review, with figures from the provider's own website only.
 
 Quick rules: keep sentences to 25 words max (30 only where a split would break the meaning); US English (say "practice", not "clinic"); introduce Pabau on first mention ("practice management software like Pabau"); qualify product names once ("Pabau GO, our iOS app"); never say "Pabau Connect" externally (say "online booking"); no free trial (structured onboarding); every subscription includes every feature (no gating); don't undermine the core product when describing Plus add-ons. Every article must fit searcher intent AND have a unique angle (originality nugget) — never publish generic, me-too content.
 $GUIDE_END

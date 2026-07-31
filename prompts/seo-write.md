@@ -138,6 +138,9 @@ tag each [UNCHANGED]/[OPTIMIZED]/[NEW] like any other node, and note:
   note the judgment it will land plus its closing inline CTA link.
 - **Continue your research** (§7) — plan the block (max 5 under-linked targets, no wrapper H2).
 - **LISTICLE** (§9) — plan a `Pricing` node at the END of every provider review.
+- **Video** (§11) — if the article already carries a YouTube embed, its only slot is the end of
+  the intro: after every intro paragraph, before the first H2. Never plan a video inside a body
+  section or between paragraphs. If one currently sits mid-section, plan the move.
 
 IMAGE PLANNING (Optimization stance #4): mark outline nodes that should carry an image with an
 [IMG] note — what the image should show and why it helps (e.g. "product screenshot for pick #1",

@@ -72,14 +72,14 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — the contract, with the exact
    markup for every block (reference article: https://pabau.com/templates/accutite/, post
    151170; fetch it with `context=edit` if you want to see the real thing). Then enforce all
-   eight guarantees below, in order, against the block markup you hold: Key takeaways →
+   nine guarantees below, in order, against the block markup you hold: Key takeaways →
    download box (templates) → Pabau section + CTA block → Conclusion → Continue your
-   research → FAQ → listicle pricing → image captions.
+   research → FAQ → listicle pricing → image captions → video placement.
 
-   In D1, D5 and D6 you are only changing wrapper markup, letter case, and placeholder items
-   — never the copy. D2, D3, D4, D7 and D8 may require writing new content (a download box,
-   a Pabau section, a proper conclusion, a pricing segment, an image caption); write it in
-   the article's voice per `2-editorial.md` and the Pabau guides.
+   In D1, D5, D6 and D9 you are only changing wrapper markup, letter case, placeholder items,
+   and block position — never the copy. D2, D3, D4, D7 and D8 may require writing new content
+   (a download box, a Pabau section, a proper conclusion, a pricing segment, an image caption);
+   write it in the article's voice per `2-editorial.md` and the Pabau guides.
 
    The required document order you are enforcing is `WordPress-blocks.md` §1. Never leave a
    heading above a block that renders its own heading (Key takeaways, Continue your research).
@@ -175,6 +175,15 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
      it helps the reader do the specific thing this article is about.
    - Keep alt text present and separate. Ensure exactly one spacer follows each image.
 
+   **D9 — Video placement (ONLY IF the article has a video).** Contract: §11. A YouTube embed
+   belongs at the END of the intro — after every intro paragraph, immediately before the first
+   H2. It must never break up a prose section: not between two paragraphs, not between a
+   heading and its first paragraph, not inside the Pabau section, Conclusion, or FAQ, and not
+   after the Conclusion. Find every embed in the body and move any that is misplaced, block
+   markup unchanged. If a paragraph was split around it, rejoin the halves, and drop any
+   "watch the video below" line left pointing at nothing. Ensure one 800 × 35 spacer follows
+   the embed. No video in the article → nothing to do; never add one.
+
 ## Pass E — sentence-length gate (MANDATORY, blocks the save)
 
 Sentence length is not checked by eye. You cannot count words reliably while writing, so a
@@ -263,6 +272,7 @@ then these sections, one line each:
 - `Continue your research block:` already correct / converted / added / placeholders replaced / placeholders removed / trimmed to 5 / wrapper H2 removed / empty block removed
 - `Pricing segments:` all first-party / N added / N figures corrected / comparison table added / not a listicle
 - `Image captions:` N images, all captioned / N written / N rewritten / N asterisk fixes / no images
+- `Video:` already at end of intro / moved to end of intro from "<old location>" / spacer added / no video
 - `Sentence gate:` the checker's final summary line, pasted verbatim (e.g. `175 sentences |
   longest 24w | 0 over 25`), then `N rewritten`. If any sentence sits in the 26–30 band, list
   each one and why it can't be split. An empty or absent line means the gate was not run,

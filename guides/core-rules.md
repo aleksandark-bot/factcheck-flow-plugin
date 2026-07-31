@@ -111,6 +111,7 @@ H1
 Key takeaways block                 ← always first body element
 [Download box]                      ← template articles only; has its own H2
 Intro
+[YouTube embed]                     ← if there is a video: after ALL intro paragraphs, before the first H2
 H2 … body sections
 H2 <Pabau-for-this-purpose section> ← contains the book-demo CTA block
 H2 Conclusion                       ← exactly this word; concludes, links /book-demo/
@@ -122,3 +123,7 @@ Yoast FAQ block
 Never put a heading above a block that renders its own heading (Key takeaways, Continue
 your research). Every image carries a `<figcaption>` and is followed by one 800 × 35
 spacer block.
+
+**A YouTube video never breaks up a prose section.** It goes in the intro, after all the
+intro paragraphs and before the first H2 — never between two paragraphs, never between a
+heading and its first paragraph. A video found mid-section gets moved to that slot.

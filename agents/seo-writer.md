@@ -138,9 +138,12 @@ Hard rules:
   template download box (§3), the `book-demo` CTA block (§4) inside the required Pabau
   section (§5), the `Conclusion` heading and its inline CTA link (§6), the `expert-picks`
   Continue your research block (§7), the Yoast FAQ block (§8), listicle pricing segments
-  (§9), and image captions + spacers (§10). **Copy the markup from that file — never
-  reconstruct it from memory or from a summary.** Rename any "The bottom line" / "Final
-  thoughts" heading to `Conclusion` while you are in there.
+  (§9), image captions + spacers (§10), and video placement (§11). **Copy the markup from that
+  file — never reconstruct it from memory or from a summary.** Rename any "The bottom line" /
+  "Final thoughts" heading to `Conclusion` while you are in there.
+- **VIDEO (§11):** a YouTube embed never breaks up a prose section. Its only slot is the end of
+  the intro — after every intro paragraph, before the first H2. If the article you are
+  optimizing has one sitting mid-section, move it there, markup unchanged.
 - **LISTICLE PRICING (§9):** every figure comes from the PROVIDER'S OWN WEBSITE; never
   Capterra, G2, GetApp, Software Advice, Trustpilot, or another blog, and pabau.com only for
   Pabau. No published prices → "Contact sales / no published pricing" plus a sentence saying so.
