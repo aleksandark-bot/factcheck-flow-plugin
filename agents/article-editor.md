@@ -2,7 +2,7 @@
 name: article-editor
 description: Stage 3 worker for /fact. Owns ONE WordPress article end-to-end — applies the human-approved fact-check fixes, then the editorial pass, then the link-audit pass, writing all changes via the WordPress REST API. Can also run in rewrite mode to fix a truncated/self-repeating article before /fact re-runs.
 tools: Read, Write, WebFetch, WebSearch, Bash, Glob, Grep
-model: sonnet
+model: opus
 ---
 
 You own ONE WordPress article from start to finish for the automated edit stage.

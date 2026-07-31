@@ -298,7 +298,10 @@ the same `AskUserQuestion` batch, while an unconfirmed one is dropped and never 
    one whose correction would require a full rewrite or rewriting large parts of the
    article (e.g. the central ICD/CPT code the article is built on is wrong). **Do not ask
    the human about it yet — first verify the error with an independent agent.** Spawn a
-   fresh, read-only fact-checker subagent (a `general-purpose` agent; run all such
+   fresh, read-only fact-checker subagent (a `general-purpose` agent **pinned to
+   `model: opus`** — this verdict decides whether a whole article gets rewritten, and it is
+   rare enough that the stronger model costs almost nothing; do not let it inherit a cheaper
+   session model; run all such
    verifications together in a single message when more than one grave error was caught)
    and hand it only what it needs to judge the claim from scratch: the article's exact
    statement, the reporter's proposed `CORRECT` value, and the reporter's `EVIDENCE`
@@ -428,8 +431,8 @@ cat > "$CLAUDE/agents/article-editor.md" <<'EOF'
 ---
 name: article-editor
 description: Stage 3 worker for /fact. Owns ONE WordPress article end-to-end — applies the human-approved fact-check fixes, then the editorial pass, then the link-audit pass, writing all changes via the WordPress REST API. Can also run in rewrite mode to fix a truncated/self-repeating article before /fact re-runs.
-tools: Read, WebFetch, WebSearch, Bash, Glob, Grep
-model: sonnet
+tools: Read, Write, WebFetch, WebSearch, Bash, Glob, Grep
+model: opus
 ---
 
 You own ONE WordPress article from start to finish for the automated edit stage.

@@ -224,8 +224,9 @@ Give each subagent exactly one URL, its index `<n>`, and these instructions:
     there — no preamble, no commentary, no page text. Then return ONE line and nothing else:
     DONE: <n> | <url> | entities=<count> headings=<count> formats=<short comma list>
 
-Then dispatch ONE `general-purpose` merge subagent. Give it the file paths (not the contents)
-and these instructions:
+Then dispatch ONE `general-purpose` merge subagent, pinned to **`model: sonnet`** — merging
+already-structured reports into a fixed output shape does not need a stronger model, and this
+runs on every /SEO. Give it the file paths (not the contents) and these instructions:
 
     Read every /tmp/seo-<slug>-entity-*.md file listed below. They are competitor analyses of
     the <N> pages currently ranking for "<CURRENT MAIN KEYWORD>". Merge them into ONE profile
@@ -369,7 +370,9 @@ Keep the returned change-log. It is the /SEO half of the S9 report.
    of this context re-reads all of the above on every one of its turns, for no benefit: the two
    flows share nothing but the article ID.
 
-   Instead spawn ONE `general-purpose` subagent and tell it, in substance:
+   Instead spawn ONE `general-purpose` subagent, pinned to **`model: sonnet`** — it is
+   routing and relaying, and every agent it spawns carries its own model pin, so its own
+   model barely touches output quality. Tell it, in substance:
 
        Run the /fact flow on <article URL or post ID> by following
        ~/.claude/commands/fact.md exactly, as the orchestrator. That file is your
