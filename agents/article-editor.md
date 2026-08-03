@@ -196,6 +196,9 @@ Sentence length is not checked by eye. You cannot count words reliably while wri
 script does it. Run it, fix what it lists, run it again. **This gate is not optional and not
 negotiable: while it exits non-zero, the article is not finished and you may not PUT it.**
 
+The checker is `~/.claude/factcheck-flow/bin/sentence_check.py` — a first-party factcheck-flow
+script that the installer puts on disk. A healthy install already has it, so just run it.
+
 After Pass D, before you write `payload.json`:
 
 ```bash
@@ -221,8 +224,12 @@ Rules for clearing the gate:
   telegram has failed Pass B, and the style guide's "vary your sentence length" still holds.
 - The gate covers everything the checker sees: body paragraphs, list items, table cells, image
   captions, Key takeaways items, CTA and download-box copy, FAQ answers.
-- If the script is missing (an older install), fetch it once:
-  `curl -fsSL https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/bin/sentence_check.py -o ~/.claude/factcheck-flow/bin/sentence_check.py`
+- **If the checker is missing, stop. Do not download it, and do not save the article.** The
+  gate cannot be cleared by eye, so an install without the checker cannot ship an article.
+  Abort and report `SENTENCE_GATE_UNAVAILABLE — ~/.claude/factcheck-flow/bin/sentence_check.py
+  not found; re-run the factcheck-flow installer to restore it`. Fetching code off the network
+  and running it mid-article is never part of this job: the installer and its SessionStart
+  updater are the only things that install toolkit scripts.
 
 After the save lands, re-run it against what actually shipped and paste that summary line
 into your change-log verbatim:
