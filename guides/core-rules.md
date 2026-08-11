@@ -124,6 +124,10 @@ Never put a heading above a block that renders its own heading (Key takeaways, C
 your research). Every image carries a `<figcaption>` and is followed by one 800 × 35
 spacer block.
 
+**In a listicle, every provider review opens with a `pabau/provider-card` block directly
+below the provider's H2** (before any prose) and closes with a `Pricing` heading + table —
+markup and card rules in `WordPress-blocks.md` §9a and §9.
+
 **A YouTube video never breaks up a run of prose.** Its one slot is the last block of the
 opening prose run, immediately before the next heading — after every intro paragraph, whether
 the intro is headless or sits under an opening H2. Never between two paragraphs, never before

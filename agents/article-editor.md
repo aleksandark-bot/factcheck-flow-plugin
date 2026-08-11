@@ -72,14 +72,16 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — the contract, with the exact
    markup for every block (reference article: https://pabau.com/templates/accutite/, post
    151170; fetch it with `context=edit` if you want to see the real thing). Then enforce all
-   nine guarantees below, in order, against the block markup you hold: Key takeaways →
+   ten guarantees below, in order, against the block markup you hold: Key takeaways →
    download box (templates) → Pabau section + CTA block → Conclusion → Continue your
-   research → FAQ → listicle pricing → image captions → video placement.
+   research → FAQ → provider cards (listicles) → listicle pricing → image captions →
+   video placement.
 
-   In D1, D5, D6 and D9 you are only changing wrapper markup, letter case, placeholder items,
-   and block position — never the copy. D2, D3, D4, D7 and D8 may require writing new content
-   (a download box, a Pabau section, a proper conclusion, a pricing segment, an image caption);
-   write it in the article's voice per `2-editorial.md` and the Pabau guides.
+   In D1, D5, D6 and D10 you are only changing wrapper markup, letter case, placeholder items,
+   and block position — never the copy. D2, D3, D4, D7, D8 and D9 may require writing new
+   content (a download box, a Pabau section, a proper conclusion, a provider card's verdict and
+   lists, a pricing segment, an image caption); write it in the article's voice per
+   `2-editorial.md` and the Pabau guides.
 
    The required document order you are enforcing is `WordPress-blocks.md` §1. Never leave a
    heading above a block that renders its own heading (Key takeaways, Continue your research).
@@ -150,7 +152,21 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
      rather than ship an empty shell or stubs. This is the one case where the article may end
      up without it; note it under "Skipped".
 
-   **D7 — Listicle pricing segments (LISTICLES ONLY).** Contract: §9. Every provider review
+   **D7 — Provider cards (LISTICLES ONLY).** Contract: §9a. Every provider review must OPEN
+   with a `pabau/provider-card` block placed **directly below the provider's H2** (or H3 if
+   the hierarchy runs deeper), before any prose, followed by the standard 800 × 35 spacer.
+   - No card under a provider heading → build one per §9a: rating consistent with the review,
+     `topPick`/`pickLabel` on the #1 provider only, one-sentence `bottomLine`, newline-separated
+     `who`/`works`/`doesnt` lists drawn from the review itself, `price` from the provider's own
+     website (same sourcing rule as D8), `siteUrl` = competitor homepage (never their pricing
+     page; `pabau.com/pricing/` allowed for Pabau).
+   - A card that exists but sits below prose → move it up to directly under the heading.
+   - A legacy raw `wp:html` `pb-card` → rebuild it as the `pabau/provider-card` block, carry
+     the content over, and remove the per-article `<style>` block once no raw card remains.
+   - Never add a logo, and never add a per-article `<style>` block — the plugin ships the CSS.
+   - Card facts must agree with the review copy and the D8 pricing segment.
+
+   **D8 — Listicle pricing segments (LISTICLES ONLY).** Contract: §9. Every provider review
    must END with a pricing segment — a `Pricing` heading at the level matching the article's
    provider hierarchy, a pricing table, then one sentence of context — placed after the
    shines/falls-short material and before the next provider. Prefer the site's
@@ -160,7 +176,7 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    listicle carries its top-of-page comparison table right after the intro, and add it if
    missing — it does not replace the per-provider tables.
 
-   **D8 — Image captions (ALWAYS).** Contract: §10, which carries the caption rules, the
+   **D9 — Image captions (ALWAYS).** Contract: §10, which carries the caption rules, the
    block markup, and the required 800 × 35 spacer. Walk EVERY image in the article — core
    `wp:image` blocks, images inside `wp:html`, images in a gallery — and bring each one up to
    §10:
@@ -175,7 +191,7 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
      it helps the reader do the specific thing this article is about.
    - Keep alt text present and separate. Ensure exactly one spacer follows each image.
 
-   **D9 — Video placement (ONLY IF the article has a video).** Contract: §11. Most articles
+   **D10 — Video placement (ONLY IF the article has a video).** Contract: §11. Most articles
    carry one and about half have it misplaced, so check every time: search the body you hold
    for `<!-- wp:embed`. The embed's one legal slot is the **last block of the opening run of
    prose, immediately before the next heading** — after every intro paragraph, whether the
@@ -248,11 +264,12 @@ URL="<article URL>"
 curl -s "$URL" | grep -c 'wp-element-caption'            # captions rendered
 curl -s "$URL" | grep -c 'wp-block-yoast-faq-block'      # FAQ block rendered
 curl -s "$URL" | grep -o '<table[^>]*>' | wc -l          # pricing/comparison tables rendered
+curl -s "$URL" | grep -o 'class="pb-card' | wc -l        # provider cards rendered (listicles: one per provider)
 curl -s "$URL" | grep -o '>\*[^<]\{0,80\}\*<' | head -5  # leaked asterisk italics (want none)
 ```
 
 Compare each count against what you expect to have written. Only when an assertion fails do
-you pull a small excerpt (`grep -o … -A2 -B2`) to see why. For D7 specifically, an empty
+you pull a small excerpt (`grep -o … -A2 -B2`) to see why. For D8 specifically, an empty
 `pricing-table` block means that provider isn't in the site's dataset — swap it for a
 `wp:table` and save that correction.
 
@@ -283,6 +300,7 @@ then these sections, one line each:
 - `Conclusion:` already correct / renamed from "<old heading>" / rewritten to conclude / written / CTA link added
 - `FAQ block:` already a Yoast block / converted / no FAQ present
 - `Continue your research block:` already correct / converted / added / placeholders replaced / placeholders removed / trimmed to 5 / wrapper H2 removed / empty block removed
+- `Provider cards:` all present under provider headings / N added / N moved up / N converted from raw HTML (style block removed) / not a listicle
 - `Pricing segments:` all first-party / N added / N figures corrected / comparison table added / not a listicle
 - `Image captions:` N images, all captioned / N written / N rewritten / N asterisk fixes / no images
 - `Video:` already in the right slot / moved to end of intro from "<old location>" / dead video removed / no video

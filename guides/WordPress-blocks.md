@@ -31,6 +31,8 @@ Notes on order:
 - Schema JSON-LD in a `wp:html` block may sit above Key takeaways — leave it there.
 - `pro-tip` blocks may appear anywhere in the body; they are optional.
 - Images may appear anywhere in the body; every one of them needs a caption (section 10).
+- **In a listicle, every provider review opens with a provider card** directly below the
+  provider's heading (section 9a) and closes with a pricing segment (section 9).
 - **A YouTube video belongs at the end of the opening run of prose, never inside it** — the
   last block before the next heading. Most articles have one and about half have it in the
   wrong place; section 11 is the rule and the fix.
@@ -320,6 +322,51 @@ shortlist right after the intro) — a listicle needs both.
 
 ---
 
+## 9a. Listicles — provider card directly below each provider heading
+
+Every provider review in a listicle **opens with a provider card**: the `pabau/provider-card`
+block placed **directly below the provider's H2** (or H3, if the article's provider hierarchy
+runs deeper), before any prose of the review. One card per provider, no exceptions — the
+pricing segment (§9) closes the review, the card opens it. A standard 800 × 35 `wp:spacer`
+follows the card, then the review's first paragraph.
+
+The block is server-rendered by the "Pabau Provider Card" plugin and self-closing; its CSS
+ships with the plugin, so **no per-article `<style>` block is needed** (and none should be
+added). Real example, live on post 163682:
+
+```
+<!-- wp:pabau/provider-card {"rating":"4.5","bottomLine":"Pabau Scribe writes the note into the client record that already holds the appointment.","who":"Med spas and aesthetics clinics\nDermatology, physical therapy and wellness practices\nMulti-location groups standardizing documentation\nOwners who want HIPAA and GDPR in one platform","price":"From $62/month","siteUrl":"https://pabau.com/pricing/","siteText":"pabau.com/pricing","works":"Notes land in the client record, with no export step\nTuned for aesthetics, wellness and allied health\nEvery subscription includes every feature","doesnt":"Not an add-on for Epic or Oracle Health\nNo standalone scribe plan, you adopt the platform","topPick":true,"pickLabel":"Top pick","priceNote":"one user, full platform"} /-->
+```
+
+Attributes (all strings unless noted):
+
+- `rating` — e.g. `"4.5"`; the stars auto-fill from it. Must match any rating stated in the
+  review copy.
+- `topPick` (boolean) + `pickLabel` — the pill in the card head. `topPick: true` with
+  `"pickLabel":"Top pick"` on the #1 provider only; other providers may carry a different
+  label (e.g. "Our pick for X") or omit both.
+- `bottomLine` — one-sentence verdict, article voice, sentence ceiling applies.
+- `who`, `works`, `doesnt` — newline-separated lists (`\n` inside the JSON string): 3–4
+  "Who it's for" fits, then What works / What doesn't. Fragments are fine here; no periods.
+- `price` + `priceNote` — headline price plus a short qualifier ("one user, full platform").
+  §9's sourcing rule applies in full: the figure comes from the provider's own website only.
+- `siteUrl` + `siteText` — the Website link. For competitors this is their **homepage**
+  (never their pricing page — §9); for Pabau, `https://pabau.com/pricing/` is allowed.
+
+Rules:
+
+- **No logos** on the card, ever.
+- Facts on the card must agree with the review and the pricing segment below it — one price,
+  one rating, one verdict.
+- **Legacy raw-HTML cards get converted.** An older listicle may carry the card as a raw
+  `wp:html` `pb-card` block plus a per-article `<style>` block before the first provider
+  heading. Rebuild each as a `pabau/provider-card` block (carry the content over, drop
+  nothing) and remove the per-article `<style>` block once no raw card remains.
+- After saving, confirm the cards rendered:
+  `curl -s "$URL" | grep -o 'class="pb-card' | wc -l` — one per provider.
+
+---
+
 ## 10. Images — every image carries a caption
 
 **Every image in the body must have a caption.** An image block without a `<figcaption>` is
@@ -462,6 +509,7 @@ even on articles that have one.
 - [ ] Continue your research (`expert-picks`) block after the Conclusion, ≤5 real working links, no wrapper H2
 - [ ] FAQ is a Yoast FAQ block with schema, under an H2
 - [ ] Listicle: comparison table after intro; every provider review ends with a `Pricing` heading + pricing table, all figures from the provider's own site
+- [ ] Listicle: a `pabau/provider-card` block directly below each provider's heading, before any prose; no logos, no per-article `<style>` block, card facts match the review
 - [ ] Every image has a `<figcaption>`: full sentence, ends in a period, wrapped in `<em>`, no stray `*`; Pabau-feature screenshots tie the feature to this article's purpose; alt text present and not duplicated into the caption
 - [ ] Every image is followed by one 800 × 35 `wp:spacer` block
 - [ ] Any YouTube embed is the LAST block of the opening prose run, immediately before the next heading — never between paragraphs, never before the intro, never mid-section; markup unchanged, no spacer added
