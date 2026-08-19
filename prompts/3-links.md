@@ -12,6 +12,35 @@ Every article must link to **exactly two /industry/ pages**. Prefer the /industr
 
 Where it fits naturally, link to **at most one /case-studies/ page** — this is preferred but **not mandatory**: include it only where a case study genuinely supports the surrounding sentence, and never add one if there's no natural home for it. **No more than one /case-studies/ link per article.** Prefer the /case-studies/ pages that are currently the **least linked to** from the rest of the site, so link equity is spread rather than concentrated — from those, pick the one that best fits the article's topic. To find the least-linked candidates, list the site's /case-studies/ pages and check how many internal links already point to each (via the `wordpress-access` skill or a site search); if that genuinely can't be determined, choose the most topically relevant /case-studies/ page instead. If included, this link **counts toward the internal-link target above** (it is not extra), and it is still bound by the max-2-links-per-paragraph and organic-placement rules.
 
+**Code articles must link to Claim.MD and its cluster.** Any article whose subject is a clinical or billing code — everything under `/diagnostic-codes/` and `/procedure-codes/`, plus code-led articles sitting in `/blog/` — must link to the Claim.MD integration page **`https://pabau.com/integrations/claim-md/`**, without exception. Claim.MD is the clearinghouse Pabau submits electronic claims through, so a code article is precisely where a reader who has just identified the code needs to bill it. Place the link in a sentence that already earns its place — typically one about billing, submission, reimbursement, payers, or denials — keep the anchor short ("Claim.MD integration"), and treat it as a normal internal link: same tab, not nofollow, must return 200. It counts toward the internal-link target above and is bound by the max-2-links-per-paragraph and organic-placement rules. If the article has no natural home for it, write nothing new to carry it: place it in the Pabau section, which every article has.
+
+On top of that, link to **at least 3 and no more than 5** of the 18 pages in the US insurance claims cluster below — the set built around that integration. Choose the ones that genuinely fit what the article covers (a denial-heavy code article takes the denial pages; an out-of-network procedure code takes the superbill pages), not the first three on the list. These count toward the internal-link target and obey every rule above: organic placement only, no more than 2 links in a paragraph, no duplicates, no sentence written to carry a link. If fewer than 3 fit naturally, ship fewer and note it in your change-log rather than pad the article — the floor never overrides the no-stuffing rule.
+
+The 18 cluster pages, in build order:
+
+| # | Topic | URL |
+|---|---|---|
+| 1 | Medical claims clearinghouse (pillar) | https://pabau.com/blog/medical-claims-clearinghouse/ |
+| 2 | Superbill template | https://pabau.com/templates/superbill-template/ |
+| 3 | What is a superbill | https://pabau.com/blog/superbill/ |
+| 4 | CMS-1500 form | https://pabau.com/templates/cms-1500-form/ |
+| 5 | Denial management in healthcare | https://pabau.com/blog/denial-management-in-healthcare/ |
+| 6 | Denial codes in medical billing | https://pabau.com/procedure-codes/denial-codes-in-medical-billing/ |
+| 7 | Clean claim / claim scrubbing | https://pabau.com/blog/clean-claim/ |
+| 8 | Electronic remittance advice (ERA) | https://pabau.com/blog/electronic-remittance-advice/ |
+| 9 | 837 file | https://pabau.com/blog/837-file/ |
+| 10 | Insurance eligibility verification | https://pabau.com/blog/insurance-eligibility-verification/ |
+| 11 | Insurance credentialing | https://pabau.com/blog/how-to-get-credentialed-with-insurance-companies/ |
+| 12 | Timely filing limits | https://pabau.com/blog/timely-filing-limits/ |
+| 13 | Prior authorization process | https://pabau.com/blog/prior-authorization-process/ |
+| 14 | Medical billing compliance | https://pabau.com/blog/medical-billing-compliance/ |
+| 15 | Revenue cycle management | https://pabau.com/blog/what-is-revenue-cycle-management/ |
+| 16 | Claim.MD clearinghouse | https://pabau.com/blog/claim-md-clearinghouse/ |
+| 17 | Claim.MD pricing | https://pabau.com/blog/claim-md-pricing/ |
+| 18 | Claim.MD vs Office Ally | https://pabau.com/blog/claim-md-vs-office-ally/ |
+
+Never link a cluster page from memory or a guessed slug — copy the URL from this table. If one of them 404s or redirects, drop it and pick another from the table; do not invent a replacement path. Cluster page #6 lives in `/procedure-codes/` but is not about a single code, so the code-only anchor rule below does not apply to it — give it short descriptive anchor text instead. On an article that IS one of these 18, skip the self-link and link 3–5 of the others.
+
 The Conclusion's `/book-demo/` CTA link is REQUIRED and exempt from the duplicate-link rule: if `/book-demo/` is also linked earlier in the body, remove the earlier one and keep the Conclusion's. Never strip it, never make it nofollow, never open it in a new tab, and keep the anchor text short ("Book a demo").
 
 For duplicate links, always remove the second link, then rephrase the sentence containing it so it makes sense without the link. If the removed link was in a sentence solely directing the reader to read the linked article, delete the sentence entirely. If the removed link was in an Expert picks / continue your research block, then replace the entire sentence with another one, linking to a different article that satisfies the Expert picks rules below.

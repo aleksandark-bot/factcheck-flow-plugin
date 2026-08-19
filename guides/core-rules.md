@@ -48,6 +48,9 @@ These hold in every edit, with no exceptions.
 - **Never link to a competitor's pricing page.** Read it for the figures, but link their
   homepage instead — never `/pricing`, `/plans`, or a pricing anchor. Details in
   `3-links.md`.
+- **Code articles link to Claim.MD.** Every ICD/CPT/HCPCS code article links to
+  `https://pabau.com/integrations/claim-md/` plus 3–5 of the 18 US-insurance-claims
+  cluster pages. The mandatory URL list is in `3-links.md` — never guess a slug.
 
 ## Voice and mechanics
 

@@ -293,7 +293,8 @@ then these sections, one line each:
 
 - `Fact-check applied:` — count plus anything notable
 - `Editorial:` — the highlights, not an inventory
-- `Links:` — added / removed / replaced counts, industry + case-study links, external count
+- `Links:` — added / removed / replaced counts, industry + case-study links, external count.
+  On a code article also state the Claim.MD integration link and which cluster pages you linked
 - `Key takeaways block:` already correct / converted / title attribute added / casing fixed / added
 - `Download box:` already correct / added / URL fixed / not a template article
 - `Pabau section + CTA block:` already correct / CTA block added / section written / section moved
