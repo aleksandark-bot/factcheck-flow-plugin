@@ -67,6 +67,12 @@ Unless it's a UK-specific article, remove references to Healthcode and replace w
 
 **Every image must have a caption.** Walk every image block in the article; any image without a `<figcaption>` gets one written for it, and any existing caption gets brought up to standard. Never ask about this — write the caption. **The caption contract, the markup, and the required 800 × 35 spacer block are all in `WordPress-blocks.md` §10** — including the rule that a caption on a Pabau-feature screenshot must name the feature and say how it helps the reader do what this article is about. Follow that section; don't work from memory. What is yours in this pass is the writing: a full sentence in the article's voice, under the 25-word ceiling, that adds information rather than restating the alt text.
 
+**Every article carries an original visual.** You do not build it here — the block pass
+(D0) does, against `Visuals.md`. What is yours in this pass is the setup: the visual needs a
+clause of prose introducing it, so the reader meets the claim and then sees it. If you write
+a section whose point is a range, a comparison, a sequence, or a structure, note it as the
+natural home for the visual rather than padding the prose to do the same work.
+
 **A YouTube video never interrupts a run of prose.** Most articles carry a `wp:embed` block and about half have it misplaced — between intro paragraphs, above the intro, or mid body section. Its one slot is the last block of the opening prose run, immediately before the next heading (the intro may be headless or sit under an opening H2; either way, after all of it). Move a misplaced embed, markup untouched, then repair what it left behind: rejoin any paragraph that was split around it, and delete any "watch the video below" line that no longer points at anything. Never add a video, and never add a spacer after one. Full rule: `WordPress-blocks.md` §11.
 
 ## Structure and blocks

@@ -71,7 +71,7 @@ fetch() { # $1 = repo-relative path, $2 = local destination
 for p in 1-factcheck 2-editorial 3-links seo-research seo-write; do
   fetch "prompts/$p.md" "$FF/prompts/$p.md"
 done
-for g in core-rules Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent WordPress-blocks; do
+for g in core-rules Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent WordPress-blocks Visuals; do
   fetch "guides/$g.md" "$FF/guides/$g.md"
 done
 
@@ -98,7 +98,7 @@ fetch "skills/wordpress-access/SKILL.md" "$HOME/.claude/skills/wordpress-access/
 
 # /SEO command + helpers (the seo-research/seo-write prompts are fetched in the loop above)
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
-for b in gsc_query keyword_picker serp_picker dfs_lists sentence_check serp_fetch; do
+for b in gsc_query keyword_picker serp_picker dfs_lists sentence_check serp_fetch render_visual; do
   fetch "bin/$b.py" "$FF/bin/$b.py"; chmod +x "$FF/bin/$b.py" 2>/dev/null || true
 done
 

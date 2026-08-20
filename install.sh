@@ -69,12 +69,18 @@ if curl -fsSL "$REPO_RAW/bin/serp_fetch.py" -o "$FF/bin/serp_fetch.py"; then
 else
   echo "  NOTE: could not download bin/serp_fetch.py — /SEO Stage 1 will have no helper." >&2
 fi
+if curl -fsSL "$REPO_RAW/bin/render_visual.py" -o "$FF/bin/render_visual.py"; then
+  chmod +x "$FF/bin/render_visual.py" 2>/dev/null || true
+  echo "  - visual renderer installed"
+else
+  echo "  NOTE: could not download bin/render_visual.py — /fact cannot build article visuals." >&2
+fi
 
 # --- 1b. Download the Pabau reference guides from the repo -----------------
 # These define voice/terminology (Pabau-style-guide), product/positioning
 # context (About-Pabau), and SERP title optimization (Meta-title-best-practices).
 # The editorial prompt and factcheck-reporter read them.
-for g in core-rules Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent WordPress-blocks; do
+for g in core-rules Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent WordPress-blocks Visuals; do
   if ! curl -fsSL "$REPO_RAW/guides/$g.md" -o "$GUIDES/$g.md"; then
     echo "  ERROR: could not download guides/$g.md — check your internet connection." >&2
     exit 1
@@ -159,7 +165,7 @@ fetch() { # $1 = repo-relative path, $2 = local destination
 for p in 1-factcheck 2-editorial 3-links seo-research seo-write; do
   fetch "prompts/$p.md" "$FF/prompts/$p.md"
 done
-for g in core-rules Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent WordPress-blocks; do
+for g in core-rules Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent WordPress-blocks Visuals; do
   fetch "guides/$g.md" "$FF/guides/$g.md"
 done
 
@@ -186,7 +192,7 @@ fetch "skills/wordpress-access/SKILL.md" "$HOME/.claude/skills/wordpress-access/
 
 # /SEO command + helpers (the seo-research/seo-write prompts are fetched in the loop above)
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
-for b in gsc_query keyword_picker serp_picker dfs_lists sentence_check serp_fetch; do
+for b in gsc_query keyword_picker serp_picker dfs_lists sentence_check serp_fetch render_visual; do
   fetch "bin/$b.py" "$FF/bin/$b.py"; chmod +x "$FF/bin/$b.py" 2>/dev/null || true
 done
 
@@ -343,11 +349,18 @@ further questions.
 
 The block-guarantee pass ALWAYS runs last and enforces the contract in
 `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — required document order plus the
-eight always-on guarantees (Key takeaways, template download box, Pabau section + CTA
-block, Conclusion, Continue your research, Yoast FAQ, listicle pricing segments, image
-captions). That file and the article-editor's own Pass D own the detail; you are the
-orchestrator and never perform this work, so do not restate the contract to the subagents
-— they read it themselves.
+always-on guarantees (an original visual, Key takeaways, template download box, Pabau
+section + CTA block, Conclusion, Continue your research, Yoast FAQ, listicle pricing
+segments, image captions). That file, `Visuals.md`, and the article-editor's own Pass D own
+the detail; you are the orchestrator and never perform this work, so do not restate the
+contract to the subagents — they read it themselves.
+
+That pass opens with **D0 — visuals**: every article gets at least one original
+visualization we built, either a rendered image (HTML → WebP, uploaded to the media library)
+or one CSS-only interactive block. The contract is
+`~/.claude/factcheck-flow/guides/Visuals.md` and the editor reads it itself. You never pick
+the visual, never design it, and never ask the user about it — it is unconditional, like the
+other guarantees. Expect a `Visuals:` line back from every editor.
 
 After that, and before the single save, each editor must clear the **sentence gate** (Pass E):
 `bin/sentence_check.py` counts every sentence in the body and the editor rewrites until the
@@ -360,8 +373,9 @@ reports the checker's final summary line verbatim; an article whose change-log h
 
 Once all Stage 3 subagents return, compile a single consolidated summary for the user.
 Each editor returns a compact change-log; relay it, don't re-derive it. Per article:
-fact-check fixes applied, editorial highlights, link changes, the one-line block-contract
-status the editor reported for each of the eight guarantees, the sentence gate's summary line
+fact-check fixes applied, editorial highlights, link changes, the visual that was built
+(route, what it shows, media id or `pv-viz` class), the one-line block-contract status the
+editor reported for each of the other guarantees, the sentence gate's summary line
 (longest sentence + how many were rewritten), and anything skipped. Note
 any article whose grave error was flagged but dropped after independent verification, and
 any article that hit the two-rewrite ceiling and needs manual attention. End with the
@@ -410,7 +424,14 @@ higher tiers, misstating the product family (Pabau GO, Pabau Pay, Pabau Scribe),
 or naming a specific customer/competitor relationship that the guide flags as
 verify-first. Treat these as TYPE: Pabau-fact findings.
 
-**Do NOT read `WordPress-blocks.md`, and do not audit the block contract.** The
+**Figures inside a visualization are yours to check.** A chart's numbers are baked into an
+image, so nobody downstream re-reads them — but our visuals carry their figures in the alt
+text and name their source in the caption, both of which are in the body you already hold.
+Compare them against the prose and against the source they cite. A mismatch is a `factual`
+finding like any other (say which figure, and which the article supports). Do not comment on
+whether a visual exists, on its design, or on its placement — that is the editor's Pass D0.
+
+**Do NOT read `WordPress-blocks.md` or `Visuals.md`, and do not audit the block contract.** The
 article-editor's final pass enforces all of it unconditionally later in the run, so a block
 audit here is redone twice and read by nobody. The single exception — a wholly missing FAQ —
 is spelled out in the fact-check instructions.
@@ -472,6 +493,9 @@ thing, not the article.
   non-negotiables, voice and mechanics, AI tells, and the required document order.
 - `~/.claude/factcheck-flow/prompts/2-editorial.md` — at Pass B.
 - `~/.claude/factcheck-flow/prompts/3-links.md` — at Pass C.
+- `~/.claude/factcheck-flow/guides/Visuals.md` — at Pass D0, before you build anything
+  visual. It owns the visual contract: what earns a visual, the brand tokens and font, the
+  render/upload commands, the block markup, and two verified templates.
 - `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — at Pass D, and any earlier moment
   you need block markup. **It is the single source of truth for the block contract**; the
   D-steps below tell you what to DO, that file tells you what the markup IS. Never
@@ -502,14 +526,42 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — the contract, with the exact
    markup for every block (reference article: https://pabau.com/templates/accutite/, post
    151170; fetch it with `context=edit` if you want to see the real thing). Then enforce all
-   nine guarantees below, in order, against the block markup you hold: Key takeaways →
-   download box (templates) → Pabau section + CTA block → Conclusion → Continue your
-   research → FAQ → listicle pricing → image captions → video placement.
+   eleven guarantees below, in order, against the block markup you hold: original visual →
+   Key takeaways → download box (templates) → Pabau section + CTA block → Conclusion →
+   Continue your research → FAQ → provider cards (listicles) → listicle pricing → image
+   captions → video placement.
 
-   In D1, D5, D6 and D9 you are only changing wrapper markup, letter case, placeholder items,
-   and block position — never the copy. D2, D3, D4, D7 and D8 may require writing new content
-   (a download box, a Pabau section, a proper conclusion, a pricing segment, an image caption);
-   write it in the article's voice per `2-editorial.md` and the Pabau guides.
+   D0 runs FIRST inside this pass, so the visual it adds is then covered by D9's caption and
+   spacer audit like any other image.
+
+   In D1, D5, D6 and D10 you are only changing wrapper markup, letter case, placeholder items,
+   and block position — never the copy. D0, D2, D3, D4, D7, D8 and D9 may require writing new
+   content (a visualization, a download box, a Pabau section, a proper conclusion, a provider
+   card's verdict and lists, a pricing segment, an image caption); write it in the article's
+   voice per `2-editorial.md` and the Pabau guides.
+
+   **D0 — original visual (ALWAYS, runs first in this pass).** Contract:
+   `~/.claude/factcheck-flow/guides/Visuals.md` — read it now; it is the single source of
+   truth for what to build, the brand tokens, the render commands, and the markup. Every
+   article ships **at least one original visual we built**: either a rendered image (HTML →
+   WebP via `bin/render_visual.py`, uploaded to the media library) or one CSS-only
+   interactive visualization in a `wp:html` block. Default to the rendered image.
+   - **Decide from the article's own substance.** Find the range, comparison, process,
+     decision, or structure the prose already establishes, and name the visual's job in one
+     sentence before you build. If you can't, you're about to build decoration — look
+     harder, don't invent data. Every figure must come from the article; pricing is
+     first-party only.
+   - Build the HTML, render it, **read the rendered file to check it**, then upload with
+     `--slug` and `--alt` (the alt carries the figures). Insert the `wp:image` block plus its
+     single 800 × 35 spacer in the body section whose point it makes.
+   - An interactive visual must pass `render_visual.py --lint-embed` (exit 0) before it goes
+     in. No JavaScript — WP Rocket defers JS, so a script is not reliably executed.
+   - Stock photos, re-crops of existing site images, and screenshots we didn't make do **not**
+     satisfy this. An article that already carries a visual built to this contract does —
+     audit it against the guide and leave it.
+   - If the environment can't render (`render_visual.py --check` fails on Chrome), do not
+     fake it and do not fall back to a decorative image: record it under "Skipped" with the
+     reason and carry on with the rest of the pass.
 
    The required document order you are enforcing is `WordPress-blocks.md` §1. Never leave a
    heading above a block that renders its own heading (Key takeaways, Continue your research).
@@ -580,7 +632,21 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
      rather than ship an empty shell or stubs. This is the one case where the article may end
      up without it; note it under "Skipped".
 
-   **D7 — Listicle pricing segments (LISTICLES ONLY).** Contract: §9. Every provider review
+   **D7 — Provider cards (LISTICLES ONLY).** Contract: §9a. Every provider review must OPEN
+   with a `pabau/provider-card` block placed **directly below the provider's H2** (or H3 if
+   the hierarchy runs deeper), before any prose, followed by the standard 800 × 35 spacer.
+   - No card under a provider heading → build one per §9a: rating consistent with the review,
+     `topPick`/`pickLabel` on the #1 provider only, one-sentence `bottomLine`, newline-separated
+     `who`/`works`/`doesnt` lists drawn from the review itself, `price` from the provider's own
+     website (same sourcing rule as D8), `siteUrl` = competitor homepage (never their pricing
+     page; `pabau.com/pricing/` allowed for Pabau).
+   - A card that exists but sits below prose → move it up to directly under the heading.
+   - A legacy raw `wp:html` `pb-card` → rebuild it as the `pabau/provider-card` block, carry
+     the content over, and remove the per-article `<style>` block once no raw card remains.
+   - Never add a logo, and never add a per-article `<style>` block — the plugin ships the CSS.
+   - Card facts must agree with the review copy and the D8 pricing segment.
+
+   **D8 — Listicle pricing segments (LISTICLES ONLY).** Contract: §9. Every provider review
    must END with a pricing segment — a `Pricing` heading at the level matching the article's
    provider hierarchy, a pricing table, then one sentence of context — placed after the
    shines/falls-short material and before the next provider. Prefer the site's
@@ -590,10 +656,11 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    listicle carries its top-of-page comparison table right after the intro, and add it if
    missing — it does not replace the per-provider tables.
 
-   **D8 — Image captions (ALWAYS).** Contract: §10, which carries the caption rules, the
+   **D9 — Image captions (ALWAYS).** Contract: §10, which carries the caption rules, the
    block markup, and the required 800 × 35 spacer. Walk EVERY image in the article — core
-   `wp:image` blocks, images inside `wp:html`, images in a gallery — and bring each one up to
-   §10:
+   `wp:image` blocks, images inside `wp:html`, images in a gallery, **and the visual D0 just
+   added** — and bring each one up to §10 (a visual's caption also names its data source, per
+   `Visuals.md` §6; an interactive `pv-viz` block is not an image and takes no `<figcaption>`):
    - Any image with no `<figcaption>` gets one written for it. No image ships bare, and never
      ask about it. Look at what the image actually shows (fetch the `src` if the alt text and
      surrounding copy don't tell you) and write the caption for *that* image in *that*
@@ -605,7 +672,7 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
      it helps the reader do the specific thing this article is about.
    - Keep alt text present and separate. Ensure exactly one spacer follows each image.
 
-   **D9 — Video placement (ONLY IF the article has a video).** Contract: §11. Most articles
+   **D10 — Video placement (ONLY IF the article has a video).** Contract: §11. Most articles
    carry one and about half have it misplaced, so check every time: search the body you hold
    for `<!-- wp:embed`. The embed's one legal slot is the **last block of the opening run of
    prose, immediately before the next heading** — after every intro paragraph, whether the
@@ -678,11 +745,14 @@ URL="<article URL>"
 curl -s "$URL" | grep -c 'wp-element-caption'            # captions rendered
 curl -s "$URL" | grep -c 'wp-block-yoast-faq-block'      # FAQ block rendered
 curl -s "$URL" | grep -o '<table[^>]*>' | wc -l          # pricing/comparison tables rendered
+curl -s "$URL" | grep -o 'class="pb-card' | wc -l        # provider cards rendered (listicles: one per provider)
 curl -s "$URL" | grep -o '>\*[^<]\{0,80\}\*<' | head -5  # leaked asterisk italics (want none)
+curl -s "$URL" | grep -o 'pv-viz' | wc -l                # interactive visual root (0 or 1)
+curl -sI -o /dev/null -w '%{http_code}\n' "<visual source_url>"   # uploaded visual resolves (200)
 ```
 
 Compare each count against what you expect to have written. Only when an assertion fails do
-you pull a small excerpt (`grep -o … -A2 -B2`) to see why. For D7 specifically, an empty
+you pull a small excerpt (`grep -o … -A2 -B2`) to see why. For D8 specifically, an empty
 `pricing-table` block means that provider isn't in the site's dataset — swap it for a
 `wp:table` and save that correction.
 
@@ -706,14 +776,20 @@ then these sections, one line each:
 
 - `Fact-check applied:` — count plus anything notable
 - `Editorial:` — the highlights, not an inventory
-- `Links:` — added / removed / replaced counts, industry + case-study links, external count
+- `Links:` — added / removed / replaced counts, industry + case-study links, external count.
+  On a code article also state the Claim.MD integration link and which cluster pages you linked
 - `Key takeaways block:` already correct / converted / title attribute added / casing fixed / added
 - `Download box:` already correct / added / URL fixed / not a template article
 - `Pabau section + CTA block:` already correct / CTA block added / section written / section moved
 - `Conclusion:` already correct / renamed from "<old heading>" / rewritten to conclude / written / CTA link added
 - `FAQ block:` already a Yoast block / converted / no FAQ present
 - `Continue your research block:` already correct / converted / added / placeholders replaced / placeholders removed / trimmed to 5 / wrapper H2 removed / empty block removed
+- `Provider cards:` all present under provider headings / N added / N moved up / N converted from raw HTML (style block removed) / not a listicle
 - `Pricing segments:` all first-party / N added / N figures corrected / comparison table added / not a listicle
+- `Visuals:` what you built and its job in a few words, the route (rendered image / interactive),
+  the media id + slug or the `pv-viz` class, and the canvas size. State the figures' source. If
+  the article already had a conforming visual, say so. This line is mandatory; an empty one
+  means D0 did not run.
 - `Image captions:` N images, all captioned / N written / N rewritten / N asterisk fixes / no images
 - `Video:` already in the right slot / moved to end of intro from "<old location>" / dead video removed / no video
 - `Sentence gate:` the checker's final summary line, pasted verbatim (e.g. `175 sentences |
@@ -931,8 +1007,11 @@ When writing, editing, or fact-checking Pabau content, read these guides first:
 - \`~/.claude/factcheck-flow/guides/About-Pabau.md\` — what Pabau is, product family + naming rules, pricing model, competitors, customer journey.
 - \`~/.claude/factcheck-flow/guides/Originality-and-search-intent.md\` — the two-bar rule for every article: fit searcher intent (answer the actual query, in the SERP-dominant format) AND carry an originality nugget (a unique angle no top-10 result has). Kill mirage/fluff; be specific.
 - \`~/.claude/factcheck-flow/guides/WordPress-blocks.md\` — the block contract + exact markup: document order, Key takeaways block (mandatory \`"title":"Key takeaways"\`), template download box, Pabau CTA (\`book-demo\`) block and the Pabau section before the Conclusion, the \`Conclusion\` heading + its \`/book-demo/\` link, Continue your research (\`expert-picks\`), Yoast FAQ, listicle pricing tables, image captions. Reference article: https://pabau.com/templates/accutite/.
+- \`~/.claude/factcheck-flow/guides/Visuals.md\` — the visual contract: every article ships at least one original visual we built (a rendered chart/diagram, or one CSS-only interactive block). Brand tokens + Satoshi, the \`bin/render_visual.py\` render/upload commands, block markup, and two verified templates.
 
 Block rules every article must satisfy: "Key takeaways" (capital K only, via the block's \`title\` attribute); an H2 Pabau section with the CTA block immediately before an H2 headed exactly "Conclusion" that concludes (not summarizes) and ends with a \`/book-demo/\` CTA link; a Continue your research block; a download box on template articles; a caption on every image (full sentence, ends with a period, italic via \`<em>\` — and if it shows a Pabau feature, it says how that feature helps the reader do what the article is about); any YouTube embed as the last block of the opening prose run, immediately before the next heading — never breaking up a run of prose, and moved byte-for-byte when it is misplaced (about half are); and in listicles a \`Pricing\` heading + pricing table closing every provider review, with figures from the provider's own website only.
+
+Every article also ships at least one original visual we built — a rendered chart/diagram (HTML → WebP via \`bin/render_visual.py\`, uploaded to the media library) or one CSS-only interactive block. Never a stock photo, never invented numbers: every figure comes from the article and the visual names its source. Read \`Visuals.md\` before building one.
 
 Quick rules: keep sentences to 25 words max (30 only where a split would break the meaning); US English (say "practice", not "clinic"); introduce Pabau on first mention ("practice management software like Pabau"); qualify product names once ("Pabau GO, our iOS app"); never say "Pabau Connect" externally (say "online booking"); no free trial (structured onboarding); every subscription includes every feature (no gating); don't undermine the core product when describing Plus add-ons. Every article must fit searcher intent AND have a unique angle (originality nugget) — never publish generic, me-too content.
 $GUIDE_END

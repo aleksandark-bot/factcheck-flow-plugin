@@ -149,6 +149,14 @@ are read by the editorial pass and the fact-check reviewer:
   sentence, italic). **Site-specific — the custom block names and inline styles are
   Pabau's; swap them for your own theme's blocks.**
 
+- `guides/Visuals.md` — the visual contract: every article ships at least one original
+  visual the workflow builds, either a rendered image (HTML → WebP through
+  `bin/render_visual.py`, uploaded to the media library) or one CSS-only interactive block.
+  Covers what earns a visual, the brand tokens and webfont, chart-form selection, the render
+  and upload commands, the block markup, and two verified templates. **Site-specific — the
+  colour tokens and font are Pabau's; swap them for your own brand's in
+  `bin/render_visual.py`.**
+
 **These defaults are Pabau-specific — replace them with your own brand's voice and
 product context** (keep the filenames, or update the references in `prompts/2-editorial.md`
 and the `factcheck-reporter` agent if you rename them). The installer also adds a small

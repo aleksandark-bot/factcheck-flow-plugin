@@ -31,6 +31,11 @@ Notes on order:
 - Schema JSON-LD in a `wp:html` block may sit above Key takeaways — leave it there.
 - `pro-tip` blocks may appear anywhere in the body; they are optional.
 - Images may appear anywhere in the body; every one of them needs a caption (section 10).
+- **Every article carries at least one original visual we built** — a rendered image, or one
+  CSS-only interactive `pv-viz` block. It sits in the body section whose point it makes,
+  never inside Key takeaways, the download box, the Pabau section, the Conclusion, the FAQ,
+  or Continue your research. What to build and how is `Visuals.md`; a rendered one is an
+  ordinary image block and must satisfy section 10 here.
 - **In a listicle, every provider review opens with a provider card** directly below the
   provider's heading (section 9a) and closes with a pricing segment (section 9).
 - **A YouTube video belongs at the end of the opening run of prose, never inside it** — the
@@ -373,6 +378,11 @@ Rules:
 an incomplete block: a captionless image gets a caption written for it, never left bare.
 (Images may sit anywhere in the body; the caption requirement is what's fixed, not the
 placement.)
+
+This applies to a visual we generated exactly as it does to a photo or a screenshot — see
+`Visuals.md` for what to build and how to render it, and §6 there for the extra rule that a
+data visual's caption also names its source. An interactive `pv-viz` block is not an image:
+it carries its own `.pv-note` line instead and takes no `<figcaption>`.
 
 Every caption:
 

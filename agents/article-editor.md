@@ -42,6 +42,9 @@ thing, not the article.
   non-negotiables, voice and mechanics, AI tells, and the required document order.
 - `~/.claude/factcheck-flow/prompts/2-editorial.md` — at Pass B.
 - `~/.claude/factcheck-flow/prompts/3-links.md` — at Pass C.
+- `~/.claude/factcheck-flow/guides/Visuals.md` — at Pass D0, before you build anything
+  visual. It owns the visual contract: what earns a visual, the brand tokens and font, the
+  render/upload commands, the block markup, and two verified templates.
 - `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — at Pass D, and any earlier moment
   you need block markup. **It is the single source of truth for the block contract**; the
   D-steps below tell you what to DO, that file tells you what the markup IS. Never
@@ -72,16 +75,42 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — the contract, with the exact
    markup for every block (reference article: https://pabau.com/templates/accutite/, post
    151170; fetch it with `context=edit` if you want to see the real thing). Then enforce all
-   ten guarantees below, in order, against the block markup you hold: Key takeaways →
-   download box (templates) → Pabau section + CTA block → Conclusion → Continue your
-   research → FAQ → provider cards (listicles) → listicle pricing → image captions →
-   video placement.
+   eleven guarantees below, in order, against the block markup you hold: original visual →
+   Key takeaways → download box (templates) → Pabau section + CTA block → Conclusion →
+   Continue your research → FAQ → provider cards (listicles) → listicle pricing → image
+   captions → video placement.
+
+   D0 runs FIRST inside this pass, so the visual it adds is then covered by D9's caption and
+   spacer audit like any other image.
 
    In D1, D5, D6 and D10 you are only changing wrapper markup, letter case, placeholder items,
-   and block position — never the copy. D2, D3, D4, D7, D8 and D9 may require writing new
-   content (a download box, a Pabau section, a proper conclusion, a provider card's verdict and
-   lists, a pricing segment, an image caption); write it in the article's voice per
-   `2-editorial.md` and the Pabau guides.
+   and block position — never the copy. D0, D2, D3, D4, D7, D8 and D9 may require writing new
+   content (a visualization, a download box, a Pabau section, a proper conclusion, a provider
+   card's verdict and lists, a pricing segment, an image caption); write it in the article's
+   voice per `2-editorial.md` and the Pabau guides.
+
+   **D0 — original visual (ALWAYS, runs first in this pass).** Contract:
+   `~/.claude/factcheck-flow/guides/Visuals.md` — read it now; it is the single source of
+   truth for what to build, the brand tokens, the render commands, and the markup. Every
+   article ships **at least one original visual we built**: either a rendered image (HTML →
+   WebP via `bin/render_visual.py`, uploaded to the media library) or one CSS-only
+   interactive visualization in a `wp:html` block. Default to the rendered image.
+   - **Decide from the article's own substance.** Find the range, comparison, process,
+     decision, or structure the prose already establishes, and name the visual's job in one
+     sentence before you build. If you can't, you're about to build decoration — look
+     harder, don't invent data. Every figure must come from the article; pricing is
+     first-party only.
+   - Build the HTML, render it, **read the rendered file to check it**, then upload with
+     `--slug` and `--alt` (the alt carries the figures). Insert the `wp:image` block plus its
+     single 800 × 35 spacer in the body section whose point it makes.
+   - An interactive visual must pass `render_visual.py --lint-embed` (exit 0) before it goes
+     in. No JavaScript — WP Rocket defers JS, so a script is not reliably executed.
+   - Stock photos, re-crops of existing site images, and screenshots we didn't make do **not**
+     satisfy this. An article that already carries a visual built to this contract does —
+     audit it against the guide and leave it.
+   - If the environment can't render (`render_visual.py --check` fails on Chrome), do not
+     fake it and do not fall back to a decorative image: record it under "Skipped" with the
+     reason and carry on with the rest of the pass.
 
    The required document order you are enforcing is `WordPress-blocks.md` §1. Never leave a
    heading above a block that renders its own heading (Key takeaways, Continue your research).
@@ -178,8 +207,9 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
 
    **D9 — Image captions (ALWAYS).** Contract: §10, which carries the caption rules, the
    block markup, and the required 800 × 35 spacer. Walk EVERY image in the article — core
-   `wp:image` blocks, images inside `wp:html`, images in a gallery — and bring each one up to
-   §10:
+   `wp:image` blocks, images inside `wp:html`, images in a gallery, **and the visual D0 just
+   added** — and bring each one up to §10 (a visual's caption also names its data source, per
+   `Visuals.md` §6; an interactive `pv-viz` block is not an image and takes no `<figcaption>`):
    - Any image with no `<figcaption>` gets one written for it. No image ships bare, and never
      ask about it. Look at what the image actually shows (fetch the `src` if the alt text and
      surrounding copy don't tell you) and write the caption for *that* image in *that*
@@ -266,6 +296,8 @@ curl -s "$URL" | grep -c 'wp-block-yoast-faq-block'      # FAQ block rendered
 curl -s "$URL" | grep -o '<table[^>]*>' | wc -l          # pricing/comparison tables rendered
 curl -s "$URL" | grep -o 'class="pb-card' | wc -l        # provider cards rendered (listicles: one per provider)
 curl -s "$URL" | grep -o '>\*[^<]\{0,80\}\*<' | head -5  # leaked asterisk italics (want none)
+curl -s "$URL" | grep -o 'pv-viz' | wc -l                # interactive visual root (0 or 1)
+curl -sI -o /dev/null -w '%{http_code}\n' "<visual source_url>"   # uploaded visual resolves (200)
 ```
 
 Compare each count against what you expect to have written. Only when an assertion fails do
@@ -303,6 +335,10 @@ then these sections, one line each:
 - `Continue your research block:` already correct / converted / added / placeholders replaced / placeholders removed / trimmed to 5 / wrapper H2 removed / empty block removed
 - `Provider cards:` all present under provider headings / N added / N moved up / N converted from raw HTML (style block removed) / not a listicle
 - `Pricing segments:` all first-party / N added / N figures corrected / comparison table added / not a listicle
+- `Visuals:` what you built and its job in a few words, the route (rendered image / interactive),
+  the media id + slug or the `pv-viz` class, and the canvas size. State the figures' source. If
+  the article already had a conforming visual, say so. This line is mandatory; an empty one
+  means D0 did not run.
 - `Image captions:` N images, all captioned / N written / N rewritten / N asterisk fixes / no images
 - `Video:` already in the right slot / moved to end of intro from "<old location>" / dead video removed / no video
 - `Sentence gate:` the checker's final summary line, pasted verbatim (e.g. `175 sentences |

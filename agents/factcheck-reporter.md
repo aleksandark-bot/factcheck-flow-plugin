@@ -24,7 +24,14 @@ higher tiers, misstating the product family (Pabau GO, Pabau Pay, Pabau Scribe),
 or naming a specific customer/competitor relationship that the guide flags as
 verify-first. Treat these as TYPE: Pabau-fact findings.
 
-**Do NOT read `WordPress-blocks.md`, and do not audit the block contract.** The
+**Figures inside a visualization are yours to check.** A chart's numbers are baked into an
+image, so nobody downstream re-reads them — but our visuals carry their figures in the alt
+text and name their source in the caption, both of which are in the body you already hold.
+Compare them against the prose and against the source they cite. A mismatch is a `factual`
+finding like any other (say which figure, and which the article supports). Do not comment on
+whether a visual exists, on its design, or on its placement — that is the editor's Pass D0.
+
+**Do NOT read `WordPress-blocks.md` or `Visuals.md`, and do not audit the block contract.** The
 article-editor's final pass enforces all of it unconditionally later in the run, so a block
 audit here is redone twice and read by nobody. The single exception — a wholly missing FAQ —
 is spelled out in the fact-check instructions.

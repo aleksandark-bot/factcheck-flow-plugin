@@ -140,11 +140,18 @@ further questions.
 
 The block-guarantee pass ALWAYS runs last and enforces the contract in
 `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — required document order plus the
-eight always-on guarantees (Key takeaways, template download box, Pabau section + CTA
-block, Conclusion, Continue your research, Yoast FAQ, listicle pricing segments, image
-captions). That file and the article-editor's own Pass D own the detail; you are the
-orchestrator and never perform this work, so do not restate the contract to the subagents
-— they read it themselves.
+always-on guarantees (an original visual, Key takeaways, template download box, Pabau
+section + CTA block, Conclusion, Continue your research, Yoast FAQ, listicle pricing
+segments, image captions). That file, `Visuals.md`, and the article-editor's own Pass D own
+the detail; you are the orchestrator and never perform this work, so do not restate the
+contract to the subagents — they read it themselves.
+
+That pass opens with **D0 — visuals**: every article gets at least one original
+visualization we built, either a rendered image (HTML → WebP, uploaded to the media library)
+or one CSS-only interactive block. The contract is
+`~/.claude/factcheck-flow/guides/Visuals.md` and the editor reads it itself. You never pick
+the visual, never design it, and never ask the user about it — it is unconditional, like the
+other guarantees. Expect a `Visuals:` line back from every editor.
 
 After that, and before the single save, each editor must clear the **sentence gate** (Pass E):
 `bin/sentence_check.py` counts every sentence in the body and the editor rewrites until the
@@ -157,8 +164,9 @@ reports the checker's final summary line verbatim; an article whose change-log h
 
 Once all Stage 3 subagents return, compile a single consolidated summary for the user.
 Each editor returns a compact change-log; relay it, don't re-derive it. Per article:
-fact-check fixes applied, editorial highlights, link changes, the one-line block-contract
-status the editor reported for each of the eight guarantees, the sentence gate's summary line
+fact-check fixes applied, editorial highlights, link changes, the visual that was built
+(route, what it shows, media id or `pv-viz` class), the one-line block-contract status the
+editor reported for each of the other guarantees, the sentence gate's summary line
 (longest sentence + how many were rewritten), and anything skipped. Note
 any article whose grave error was flagged but dropped after independent verification, and
 any article that hit the two-rewrite ceiling and needs manual attention. End with the

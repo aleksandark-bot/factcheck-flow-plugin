@@ -19,6 +19,7 @@ they differ, the full guide wins.
 | `Pabau-style-guide.md` | **Before writing or rewriting any prose.** Voice, benefit framing, US/UK terms, glossary. Non-negotiable for /SEO's writing stages and the editorial pass. |
 | `2-editorial.md` | **Before writing or rewriting any prose**, and for the whole editorial pass. Structure, AI-tell removal, meta description, capitalization, categories/tags. |
 | `WordPress-blocks.md` | Whenever you touch block markup — the block-guarantee pass, or any stage that adds/converts/moves a block. **Sole source of truth for the block contract and its markup.** |
+| `Visuals.md` | Before you build, audit, or place any chart, diagram, or interactive visualization. **Sole source of truth for the visual contract** — what earns a visual, the brand tokens and font, the render/upload commands, and two verified templates. |
 | `About-Pabau.md` | Writing new Pabau copy (the Pabau section, CTA text, Pabau feature captions), or fact-checking a Pabau claim. |
 | `Originality-and-search-intent.md` | Judging intent from a SERP, planning an outline, or deciding a restructure. |
 | `Meta-title-best-practices.md` | Writing or re-optimizing a SERP/meta title. Only then — it is about titles and nothing else. |
@@ -43,6 +44,10 @@ These hold in every edit, with no exceptions.
   "specialist", never "advanced", "basic marketing", or "limited reporting".
 - **Lead with outcomes, not features.** Spell the benefit out ("so you can…").
 - **Never name a specific customer** without the team's confirmation.
+- **Every article ships at least one original visual we built** — a rendered chart or
+  diagram, or one CSS-only interactive block. Never a stock photo and never invented
+  numbers: every figure in a visual comes from the article, and the visual names its
+  source. Full contract in `Visuals.md`.
 - **Pricing comes from the provider's own website only** — never Capterra, G2, GetApp,
   Software Advice, Trustpilot, a round-up, or another blog. For Pabau, pabau.com only.
 - **Never link to a competitor's pricing page.** Read it for the figures, but link their
