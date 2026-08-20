@@ -36,9 +36,25 @@ Remove Claude speak in intro and the rest of the text.
 
 Do not talk about gaps unless it's an actual, physical gap (like a gap in a brick wall). Remove all mentions of gaps not relating to physical gaps.
 
-Do not talk about things being "real" or "actual", example:
+Do not call things "real", "true", "actual" or similar, unless a fake version of that thing exists in the article. Examples:
 - BAD: A four-clinician dermatology group taking two weeks longer than expected to reach full productivity will absorb that cost invisibly, but it is real.
 - GOOD: A four-clinician dermatology group taking two weeks longer than expected to reach full productivity will absorb that cost invisibly, but it still affects the bottom line.
+- BAD: Every action is logged and scored against the practice's real records.
+- GOOD: Every action is logged and scored against the practice's records.
+- FINE (a fake version genuinely exists): Staff learn to tell a real prescription request from a spoofed one.
+
+Cut "everything", "nothing", "anything" and bare "thing" hard — a whole article should carry only a handful between them. Three rules:
+
+1. **Never contrast "everything" with "nothing".** There is no good version of this construction. Delete the sentence and make the point another way.
+   - BAD: If everything is important, nothing is important.
+2. **Neither word can perform an action.** Apart from conjugations of "be" and "get", "everything" and "nothing" must not precede a verb. Name the actor that does the thing.
+   - BAD: They draft, the practice approves, and everything leaves a record of who did what and when.
+   - GOOD: They draft, the practice approves, and the whole process gets recorded.
+3. **Everywhere else, prefer the specific noun.** "Anything" and "thing" are almost always a placeholder for a word you have not chosen yet.
+   - BAD: The dashboard pulls everything into one place.
+   - GOOD: The dashboard pulls appointments, notes, and invoices into one place.
+   - BAD: Check anything that touches patient data.
+   - GOOD: Check every form, integration, and export that touches patient data.
 
 No "it's not X it's Y" phrasing; examples:
 - BAD: The comparison is not about which platform is objectively better. It is about fit. A multi-physician ophthalmology group whose revenue is driven primarily by high-volume, complex insurance claims will likely find Nextech's billing depth worth its cost.

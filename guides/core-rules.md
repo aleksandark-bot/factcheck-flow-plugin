@@ -87,8 +87,14 @@ These hold in every edit, with no exceptions.
 ## AI tells to strip on sight
 
 - No "gaps" unless it's a physical gap in a physical thing.
-- No calling things "real" or "actual" ("…but it is real" → "…but it still affects the
-  bottom line").
+- No calling things "real", "true", or "actual" unless a fake version of that thing exists
+  in the article ("…but it is real" → "…but it still affects the bottom line"; "scored
+  against the practice's real records" → "scored against the practice's records").
+- Cut "everything", "nothing", "anything", and bare "thing" down to a handful per article,
+  and never pair "everything" against "nothing" as a contrast ("If everything is important,
+  nothing is important" — don't write it in any form). Neither word can act: apart from
+  "be"/"get", they never precede a verb. Name the actor instead ("…and everything leaves a
+  record of who did what" → "…and the whole process gets recorded").
 - No "it's not X, it's Y" phrasing.
 - No "most practices miss…" / "here's the part most clinics avoid" — or anything near it.
 - No generic openers ("When it comes to…"), platitudes, or obvious advice.

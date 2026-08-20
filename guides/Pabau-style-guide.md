@@ -256,6 +256,23 @@ Long, formal words slow readers down. Try these swaps:
 | In the event of | If |
 | In as short a time as possible | Quickly |
 
+### **Vague nouns to replace**
+
+"Everything", "nothing", "anything" and bare "thing" are placeholders for a word you have not
+chosen yet. A whole article should carry only a handful between them. Name what you mean:
+"everything in one place" → "appointments, notes, and invoices in one place".
+
+Two hard rules:
+
+- **Never contrast "everything" with "nothing"** ("If everything is important, nothing is
+  important"). There is no acceptable version — make the point another way.
+- **Neither word can act.** Apart from "be" and "get", they never precede a verb. "…and
+  everything leaves a record of who did what" → "…and the whole process gets recorded".
+
+Same for "real", "true", and "actual": only use them when a fake version of that thing exists
+in the article. "Scored against the practice's real records" → "scored against the practice's
+records".
+
 ---
 
 ## **Formatting and mechanics**
