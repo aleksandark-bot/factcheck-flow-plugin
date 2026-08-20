@@ -140,10 +140,10 @@ further questions.
 
 The block-guarantee pass ALWAYS runs last and enforces the contract in
 `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — required document order plus the
-always-on guarantees (an original visual, Key takeaways, template download box, Pabau
-section + CTA block, Conclusion, Continue your research, Yoast FAQ, listicle pricing
-segments, image captions). That file, `Visuals.md`, and the article-editor's own Pass D own
-the detail; you are the orchestrator and never perform this work, so do not restate the
+always-on guarantees (an original visual, a featured image on a blog article that has none,
+Key takeaways, template download box, Pabau section + CTA block, Conclusion, Continue your
+research, Yoast FAQ, listicle pricing segments, image captions). That file, `Visuals.md`, and
+the article-editor's own Pass D own the detail; you are the orchestrator and never perform this work, so do not restate the
 contract to the subagents — they read it themselves.
 
 That pass opens with **D0 — visuals**: every article gets at least one original
@@ -152,6 +152,14 @@ or one CSS-only interactive block. The contract is
 `~/.claude/factcheck-flow/guides/Visuals.md` and the editor reads it itself. You never pick
 the visual, never design it, and never ask the user about it — it is unconditional, like the
 other guarantees. Expect a `Visuals:` line back from every editor.
+
+**D0b — featured image** follows it, and only on a blog article whose featured image slot is
+empty: the editor renders a 1200 × 630 brand card from the same guide (§11), uploads it, and
+attaches it with `featured_media` in the one save. It never replaces an existing featured
+image, never touches a template or code article, and never puts the card in the body. Same
+standing as D0 — you don't design it, don't second-guess which article qualifies, and don't
+ask the user. Expect a `Featured image:` line back from every editor, including the
+"already had one" and "not a blog article" cases.
 
 After that, and before the single save, each editor must clear the **sentence gate** (Pass E):
 `bin/sentence_check.py` counts every sentence in the body and the editor rewrites until the
@@ -165,7 +173,8 @@ reports the checker's final summary line verbatim; an article whose change-log h
 Once all Stage 3 subagents return, compile a single consolidated summary for the user.
 Each editor returns a compact change-log; relay it, don't re-derive it. Per article:
 fact-check fixes applied, editorial highlights, link changes, the visual that was built
-(route, what it shows, media id or `pv-viz` class), the one-line block-contract status the
+(route, what it shows, media id or `pv-viz` class), whether a featured image was built,
+already there, or not applicable, the one-line block-contract status the
 editor reported for each of the other guarantees, the sentence gate's summary line
 (longest sentence + how many were rewritten), and anything skipped. Note
 any article whose grave error was flagged but dropped after independent verification, and

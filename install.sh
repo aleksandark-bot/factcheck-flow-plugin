@@ -349,10 +349,10 @@ further questions.
 
 The block-guarantee pass ALWAYS runs last and enforces the contract in
 `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — required document order plus the
-always-on guarantees (an original visual, Key takeaways, template download box, Pabau
-section + CTA block, Conclusion, Continue your research, Yoast FAQ, listicle pricing
-segments, image captions). That file, `Visuals.md`, and the article-editor's own Pass D own
-the detail; you are the orchestrator and never perform this work, so do not restate the
+always-on guarantees (an original visual, a featured image on a blog article that has none,
+Key takeaways, template download box, Pabau section + CTA block, Conclusion, Continue your
+research, Yoast FAQ, listicle pricing segments, image captions). That file, `Visuals.md`, and
+the article-editor's own Pass D own the detail; you are the orchestrator and never perform this work, so do not restate the
 contract to the subagents — they read it themselves.
 
 That pass opens with **D0 — visuals**: every article gets at least one original
@@ -361,6 +361,14 @@ or one CSS-only interactive block. The contract is
 `~/.claude/factcheck-flow/guides/Visuals.md` and the editor reads it itself. You never pick
 the visual, never design it, and never ask the user about it — it is unconditional, like the
 other guarantees. Expect a `Visuals:` line back from every editor.
+
+**D0b — featured image** follows it, and only on a blog article whose featured image slot is
+empty: the editor renders a 1200 × 630 brand card from the same guide (§11), uploads it, and
+attaches it with `featured_media` in the one save. It never replaces an existing featured
+image, never touches a template or code article, and never puts the card in the body. Same
+standing as D0 — you don't design it, don't second-guess which article qualifies, and don't
+ask the user. Expect a `Featured image:` line back from every editor, including the
+"already had one" and "not a blog article" cases.
 
 After that, and before the single save, each editor must clear the **sentence gate** (Pass E):
 `bin/sentence_check.py` counts every sentence in the body and the editor rewrites until the
@@ -374,7 +382,8 @@ reports the checker's final summary line verbatim; an article whose change-log h
 Once all Stage 3 subagents return, compile a single consolidated summary for the user.
 Each editor returns a compact change-log; relay it, don't re-derive it. Per article:
 fact-check fixes applied, editorial highlights, link changes, the visual that was built
-(route, what it shows, media id or `pv-viz` class), the one-line block-contract status the
+(route, what it shows, media id or `pv-viz` class), whether a featured image was built,
+already there, or not applicable, the one-line block-contract status the
 editor reported for each of the other guarantees, the sentence gate's summary line
 (longest sentence + how many were rewritten), and anything skipped. Note
 any article whose grave error was flagged but dropped after independent verification, and
@@ -480,7 +489,9 @@ This is the rule that governs the whole job.
    over the ceiling.
 4. **Save ONCE**, at the end, with a single PUT. Write `payload.json` with the Write tool and
    send it with `-d @payload.json -o /dev/null -w '%{http_code}\n'`. A draft stays a draft;
-   a published post stays published.
+   a published post stays published. If D0b built a featured image, its
+   `featured_media` id rides along in that same payload — it is a field on the post, not a
+   second save.
 5. **Verify with grep assertions, not page fetches** (see "Verifying the save" below).
 
 The old four-fetch / four-save shape cost six full copies of the article per run and bought
@@ -526,19 +537,20 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — the contract, with the exact
    markup for every block (reference article: https://pabau.com/templates/accutite/, post
    151170; fetch it with `context=edit` if you want to see the real thing). Then enforce all
-   eleven guarantees below, in order, against the block markup you hold: original visual →
-   Key takeaways → download box (templates) → Pabau section + CTA block → Conclusion →
-   Continue your research → FAQ → provider cards (listicles) → listicle pricing → image
-   captions → video placement.
+   twelve guarantees below, in order, against the block markup you hold: original visual →
+   featured image (blog) → Key takeaways → download box (templates) → Pabau section + CTA
+   block → Conclusion → Continue your research → FAQ → provider cards (listicles) →
+   listicle pricing → image captions → video placement.
 
    D0 runs FIRST inside this pass, so the visual it adds is then covered by D9's caption and
-   spacer audit like any other image.
+   spacer audit like any other image. D0b is the one step that touches no block markup at
+   all — it sets a field, not a block.
 
    In D1, D5, D6 and D10 you are only changing wrapper markup, letter case, placeholder items,
-   and block position — never the copy. D0, D2, D3, D4, D7, D8 and D9 may require writing new
-   content (a visualization, a download box, a Pabau section, a proper conclusion, a provider
-   card's verdict and lists, a pricing segment, an image caption); write it in the article's
-   voice per `2-editorial.md` and the Pabau guides.
+   and block position — never the copy. D0, D0b, D2, D3, D4, D7, D8 and D9 may require writing
+   new content (a visualization, a featured-image card, a download box, a Pabau section, a
+   proper conclusion, a provider card's verdict and lists, a pricing segment, an image
+   caption); write it in the article's voice per `2-editorial.md` and the Pabau guides.
 
    **D0 — original visual (ALWAYS, runs first in this pass).** Contract:
    `~/.claude/factcheck-flow/guides/Visuals.md` — read it now; it is the single source of
@@ -562,6 +574,32 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    - If the environment can't render (`render_visual.py --check` fails on Chrome), do not
      fake it and do not fall back to a decorative image: record it under "Skipped" with the
      reason and carry on with the rest of the pass.
+
+   **D0b — featured image (BLOG ARTICLES WITH AN EMPTY SLOT).** Contract: `Visuals.md` §11 —
+   read it before you build; it owns the size, the copy rules and the verified card template.
+   The fetch you already did carries `link` and `featured_media`, so this costs no extra
+   request.
+   - **It applies when both are true:** the article is a blog article, and `featured_media` is
+     `0`. A published blog article has `/blog/` in its `link`. A draft's `link` is `?p=<id>`,
+     so judge the kind from the article itself: it is a blog article unless it is a template
+     article (it hands the reader a downloadable form) or a code article (an ICD/CPT/HCPCS code
+     is its subject).
+   - **`featured_media` already set → do nothing.** Never replace, re-crop or "improve" an
+     existing featured image, and never touch one on a template or code article. Say which
+     case it was on the `Featured image:` line and move on.
+   - Build the 1200 × 630 card from §11a with this article's own H1, a one-sentence deck, and a
+     two-to-four-word topic kicker. **Read the rendered file before you upload it** — a clipped
+     title on this card ships to every share preview the article ever gets.
+   - Upload with `--slug <article-slug>-featured` and an `--alt` that names it as a Pabau blog
+     card and repeats the title. Take the `id` from the upload's JSON.
+   - **Attach it by field, in the same single PUT as the body:** add `"featured_media": <id>`
+     to `payload.json`. It goes nowhere in the content — no `wp:image` block, no caption, no
+     spacer. A card that is both attached and inserted is a failed step, not a bonus.
+   - This is not the D0 visual and neither one covers for the other. An article that arrives
+     with neither leaves with both.
+   - Chrome can't render, or the upload fails? Leave `featured_media` out of the payload
+     entirely, record it under "Skipped", and never substitute a stock photo or an existing
+     media item.
 
    The required document order you are enforcing is `WordPress-blocks.md` §1. Never leave a
    heading above a block that renders its own heading (Key takeaways, Continue your research).
@@ -749,6 +787,7 @@ curl -s "$URL" | grep -o 'class="pb-card' | wc -l        # provider cards render
 curl -s "$URL" | grep -o '>\*[^<]\{0,80\}\*<' | head -5  # leaked asterisk italics (want none)
 curl -s "$URL" | grep -o 'pv-viz' | wc -l                # interactive visual root (0 or 1)
 curl -sI -o /dev/null -w '%{http_code}\n' "<visual source_url>"   # uploaded visual resolves (200)
+curl -sI -o /dev/null -w '%{http_code}\n' "<card source_url>"     # featured card resolves (200)
 ```
 
 Compare each count against what you expect to have written. Only when an assertion fails do
@@ -790,6 +829,8 @@ then these sections, one line each:
   the media id + slug or the `pv-viz` class, and the canvas size. State the figures' source. If
   the article already had a conforming visual, say so. This line is mandatory; an empty one
   means D0 did not run.
+- `Featured image:` built and attached (media id + slug) / already had one / not a blog
+  article / skipped + why. This line is mandatory; an empty one means D0b did not run
 - `Image captions:` N images, all captioned / N written / N rewritten / N asterisk fixes / no images
 - `Video:` already in the right slot / moved to end of intro from "<old location>" / dead video removed / no video
 - `Sentence gate:` the checker's final summary line, pasted verbatim (e.g. `175 sentences |
@@ -1007,11 +1048,11 @@ When writing, editing, or fact-checking Pabau content, read these guides first:
 - \`~/.claude/factcheck-flow/guides/About-Pabau.md\` — what Pabau is, product family + naming rules, pricing model, competitors, customer journey.
 - \`~/.claude/factcheck-flow/guides/Originality-and-search-intent.md\` — the two-bar rule for every article: fit searcher intent (answer the actual query, in the SERP-dominant format) AND carry an originality nugget (a unique angle no top-10 result has). Kill mirage/fluff; be specific.
 - \`~/.claude/factcheck-flow/guides/WordPress-blocks.md\` — the block contract + exact markup: document order, Key takeaways block (mandatory \`"title":"Key takeaways"\`), template download box, Pabau CTA (\`book-demo\`) block and the Pabau section before the Conclusion, the \`Conclusion\` heading + its \`/book-demo/\` link, Continue your research (\`expert-picks\`), Yoast FAQ, listicle pricing tables, image captions. Reference article: https://pabau.com/templates/accutite/.
-- \`~/.claude/factcheck-flow/guides/Visuals.md\` — the visual contract: every article ships at least one original visual we built (a rendered chart/diagram, or one CSS-only interactive block). Brand tokens + Satoshi, the \`bin/render_visual.py\` render/upload commands, block markup, and two verified templates.
+- \`~/.claude/factcheck-flow/guides/Visuals.md\` — the visual contract: every article ships at least one original visual we built (a rendered chart/diagram, or one CSS-only interactive block), plus the 1200 × 630 featured-image card for a blog article that has none (§11). Brand tokens + Satoshi, the \`bin/render_visual.py\` render/upload commands, block markup, and the verified templates.
 
 Block rules every article must satisfy: "Key takeaways" (capital K only, via the block's \`title\` attribute); an H2 Pabau section with the CTA block immediately before an H2 headed exactly "Conclusion" that concludes (not summarizes) and ends with a \`/book-demo/\` CTA link; a Continue your research block; a download box on template articles; a caption on every image (full sentence, ends with a period, italic via \`<em>\` — and if it shows a Pabau feature, it says how that feature helps the reader do what the article is about); any YouTube embed as the last block of the opening prose run, immediately before the next heading — never breaking up a run of prose, and moved byte-for-byte when it is misplaced (about half are); and in listicles a \`Pricing\` heading + pricing table closing every provider review, with figures from the provider's own website only.
 
-Every article also ships at least one original visual we built — a rendered chart/diagram (HTML → WebP via \`bin/render_visual.py\`, uploaded to the media library) or one CSS-only interactive block. Never a stock photo, never invented numbers: every figure comes from the article and the visual names its source. Read \`Visuals.md\` before building one.
+Every article also ships at least one original visual we built — a rendered chart/diagram (HTML → WebP via \`bin/render_visual.py\`, uploaded to the media library) or one CSS-only interactive block. Never a stock photo, never invented numbers: every figure comes from the article and the visual names its source. Read \`Visuals.md\` before building one. And a \`/blog/\` article with an empty featured image gets a 1200 × 630 brand card built the same way, attached via \`featured_media\` and never inserted into the body — an existing featured image is never replaced (\`Visuals.md\` §11).
 
 Quick rules: keep sentences to 25 words max (30 only where a split would break the meaning); US English (say "practice", not "clinic"); introduce Pabau on first mention ("practice management software like Pabau"); qualify product names once ("Pabau GO, our iOS app"); never say "Pabau Connect" externally (say "online booking"); no free trial (structured onboarding); every subscription includes every feature (no gating); don't undermine the core product when describing Plus add-ons. Every article must fit searcher intent AND have a unique angle (originality nugget) — never publish generic, me-too content.
 $GUIDE_END

@@ -29,7 +29,9 @@ This is the rule that governs the whole job.
    over the ceiling.
 4. **Save ONCE**, at the end, with a single PUT. Write `payload.json` with the Write tool and
    send it with `-d @payload.json -o /dev/null -w '%{http_code}\n'`. A draft stays a draft;
-   a published post stays published.
+   a published post stays published. If D0b built a featured image, its
+   `featured_media` id rides along in that same payload — it is a field on the post, not a
+   second save.
 5. **Verify with grep assertions, not page fetches** (see "Verifying the save" below).
 
 The old four-fetch / four-save shape cost six full copies of the article per run and bought
@@ -75,19 +77,20 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — the contract, with the exact
    markup for every block (reference article: https://pabau.com/templates/accutite/, post
    151170; fetch it with `context=edit` if you want to see the real thing). Then enforce all
-   eleven guarantees below, in order, against the block markup you hold: original visual →
-   Key takeaways → download box (templates) → Pabau section + CTA block → Conclusion →
-   Continue your research → FAQ → provider cards (listicles) → listicle pricing → image
-   captions → video placement.
+   twelve guarantees below, in order, against the block markup you hold: original visual →
+   featured image (blog) → Key takeaways → download box (templates) → Pabau section + CTA
+   block → Conclusion → Continue your research → FAQ → provider cards (listicles) →
+   listicle pricing → image captions → video placement.
 
    D0 runs FIRST inside this pass, so the visual it adds is then covered by D9's caption and
-   spacer audit like any other image.
+   spacer audit like any other image. D0b is the one step that touches no block markup at
+   all — it sets a field, not a block.
 
    In D1, D5, D6 and D10 you are only changing wrapper markup, letter case, placeholder items,
-   and block position — never the copy. D0, D2, D3, D4, D7, D8 and D9 may require writing new
-   content (a visualization, a download box, a Pabau section, a proper conclusion, a provider
-   card's verdict and lists, a pricing segment, an image caption); write it in the article's
-   voice per `2-editorial.md` and the Pabau guides.
+   and block position — never the copy. D0, D0b, D2, D3, D4, D7, D8 and D9 may require writing
+   new content (a visualization, a featured-image card, a download box, a Pabau section, a
+   proper conclusion, a provider card's verdict and lists, a pricing segment, an image
+   caption); write it in the article's voice per `2-editorial.md` and the Pabau guides.
 
    **D0 — original visual (ALWAYS, runs first in this pass).** Contract:
    `~/.claude/factcheck-flow/guides/Visuals.md` — read it now; it is the single source of
@@ -111,6 +114,32 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    - If the environment can't render (`render_visual.py --check` fails on Chrome), do not
      fake it and do not fall back to a decorative image: record it under "Skipped" with the
      reason and carry on with the rest of the pass.
+
+   **D0b — featured image (BLOG ARTICLES WITH AN EMPTY SLOT).** Contract: `Visuals.md` §11 —
+   read it before you build; it owns the size, the copy rules and the verified card template.
+   The fetch you already did carries `link` and `featured_media`, so this costs no extra
+   request.
+   - **It applies when both are true:** the article is a blog article, and `featured_media` is
+     `0`. A published blog article has `/blog/` in its `link`. A draft's `link` is `?p=<id>`,
+     so judge the kind from the article itself: it is a blog article unless it is a template
+     article (it hands the reader a downloadable form) or a code article (an ICD/CPT/HCPCS code
+     is its subject).
+   - **`featured_media` already set → do nothing.** Never replace, re-crop or "improve" an
+     existing featured image, and never touch one on a template or code article. Say which
+     case it was on the `Featured image:` line and move on.
+   - Build the 1200 × 630 card from §11a with this article's own H1, a one-sentence deck, and a
+     two-to-four-word topic kicker. **Read the rendered file before you upload it** — a clipped
+     title on this card ships to every share preview the article ever gets.
+   - Upload with `--slug <article-slug>-featured` and an `--alt` that names it as a Pabau blog
+     card and repeats the title. Take the `id` from the upload's JSON.
+   - **Attach it by field, in the same single PUT as the body:** add `"featured_media": <id>`
+     to `payload.json`. It goes nowhere in the content — no `wp:image` block, no caption, no
+     spacer. A card that is both attached and inserted is a failed step, not a bonus.
+   - This is not the D0 visual and neither one covers for the other. An article that arrives
+     with neither leaves with both.
+   - Chrome can't render, or the upload fails? Leave `featured_media` out of the payload
+     entirely, record it under "Skipped", and never substitute a stock photo or an existing
+     media item.
 
    The required document order you are enforcing is `WordPress-blocks.md` §1. Never leave a
    heading above a block that renders its own heading (Key takeaways, Continue your research).
@@ -298,6 +327,7 @@ curl -s "$URL" | grep -o 'class="pb-card' | wc -l        # provider cards render
 curl -s "$URL" | grep -o '>\*[^<]\{0,80\}\*<' | head -5  # leaked asterisk italics (want none)
 curl -s "$URL" | grep -o 'pv-viz' | wc -l                # interactive visual root (0 or 1)
 curl -sI -o /dev/null -w '%{http_code}\n' "<visual source_url>"   # uploaded visual resolves (200)
+curl -sI -o /dev/null -w '%{http_code}\n' "<card source_url>"     # featured card resolves (200)
 ```
 
 Compare each count against what you expect to have written. Only when an assertion fails do
@@ -339,6 +369,8 @@ then these sections, one line each:
   the media id + slug or the `pv-viz` class, and the canvas size. State the figures' source. If
   the article already had a conforming visual, say so. This line is mandatory; an empty one
   means D0 did not run.
+- `Featured image:` built and attached (media id + slug) / already had one / not a blog
+  article / skipped + why. This line is mandatory; an empty one means D0b did not run
 - `Image captions:` N images, all captioned / N written / N rewritten / N asterisk fixes / no images
 - `Video:` already in the right slot / moved to end of intro from "<old location>" / dead video removed / no video
 - `Sentence gate:` the checker's final summary line, pasted verbatim (e.g. `175 sentences |

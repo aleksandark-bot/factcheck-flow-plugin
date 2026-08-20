@@ -4,7 +4,10 @@ Every Pabau article gets **at least one original visual** that we built: either 
 **rendered image** (built in HTML, screenshotted to WebP, uploaded to the media library) or
 an **interactive visualization** (CSS-only HTML, embedded live in a `wp:html` block).
 
-This file is the single source of truth for both. It owns *what* to build, *how* it must
+It also owns the **blog featured image** (§11): a `/blog/` article with an empty featured
+image slot gets a 1200 × 630 card built the same way.
+
+This file is the single source of truth for all three. It owns *what* to build, *how* it must
 look, and the exact commands and markup. `WordPress-blocks.md` still owns the surrounding
 block contract — image captions and spacers are its §10, and a rendered visual is an
 ordinary `wp:image` block that must satisfy that section in full.
@@ -24,6 +27,10 @@ this article's own substance.
 Two or three is right for a long article (2,000+ words) or a listicle. More than four is
 padding. If an article already carries a visual *we* built to this contract, it satisfies
 the rule; audit it against §7/§8 and move on.
+
+**The featured image is a separate job** — §11. It is the card the article travels on, not a
+visual inside it, so it neither satisfies this rule nor is satisfied by it. A `/blog/` article
+with no featured image needs both.
 
 **A visual has to earn its place.** It must carry information the reader cannot get as
 quickly from the prose. Before you build, name the job in one sentence: *"this shows the
@@ -489,3 +496,134 @@ people get wrong.
 
 Note the `display:block` on each `.pv-bar` — the bars are `<span>`s so the markup stays
 inline-friendly, and a span needs it to take a width.
+
+---
+
+## 11. The blog featured image
+
+A `/blog/` article whose featured image is empty gets one **built here** — same renderer,
+different job. This is not the §1 visual and does not stand in for it: the in-body visual
+carries information, the featured image is the card the article travels on (the blog index,
+related-post rails, and the Open Graph thumbnail in Slack, LinkedIn and X). An article
+missing both gets both.
+
+### When it applies
+
+- The article's URL contains `/blog/` **and** its `featured_media` is `0`.
+- A draft's permalink is `?p=<id>`, so read the kind off the article instead. It is a blog
+  article unless it is a template article (it hands the reader a downloadable form) or a code
+  article (an ICD/CPT/HCPCS code is its subject) — those publish under `/templates/`,
+  `/procedure-codes/` and `/diagnostic-codes/`.
+- **Never replace a featured image that already exists**, however plain it looks. This fills
+  an empty slot; it does not re-art-direct the blog.
+- Other post types are out of scope. A template or code article with an empty slot is
+  recorded, not filled.
+
+### What it is
+
+**1200 × 630**, rendered from the template in §11a and uploaded to the media library. That is
+the size every other featured image on the site uses, and it is the OG card ratio, so nothing
+crops it.
+
+It is typographic, not a chart: title, one line of deck, the topic, the wordmark. This is the
+one visual on the site that carries no data, because a card is read at thumbnail size in a
+feed — §1's "earn its place" test does not apply to it. Everything else still does: tokens and
+Satoshi only, nothing invented, no stock photo, no screenshot. If you do put a number on it, it
+comes from the article and it is the number the article is about.
+
+The copy on the card:
+
+- **Title** — the article's own H1, sentence case, shortened to fit if it runs long. Aim under
+  ~70 characters, three lines maximum on the canvas. Cut words, never truncate with an ellipsis,
+  and never re-title the article here.
+- **Deck** — one sentence, 14 words or fewer, the reader's payoff. Not a summary of the Key
+  takeaways.
+- **Kicker** — the topic area in two to four words, US English ("Insurance & billing",
+  "Practice operations", "Aesthetic treatments"). Not the keyword, not a category slug.
+- **Chip** — what kind of read it is ("Practice management guide", "Code reference"), or one
+  first-party figure from the article. Optional: drop it rather than pad it.
+- **Never** a product claim, a price, a competitor's name, or anything about a free trial.
+  The card is brand surface, and it outlives the paragraph it was written from.
+
+### Build, check, upload, attach
+
+```bash
+RV=~/.claude/factcheck-flow/bin/render_visual.py
+
+# 1. Render at the featured-image size and LOOK at the file.
+python3 "$RV" --html /tmp/hero.html --width 1200 --height 630 --out /tmp/hero.webp
+
+# 2. Upload. Prints {"id":…, "source_url":…}; you need the id.
+python3 "$RV" --html /tmp/hero.html --width 1200 --height 630 \
+  --slug insurance-eligibility-verification-featured \
+  --alt "Pabau blog card: how insurance eligibility verification works, from intake to a clean claim" \
+  --upload
+```
+
+- `--width 1200 --height 630` is deliberate. 630 is not one of the presets, and `--fit` is
+  wrong here — a card is a fixed frame, not a content flow.
+- `--slug` is `<article-slug>-featured`, so the media library says what it belongs to.
+- `--alt` names it as a Pabau blog card and repeats the title. It is decoration on the page it
+  fronts, but it is the only text a screen reader gets in a share preview.
+- **The image goes nowhere in the body.** No `wp:image` block, no caption, no spacer — §10 of
+  `WordPress-blocks.md` does not apply to it. It is attached by field only, in the same single
+  PUT as the body:
+
+```json
+{"featured_media": 186912}
+```
+
+- If Chrome can't render (`render_visual.py --check` fails), record it under "Skipped" with the
+  reason. Never attach a stock photo instead, and never leave a half-uploaded id in the payload.
+
+### QA before you attach
+
+- [ ] The slot really was empty, and the article really is a blog article.
+- [ ] You read the rendered file. Nothing clipped, no orphaned word, no third line of deck.
+- [ ] Title matches the article's H1 in substance and in case.
+- [ ] Tokens and Satoshi only; no hue carrying meaning; no invented figure.
+- [ ] 1200 × 630, under ~200 KB (a card this simple renders around 50 KB).
+- [ ] `featured_media` set in the PUT, and nothing added to the body.
+- [ ] After the save: `curl -sI -o /dev/null -w '%{http_code}\n' "<source_url>"` returns 200.
+
+### 11a. The card — verified template
+
+Rendered and checked at 1200 × 630, in both variants. Replace the kicker, title, deck and
+chip; leave the structure alone. The corner disc is the only decoration the edge-clipping check
+tolerates at this size, so don't add more.
+
+```html
+<style>
+.pv-hero{height:100%;display:flex;flex-direction:column;padding:60px 72px;
+  background:var(--pb-wash-a);position:relative;overflow:hidden}
+.pv-hero::after{content:"";position:absolute;right:-160px;top:-160px;width:540px;height:540px;
+  border-radius:50%;background:var(--pb-tint);opacity:.7}
+.pv-hero>*{position:relative;z-index:1}
+.pv-eyebrow{display:flex;align-items:center;gap:12px}
+.pv-eyebrow .pv-dot{width:9px;height:9px;border-radius:50%;background:var(--pb-cyan)}
+.pv-mid{flex:1;display:flex;flex-direction:column;justify-content:center}
+.pv-title{font-size:56px;line-height:1.07;letter-spacing:-.025em;max-width:17em}
+.pv-deck{font-size:20px;line-height:1.45;color:var(--pb-body);max-width:34em;margin-top:20px}
+.pv-foot{display:flex;align-items:center;justify-content:space-between;
+  padding-top:22px;border-top:1px solid var(--pb-line)}
+.pv-mark{font-size:17px;font-weight:700;color:var(--pb-ink);letter-spacing:-.01em}
+.pv-chip{font-size:13px;font-weight:500;color:var(--pb-ink);background:var(--pb-page);
+  border:1px solid var(--pb-line);border-radius:999px;padding:8px 16px}
+</style>
+<div class="pv-hero">
+  <div class="pv-eyebrow"><span class="pv-dot"></span><span class="pv-kicker">Insurance &amp; billing</span></div>
+  <div class="pv-mid">
+    <h1 class="pv-title">How insurance eligibility verification works, from intake to a clean claim</h1>
+    <p class="pv-deck">What to check before the visit, and the five denial codes it prevents.</p>
+  </div>
+  <div class="pv-foot"><span class="pv-mark">pabau.com</span><span class="pv-chip">Practice management guide</span></div>
+</div>
+```
+
+For the **navy variant** — a stronger thumbnail in a feed, same layout — swap six values:
+`background:var(--pb-wash-a)` → `var(--pb-navy)`; the disc's
+`background:var(--pb-tint);opacity:.7` → `background:#1F2C45;opacity:1`; the title's colour →
+`#FFFFFF`; the deck's `var(--pb-body)` → `#C6D2E4`; the footer rule → `rgba(255,255,255,.18)`;
+and the chip to `color:#E8F6FB;background:rgba(255,255,255,.08);border:1px solid
+rgba(255,255,255,.22)`. Add `style="color:var(--pb-cyan)"` to the kicker so it holds up on the
+dark ground. Pick one variant per article and don't mix them mid-run.
