@@ -23,7 +23,7 @@ they differ, the full guide wins.
 | `About-Pabau.md` | Writing new Pabau copy (the Pabau section, CTA text, Pabau feature captions), or fact-checking a Pabau claim. |
 | `Originality-and-search-intent.md` | Judging intent from a SERP, planning an outline, or deciding a restructure. |
 | `Meta-title-best-practices.md` | Writing or re-optimizing a SERP/meta title. Only then — it is about titles and nothing else. |
-| `3-links.md` | The link audit, and choosing Continue-your-research targets. |
+| `3-links.md` | **Any link work at all** — the internal-link pass, and choosing Continue-your-research targets. **Sole source of truth for interlinking:** the cluster wall, the ≤5 link budget, the pillar/subhub pattern, the funnel and CTA contract, and the gate that must pass before the save. |
 
 ---
 
@@ -58,9 +58,16 @@ These hold in every edit, with no exceptions.
 - **Never link to a competitor's pricing page.** Read it for the figures, but link their
   homepage instead — never `/pricing`, `/plans`, or a pricing anchor. Details in
   `3-links.md`.
-- **Code articles link to Claim.MD.** Every ICD/CPT/HCPCS code article links to
-  `https://pabau.com/integrations/claim-md/` plus 3–5 of the 18 US-insurance-claims
-  cluster pages. The mandatory URL list is in `3-links.md` — never guess a slug.
+- **Links stay inside the article's content cluster.** The cluster comes from
+  `~/Desktop/pabau-content-clusters.xlsx` (source of truth, never re-derived) via
+  `bin/cluster_lookup.py`. At most 5 in-body editorial links per article — 3 on a code page —
+  exactly one of them the cluster's pillar. Cross-cluster links only via a pillar or a Tier-2
+  hub, never post to post. Code pages link only inside billing: pillar + one subhub + at most
+  one next-step. Full rulebook in `3-links.md`.
+- **No URL containing `/lp/` is ever a link target** — not in the body, not in a Continue your
+  research pick. Existing ones are removed.
+- **Never remove or reroute a `/book-demo/` link.** Every article ends with two: one in the
+  Pabau promotional section, one closing the Conclusion.
 
 ## Voice and mechanics
 

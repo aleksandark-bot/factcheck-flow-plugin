@@ -1,82 +1,418 @@
 <!--
-  PROMPT 3 — LINK AUDIT PASS (applied automatically in Stage 3)
-  Edit the site paths, minimum link count, replacement-source blog, and the
-  banned-link list below for your own site.
+  PROMPT 3 — LINK PASS (applied automatically in Stage 3, inside the article-editor)
+
+  This file implements the Pabau internal-linking rulebook for ONE article. The rulebook is
+  corpus-wide; the per-article adaptations are marked "per-article" below and the corpus-only
+  work is listed under "Out of scope for /fact" at the end — you report it, you never fake it.
+
+  The EXTERNAL-link rules in §12 are unchanged from the previous version of this pass.
 -->
 
-For this article, check internal links (NOT redirects, NOT nofollow, anchor text makes sense with the content and searcher intent). No duplicate links, unless they're in the "Expert Picks" or "Continue your research" (the box at the bottom that lists other articles to visit). If you remove links for any reason, find appropriate Pabau blogs to replace them with. Aim for internal links to /blog/, /diagnostic-codes/, /procedure-codes/, or /templates/ pages that scale with the article's length — roughly **one internal link per 200 words** (so ~15 for a 3,000-word article). This is an ideal target, not a hard floor: get close to it with links that fit naturally, but never stuff or pad to reach the number — a shorter or link-sparse article that reads well is better than a padded one.
+# The link pass, in one paragraph
 
-Linking must be organic. Place every link inside a sentence that already earns its place in the article — **never write a new paragraph or sentence whose purpose is to carry a link, and never pad the article to hit the link count**. Allow **no more than 2 internal links in any single paragraph**; spread links across the article rather than clustering them. If hitting the minimum would force stuffing, prefer fewer, well-placed links over cramming.
+Links are an expense, not free authority. This article gets **at most five in-body editorial
+links** (three if it is a code page), every one of them inside its own content cluster, exactly
+one of them pointing up at the cluster's pillar, each one the reader's genuine next step. The
+cluster comes from the spreadsheet, never from your judgment about what feels related. Every
+existing link gets a disposition. Then a script checks the plan before you save.
 
-Every article must link to **exactly two /industry/ pages**. Prefer the /industry/ pages that are currently the **least linked to** from the rest of the site, so link equity is spread rather than concentrated — from those, pick the two that best fit the article's topic and can be worked in naturally. To find the least-linked candidates, list the site's /industry/ pages and check how many internal links already point to each (via the `wordpress-access` skill or a site search); if that genuinely can't be determined, choose the two most topically relevant /industry/ pages instead. These two links **count toward the internal-link target above** (they are not extra), and they are still bound by the max-2-links-per-paragraph and organic-placement rules.
+Work from the copy of the article you already hold — this pass runs inside the article-editor,
+which fetched the article once at the start. Do not re-fetch it, and hold every edit for the
+single save at the end of the run.
 
-Where it fits naturally, link to **at most one /case-studies/ page** — this is preferred but **not mandatory**: include it only where a case study genuinely supports the surrounding sentence, and never add one if there's no natural home for it. **No more than one /case-studies/ link per article.** Prefer the /case-studies/ pages that are currently the **least linked to** from the rest of the site, so link equity is spread rather than concentrated — from those, pick the one that best fits the article's topic. To find the least-linked candidates, list the site's /case-studies/ pages and check how many internal links already point to each (via the `wordpress-access` skill or a site search); if that genuinely can't be determined, choose the most topically relevant /case-studies/ page instead. If included, this link **counts toward the internal-link target above** (it is not extra), and it is still bound by the max-2-links-per-paragraph and organic-placement rules.
+---
 
-**Code articles must link to Claim.MD and its cluster.** Any article whose subject is a clinical or billing code — everything under `/diagnostic-codes/` and `/procedure-codes/`, plus code-led articles sitting in `/blog/` — must link to the Claim.MD integration page **`https://pabau.com/integrations/claim-md/`**, without exception. Claim.MD is the clearinghouse Pabau submits electronic claims through, so a code article is precisely where a reader who has just identified the code needs to bill it. Place the link in a sentence that already earns its place — typically one about billing, submission, reimbursement, payers, or denials — keep the anchor short ("Claim.MD integration"), and treat it as a normal internal link: same tab, not nofollow, must return 200. It counts toward the internal-link target above and is bound by the max-2-links-per-paragraph and organic-placement rules. If the article has no natural home for it, write nothing new to carry it: place it in the Pabau section, which every article has.
+## §0 — Resolve the cluster first (nothing else happens before this)
 
-On top of that, link to **at least 3 and no more than 5** of the 18 pages in the US insurance claims cluster below — the set built around that integration. Choose the ones that genuinely fit what the article covers (a denial-heavy code article takes the denial pages; an out-of-network procedure code takes the superbill pages), not the first three on the list. These count toward the internal-link target and obey every rule above: organic placement only, no more than 2 links in a paragraph, no duplicates, no sentence written to carry a link. If fewer than 3 fit naturally, ship fewer and note it in your change-log rather than pad the article — the floor never overrides the no-stuffing rule.
+**`~/Desktop/pabau-content-clusters.xlsx` is the source of truth for cluster assignment. Use it
+as-is. Never re-derive it, never re-litigate an assignment** — including the conflict
+resolutions and the Rule-2 flags. It is a fixed snapshot, so it does not contain articles
+published after it was built; for those you infer the cluster by reasoning and semantic
+similarity to the posts it does contain.
 
-The 18 cluster pages, in build order:
+You never read the spreadsheet by hand. `~/.claude/factcheck-flow/bin/cluster_lookup.py` reads
+it at runtime and answers exactly the questions this pass asks:
 
-| # | Topic | URL |
-|---|---|---|
-| 1 | Medical claims clearinghouse (pillar) | https://pabau.com/blog/medical-claims-clearinghouse/ |
-| 2 | Superbill template | https://pabau.com/templates/superbill-template/ |
-| 3 | What is a superbill | https://pabau.com/blog/superbill/ |
-| 4 | CMS-1500 form | https://pabau.com/templates/cms-1500-form/ |
-| 5 | Denial management in healthcare | https://pabau.com/blog/denial-management-in-healthcare/ |
-| 6 | Denial codes in medical billing | https://pabau.com/procedure-codes/denial-codes-in-medical-billing/ |
-| 7 | Clean claim / claim scrubbing | https://pabau.com/blog/clean-claim/ |
-| 8 | Electronic remittance advice (ERA) | https://pabau.com/blog/electronic-remittance-advice/ |
-| 9 | 837 file | https://pabau.com/blog/837-file/ |
-| 10 | Insurance eligibility verification | https://pabau.com/blog/insurance-eligibility-verification/ |
-| 11 | Insurance credentialing | https://pabau.com/blog/how-to-get-credentialed-with-insurance-companies/ |
-| 12 | Timely filing limits | https://pabau.com/blog/timely-filing-limits/ |
-| 13 | Prior authorization process | https://pabau.com/blog/prior-authorization-process/ |
-| 14 | Medical billing compliance | https://pabau.com/blog/medical-billing-compliance/ |
-| 15 | Revenue cycle management | https://pabau.com/blog/what-is-revenue-cycle-management/ |
-| 16 | Claim.MD clearinghouse | https://pabau.com/blog/claim-md-clearinghouse/ |
-| 17 | Claim.MD pricing | https://pabau.com/blog/claim-md-pricing/ |
-| 18 | Claim.MD vs Office Ally | https://pabau.com/blog/claim-md-vs-office-ally/ |
+```bash
+CL=~/.claude/factcheck-flow/bin/cluster_lookup.py
 
-Never link a cluster page from memory or a guessed slug — copy the URL from this table. If one of them 404s or redirects, drop it and pick another from the table; do not invent a replacement path. Cluster page #6 lives in `/procedure-codes/` but is not about a single code, so the code-only anchor rule below does not apply to it — give it short descriptive anchor text instead. On an article that IS one of these 18, skip the self-link and link 3–5 of the others.
+# 1. The article: cluster, tier, subcluster, pillar, supporting hubs, budget, directives
+python3 $CL resolve --url "<article URL>"
 
-The Conclusion's `/book-demo/` CTA link is REQUIRED and exempt from the duplicate-link rule: if `/book-demo/` is also linked earlier in the body, remove the earlier one and keep the Conclusion's. Never strip it, never make it nofollow, never open it in a new tab, and keep the anchor text short ("Book a demo").
+# 2. Only if it is NOT in the sheet — the nearest posts, so you can reason to a cluster
+python3 $CL suggest --title "<the article's H1>" --terms "<3-6 topic words>"
 
-For duplicate links, always remove the second link, then rephrase the sentence containing it so it makes sense without the link. If the removed link was in a sentence solely directing the reader to read the linked article, delete the sentence entirely. If the removed link was in an Expert picks / continue your research block, then replace the entire sentence with another one, linking to a different article that satisfies the Expert picks rules below.
+# 3. Candidate targets inside that cluster (lowest inbound first = most equity-hungry)
+python3 $CL targets --cluster <cluster-id> --subcluster "<subcluster>" --limit 20
+python3 $CL targets --cluster <cluster-id> --bofu --sort pr --limit 10   # funnel candidates
 
-**Expert picks / Continue your research block.** This is the box at the bottom that lists other articles to visit — the `gutenberg-custom-blocks/expert-picks` block, which renders its own "Continue your research" heading. Its exact markup (unicode-escaped inline HTML, bold hook + link + one clause) is in `~/.claude/factcheck-flow/guides/WordPress-blocks.md`; it sits directly after the Conclusion section, before the FAQ heading, with NO wrapper H2 above it (delete any leftover "Expert picks…" heading). Every article must have one. It must contain **5 links AT MOST** — if it currently has more, trim it down to the 5 strongest, most topically relevant ones and delete the rest. Every article linked from this block must be an **orphan, near-orphan, or "lonely" page** — one with **fewer than 5 internal links already pointing to it** from the rest of the site. The entire purpose of this block is to spread link equity to under-linked pages, so never fill it with already-well-linked articles. To choose targets, use the `wordpress-access` skill or a site search to count how many internal links already point to each candidate; keep/add only those under 5, prioritizing true orphans (0 inbound links) first, then near-orphans (1–2), then lonely pages (3–4). If an article already sitting in the block turns out to be well-linked (5+ inbound links), replace it with a lonely one that still fits the article's topic. If you genuinely cannot determine inbound-link counts, prefer the most recently published articles (which are the least likely to have accumulated links yet). **Every item in this block must be a real, working link to a real, existing article, with descriptive anchor text that names the article — never a placeholder, an empty bullet, or a template stub.** The block must never ship with filler such as a literal "list item #1" / "list item #2", a bare "list item", "Article title", "Lorem ipsum", "#" / "example.com" links, or an empty `<li>`. If you find any placeholder, empty, or dead item in the block, replace each one with a genuine link to a qualifying under-linked article (per the rules above) or delete that item outright. If, after that, no qualifying real links remain, remove the entire block rather than leave stubs behind — an absent block is fine, a block full of placeholders is not.
+# 4. Every link already in the body, judged against rule A
+python3 $CL classify --from-url "<article URL>" --urls <every internal href in the body>
 
-Check today's date. Find all articles published the past day in /blog/, /diagnostic-codes/, /procedure-codes/, or /templates/. Link to at least 3 of those articles (choose them at random, do not go in order).
+# 5. Billing only: the subhub target set
+python3 $CL subhubs
+```
 
-Check for any 3xx redirects or 4xx errors; all links must return a clean 200.
+`resolve` prints the tier, the pillar URL, the listed supporting hub pages, the in-body budget,
+the funnel stage, an anchor-rotation seed, and any directive that applies (pillar exceptions,
+the billing wall, the house category, the retirement bucket). Read its output as instructions,
+not as suggestions.
 
-External links must be nofollow, open in new tab.
+If the article is **not** in the sheet, run `suggest`, decide the cluster from the shortlist and
+the cluster/subcluster tally, and record the id you chose — it goes in the plan you verify at
+the end. If the spreadsheet is missing, **stop the link pass**, change no links, and report
+`LINKPLAN_BLOCKED — cluster spreadsheet not found`. Guessing a cluster is worse than doing
+nothing.
 
-Internal links open in the same tab and are NOT nofollow.
+Three §0 outcomes end the pass immediately:
 
-Keep up to 5 external links ONLY. Choose the ones with the greatest impact, keep those, and remove the rest, while fixing the context around them to make sense without the link.
+- The article is in the **Review queue's retirement/reassign bucket** → no link actions at all.
+  Log it and skip to §13.
+- The article is in **`pabau-product-updates`** → house category, not a silo. No added editorial
+  links, no pillar rule; only the §2 removals (/lp/, cross-cluster) and the §8 CTA contract.
+- The article's URL is **outside `/blog/`, `/templates/`, `/procedure-codes/`,
+  `/diagnostic-codes/`** → those four folders are the only pages that may ever be edited. Make
+  no link changes, and say so in your report so David can decide whether /fact should have been
+  pointed at it at all. (The rest of the /fact passes still run.)
 
-**NEVER link to a competitor's pricing page.** Reading a competitor's pricing page to source their figures is still required — the link itself never ships. Check every external link for a pricing destination: `/pricing`, `/pricing-plans`, `/plans`, `/packages`, `/cost`, a `#pricing` anchor, or any page whose purpose is to sell their plans. Where you find one, **change the URL to that competitor's homepage** (root domain, e.g. `https://www.zenoti.com/`) and keep it nofollow + new tab. Then fix the anchor text and the surrounding sentence so both still make sense pointing at a homepage — anchor text like "Zenoti's pricing page" becomes "Zenoti". If the sentence existed only to send the reader to that pricing page, delete the sentence. If the homepage version of the link then adds nothing, drop the link entirely rather than keep a hollow one. This applies to every provider that isn't us, including in listicle pricing segments; `pabau.com/pricing/` is our own page and is unaffected.
+---
 
-Remove any links to these articles and replace them with something else:
-- …/intraparenchymal-hemorrhage-icd-10-codes/
-- …/blog/acne-face-mapping/
-- …/icd-10-code-for-autistic-disorder/
-- …/situational-anxiety-icd-10-code/
-- …/blog/ index
+## §1 — Hard scope gates
 
-When you link to articles from the /diagnostic-codes/ or /procedure-codes/ subfolders, the anchor text should be just the procedural or diagnostic code itself, and the sentence should not contain any parentheticals describing what the code refers to (as this makes sentences extremely clunky).
+Violating any of these invalidates the whole plan.
 
-Anchor text should be no longer than 4 words. Reduce anchor text that is too long.
+1. **`/lp/` is radioactive.** No URL containing `/lp/` is ever a link target — not in the body,
+   not in a Continue your research pick. Every existing link from this article to any `/lp/` URL
+   is a REMOVE.
+2. **Never plan a URL, slug, title, or status change.** This pass changes links and the prose
+   hosting them, nothing else.
+3. **House blocks and their links are untouchable** — Key takeaways, the Pabau CTA block, the
+   Conclusion's `/book-demo/` link, download boxes, pricing tables, the FAQ. The only permitted
+   block edit is REPLACE_PICK inside the Continue your research block (§7). Nav and footer are
+   out of scope entirely.
+4. **Every existing `/book-demo/` link stays** — block or inline, anywhere on the page. Never
+   removed, never rerouted. §8 governs adding the missing required ones.
 
-When you have finished ALL link changes, read the whole article through once more for flow — this is the last thing you do in the link step. Make sure the interlinking hasn't interrupted the flow of the article, its sections, or any individual paragraph. Watch for link-cluttered paragraphs, awkwardly inserted anchors, and sentences that now exist only to hold a link. Fix anything that blocks flow automatically — rephrase, merge, or cut — without asking.
+---
 
-Note: This is a newly published article or draft that may not yet be indexed by search engines, so don't rely on a search index to read it.
+## §2 — The disposition sweep: every existing link gets exactly one verdict
 
-**Work from the copy of the article you already hold** — this pass runs inside the article-editor, which fetched it once at the start. Do not re-fetch it, and hold your edits for the single save at the end of the run.
+List every internal href in the body you hold, then run `classify --from-url <article> --urls …`
+and give each link exactly one of:
 
-**Checking links cheaply.** You are checking status codes, not reading pages. Never WebFetch a link to see whether it works — that pulls a whole page (nav included) into context for a three-digit answer. Batch the checks in one Bash call and print only the codes:
+`KEEP` · `KEEP_ANTI_ORPHAN` · `REWRITE_ANCHOR` · `REROUTE` · `REMOVE`
+
+with a reason code: `COMPLIANT` / `LP_TARGET` / `CROSS_CLUSTER` / `BILLING_WALL_BREACH` /
+`OVER_CAP` / `BAD_ANCHOR` / `BAD_PLACEMENT` / `CANNIBAL_VARIANT`.
+
+- **KEEP requires passing every rule**: legal target (§3), in-prose placement (§6), compliant
+  anchor (§5), and inside the budget (§4).
+- **Cross-cluster post-to-post links default to REMOVE.** REROUTE them to that cluster's pillar
+  only when the mention survives naturally in the sentence.
+- **Over budget?** Keep the pillar up-link first, then the highest reader-value links toward
+  targets that need equity. REMOVE the rest with reason `OVER_CAP`.
+- **Never orphan a page.** `classify` flags any target whose inbound count in the link graph is
+  1 — removing that link orphans it. Fix it with a compliant same-cluster ADD elsewhere if one
+  exists; if none does, keep the link and mark it `KEEP_ANTI_ORPHAN`. (`/lp/` removals are
+  exempt: an /lp/ page is never protected from orphaning.)
+- After a REMOVE, **rephrase the host sentence so it reads correctly without the link.** If the
+  sentence existed only to send the reader to that page, delete the sentence. Removing a link
+  does not obligate you to find a replacement — the budget, not the count, decides what is
+  added.
+- **Remove any link to these, and do not replace them:**
+  - …/intraparenchymal-hemorrhage-icd-10-codes/
+  - …/blog/acne-face-mapping/
+  - …/icd-10-code-for-autistic-disorder/
+  - …/situational-anxiety-icd-10-code/
+  - the /blog/ index
+
+---
+
+## §3 — Where links may point (rule A)
+
+**The wall is the cluster, not the folder.** Inside the article's own cluster you may link
+freely across all four folders — blog ↔ template, CPT ↔ ICD-10 — plus the cluster's own pillar
+and its listed supporting hub pages (targets only, never edited). Every link must be the
+reader's next logical step. No link exists just to exist.
+
+**Exactly one in-body pillar up-link. Not zero, not two.** If a compliant one already exists,
+KEEP it (or REWRITE_ANCHOR). This is the highest-priority add class in the whole pass.
+
+**Different cluster → only via a pillar or a shared Tier-2 hub. No lateral cross-cluster links,
+ever.** The article may link another cluster's *pillar page*, or — where the topic is a shared
+operational function — the pillar or a listed supporting hub of a `Tier 2 — Cross-industry`
+cluster. Never another cluster's posts. Only where the prose genuinely discusses that topic.
+`classify` labels each of these for you.
+
+**Pillar exceptions** (`resolve` prints the one that applies):
+
+- `comparisons-alternatives` — its listed pillar is an /lp/ page. Up-link the most relevant
+  non-LP `/compare/` page instead and verify it returns 200. If none fits, log BLOCKED_PILLAR.
+- `optometry-eye-care` — pillar is /lp/-only. No pillar up-link; log BLOCKED_PILLAR.
+- `ai-in-healthcare` — use the interim pillar `/features/ai-medical-scribe/` as-is.
+- Any listed supporting page that lives under /lp/ is never a target.
+
+### The billing wall — strictest rule on the site
+
+Articles in `billing-coding-claims` (essentially all of `/procedure-codes/` and
+`/diagnostic-codes/`, plus billing-topic blog posts) link **only inside the billing cluster and
+its own hubs**. Nothing outside billing — not even another cluster's pillar. The §8
+`/book-demo/` CTA links are conversion links outside the cluster system and are the only
+exception.
+
+Every code page gets exactly this pattern, and nothing else:
+
+1. **one up-link to `https://pabau.com/features/claims-management-software/`**;
+2. **one link to a billing subhub** — `resolve` prints the rotation pick for this page, so
+   equity spreads across the subhubs instead of piling on one. Override the rotation when the
+   article points somewhere specific: a code whose medical-necessity codes live in ICD-10 links
+   the ICD-10 hub, a denial-prone code links the denial-codes hub;
+3. **at most one next-step** — the CPT ↔ ICD-10 counterpart, or the matching template/blog guide
+   inside billing.
+
+Pillar and subhub links are structural: they are exempt from the boost cap in §4. Inbound,
+non-billing articles may link the billing pillar only.
+
+---
+
+## §4 — Budget (rule B)
+
+- **At most 5 in-body editorial links** — **at most 3** on a `/procedure-codes/` or
+  `/diagnostic-codes/` page. House blocks do not count, Continue your research picks do not
+  count (§7), and `/book-demo/` CTA links do not count (§8).
+- Final-state composition:
+  - blog / template article = 1 pillar up-link + up to 4 discretionary (keeps, boosts,
+    next-steps; on a TOFU article one of those slots is the §8 funnel link);
+  - code page = 1 pillar + 1 subhub + at most 1 next-step.
+- **Absolute ceiling of 50 outbound links on the page** (CTA links excluded). A page over it
+  after your plan fails verification.
+- **No duplicate in-body links** — one link per target. Picks may duplicate an in-body target
+  (§7). Where a duplicate exists, remove the second and rephrase its sentence.
+- **At most 2 internal links in any single paragraph**, and spread them across the article
+  rather than clustering them.
+- **Never pad to reach a number.** Five is a ceiling, not a target. Four well-placed links beat
+  five with one that had to be invented a home.
+
+---
+
+## §5 — Anchors (rule C)
+
+- The anchor describes the **target's** primary keyword, reads naturally mid-sentence, and is
+  never "click here", "read more", "learn more", or a bare URL.
+- **The same anchor string appears at most 3 times in one article.**
+- For a pillar, a Tier-2 hub, or a billing subhub, do not ship the same exact-match anchor the
+  whole corpus uses — one sitewide anchor pattern is a footprint. `resolve` prints an
+  **anchor-rotation seed** naming which pattern this article uses (exact keyword / audience
+  phrase / the target's own H1 / benefit-framed phrase). Write that pattern in this article's
+  own words, and record the anchor you used.
+- **Anchors run to 4 words at most.** Trim anything longer.
+- **Linking a `/procedure-codes/` or `/diagnostic-codes/` page: the anchor is the code itself**,
+  and the sentence carries no parenthetical explaining what the code refers to — it makes
+  sentences unreadable. (A billing page that is not about one specific code — the denial-codes
+  page, a subhub archive — takes short descriptive anchor text instead.)
+- CTA links are exempt from the target-keyword rule: the anchor is short CTA text ("Book a
+  demo") inside a sentence naming the benefit for this article's reader.
+- Anchors and all new prose follow `core-rules.md` and the style guide: US English, 25 words per
+  sentence, no banned words.
+
+---
+
+## §6 — Placement and prose (rule E)
+
+Links live in body prose paragraphs only — never in a heading, an image caption, or any house
+block. Each added link uses one of three host types, and you decide which before you write:
+
+- **EXISTING_SENTENCE (preferred).** Place the anchor inside a sentence that already earns its
+  place in the article.
+- **NEW_SENTENCE.** Where no natural host exists, **write 1–2 new sentences** that genuinely
+  serve the reader on the target's topic, and insert them next to a specific existing sentence.
+  They must read as native to the article, invent no facts, and pass every style rule. On
+  templated corpora — the code pages especially — vary the structure and name the specific
+  code or procedure. One boilerplate sentence cloned across pages is a footprint.
+- **NEW_SECTION.** Only when the article contains nothing genuinely related **and** the link is
+  structurally required (pillar or subhub): add a short new H2 of 2–4 sentences that creates
+  real topical relevance, placed in the body run before the Pabau section, never disturbing the
+  house block order. **Never for a discretionary boost** — if nothing related exists, the boost
+  is dropped, not manufactured.
+
+If honest supporting prose cannot exist for a link, the link shouldn't either: skip it with
+reason `NOT_RELEVANT`.
+
+This replaces the old blanket ban on writing prose to host a link. The ban on *padding* stands:
+new prose must serve the reader on its own, and a sentence that only exists to hold an anchor
+still fails.
+
+**Genuine next-step links worth planning where budget allows:** blog article ↔ the same
+procedure's template (the download is the conversion), CPT page ↔ the ICD-10 codes that support
+its medical necessity, template → the blog guide that explains the procedure. Each must pass
+the "would the reader want this next?" test. No systematic related-content meshes.
+
+---
+
+## §7 — Continue your research (the `expert-picks` block)
+
+Markup and the 5-item ceiling belong to `WordPress-blocks.md` §7 — never rebuild the block from
+memory. This pass owns only which articles it links.
+
+- Picks **do not count** toward the in-body budget and **may duplicate** in-body link targets.
+- **Every pick stays inside the article's own cluster.** Never outside it, never `/lp/`.
+- Prefer, in order: same subcluster → same folder → posts over hub pages.
+- Among compliant candidates, prefer the ones that need equity: `targets --sort inbound` lists
+  the cluster's lowest-inbound pages first. This is a tiebreaker, never a reason to break the
+  cluster wall.
+- Any pick that violates the wall becomes a REPLACE_PICK with a compliant same-cluster
+  replacement. Never delete the block, never change its structure.
+- Every item must be a real, working link with descriptive anchor text naming the article. Never
+  a placeholder — no "list item #1", "Article title", "Lorem ipsum", "#" or example.com hrefs,
+  no empty items. Replace each one you find, or delete that item.
+
+---
+
+## §8 — Funnel and CTA (rule G)
+
+**Classify this article TOFU / MOFU / BOFU** from its target query and title, and record the
+stage. BOFU = purchase intent: comparisons, "alternative to", pricing, "best X software"
+listicles, commercial decision guides; a template article defaults to BOFU (the download is the
+conversion) unless it is purely educational. TOFU = educational, including every code page.
+MOFU sits between them. `resolve` prints a heuristic guess — confirm it yourself.
+
+**Every TOFU article in `/blog/` or `/templates/` links at least one same-cluster BOFU
+article** — a post, not the pillar. This is the ADD_FUNNEL link. An existing compliant link may
+serve as it, flagged on its KEEP row. It still has to pass the next-step test and live in honest
+host prose. Route by subcluster relevance first. `targets --cluster <id> --bofu --sort pr` lists
+the candidates; **spread across the cluster's BOFU inventory** rather than always picking the
+strongest one. The funnel link counts against this article's budget. If the cluster has no BOFU
+article at all, log `NO_BOFU_IN_CLUSTER` — that is a content-gap finding for David, not a
+failure. **Code pages are exempt from this mandate**; where genuinely relevant their one
+next-step may be a BOFU billing guide or template.
+
+**The `/book-demo/` CTA contract.** Every in-scope, non-skipped article ends in final state with
+both placements:
+
+1. one in the **Pabau promotional section** — satisfied by the Pabau CTA (`book-demo`) block
+   where it exists; where no block exists (Elementor articles, templated code pages), an inline
+   CTA link in the Pabau-promotional prose;
+2. one **inline CTA link closing the Conclusion** — short "Book a demo"-style anchor inside a
+   closing sentence naming the benefit for this reader. `WordPress-blocks.md` owns the format.
+
+Audit both, record the before-state, and add each missing one as an ADD_CTA — prose written via
+§6, never a planned block addition. On a page with no Pabau section or Conclusion at all, put
+the promotional CTA in a short passage before the closing content and the closing CTA as the
+final body sentence. **Vary the benefit sentence per page.** CTA links are conversion links, not
+editorial links: exempt from the cluster wall (billing included), from every budget and cap, and
+from the §5 anchor rules. An article carrying more than the two placements is left alone.
+
+(The block-guarantee pass D3/D4 enforces the same two placements from the block side. Where both
+apply, they are the same two links — do not create a third.)
+
+---
+
+## §9 — Close variants and cannibalization (rule 1, per-article)
+
+The corpus-wide cannibalization sweep is not this pass's job (see Out of scope). What is:
+
+- **Never plan a boost, next-step, or funnel link at a page that is a close variant of another
+  page competing on the same query** unless it is the primary. Close variants live mainly in the
+  code corpus (neighboring or related codes) and in same-procedure blog/template pairs.
+- When two candidate targets are genuine close variants of each other, pick the primary by best
+  rank, then clicks. One GSC call each settles it, for the two or three shortlisted targets
+  only:
+
+  ```bash
+  python3 ~/.claude/factcheck-flow/bin/gsc_query.py --page "<candidate URL>" --days 28 --limit 5
+  ```
+
+- An existing link pointing at a non-primary variant becomes REROUTE to the primary, reason
+  `CANNIBAL_VARIANT`. Non-primary variants receive no boost, next-step or funnel links —
+  structural pillar/subhub links and CTA links only — and variants never link each other
+  laterally.
+- Log any pair you find with heavy overlap as a merge candidate for David. **Never plan a merge
+  or a 301** — out of scope.
+
+**Does this article's own links pass equity?** A link from a page that does not itself rank
+passes ~nothing. One call classifies this article:
+
+```bash
+python3 ~/.claude/factcheck-flow/bin/gsc_query.py --page "<article URL>" --days 28 --limit 10
+```
+
+Clicks > 0, or impressions at position ≤ 20 → RANKING. Otherwise INERT. Say which in your
+report: on an INERT article the links you added are hygiene, not equity, and nobody should
+credit them later for moving a pillar. A brand-new article is INERT by definition and that is
+fine — it is not a reason to skip the pass.
+
+---
+
+## §10 — Elementor articles (rule F)
+
+Detect the engine and **record it**: `gutenberg` / `classic` vs `elementor`. One call settles
+it — exit 0 means `post_content` is safe to write, exit 3 means the page is builder-backed:
+
+```bash
+python3 ~/.claude/factcheck-flow/bin/elementor_guard.py <POST_ID>   # prints "<id> ok|BUILDER <url>"
+```
+
+Its fallback signals, if the script is unavailable: `content.raw` empty or a shell while
+`content.rendered` is full, and/or `_elementor_data` / `_elementor_edit_mode` in meta.
+
+**Elementor pages silently ignore `post_content` writes.** An edit written there reports success
+and changes nothing. So on an Elementor article: quote host sentences and current anchors from
+the `_elementor_data` widget text, edit that structure, preserve its JSON encoding exactly, and
+regenerate/flush Elementor CSS after the save. If `_elementor_data` is not readable over REST,
+change nothing and log **BLOCKED_ELEMENTOR** — never a blind edit. Elementor pages may carry no
+Gutenberg house blocks at all; audit what actually exists and never plan adding blocks to one.
+
+---
+
+## §11 — Verify before you save (mechanical gate)
+
+Link rules are counting rules, and counting is not done by eye. Write the finished plan to JSON
+and run the gate. It must exit 0 before the article is saved.
+
+```bash
+# plan.json — write it with the Write tool, then:
+python3 ~/.claude/factcheck-flow/bin/cluster_lookup.py verify \
+  --url "<article URL>" --plan /tmp/plan.json
+```
+
+```json
+{
+  "engine": "gutenberg",
+  "stage": "TOFU",
+  "cluster": "med-spa-aesthetics",
+  "cta_promotional": true,
+  "cta_conclusion": true,
+  "links": [
+    {"type": "ADD_PILLAR",  "target": "https://pabau.com/industry/medical-spa-software/",
+     "anchor": "software built for med spas", "host": "EXISTING_SENTENCE"},
+    {"type": "ADD_FUNNEL",  "target": "https://pabau.com/blog/best-medical-spa-software/",
+     "anchor": "best med spa software", "host": "NEW_SENTENCE"},
+    {"type": "KEEP",        "target": "https://pabau.com/blog/dermatology-practice-marketing/",
+     "anchor": "dermatology marketing"},
+    {"type": "REMOVE",      "target": "https://pabau.com/lp/medical-spa-software/",
+     "anchor": "med spa software", "reason": "LP_TARGET"},
+    {"type": "ADD_CTA",     "target": "https://pabau.com/book-demo/", "anchor": "Book a demo"}
+  ],
+  "picks": ["https://pabau.com/blog/easi-score-calculator/"]
+}
+```
+
+Every existing link needs a row, every added link needs a row. `cluster` is required only when
+the article is not in the spreadsheet. On a target published after the snapshot, add
+`"cluster_confirmed": true` to that row once you have resolved its cluster yourself.
+
+The gate checks: no `/lp/` survivor; the edited page is in the four folders; the budget; exactly
+one pillar up-link and that it is the right pillar; every target legal under §3 (including the
+billing wall); exactly one subhub on a code page; anchors — none banned, none over 3 uses; picks
+inside the cluster and at most 5; no `/book-demo/` link removed or rerouted; the TOFU funnel
+link; the engine recorded. It warns where a removal may orphan a page.
+
+**A FAIL is not advisory.** Fix the plan, re-run, and only then continue. If the script is
+missing, do not download it and do not improvise the counting — report
+`LINKPLAN_GATE_UNAVAILABLE` and leave the links as they were.
+
+Then check every link actually resolves — status codes only, never WebFetch a page for a
+three-digit answer:
 
 ```bash
 for u in <url1> <url2> <url3>; do
@@ -84,4 +420,84 @@ for u in <url1> <url2> <url3>; do
 done
 ```
 
-Drop `-L` when you specifically want to catch a 3xx rather than follow it. To count inbound internal links to a candidate page (for the orphan/near-orphan rules), query the REST API with `search=` and `_fields=id,link` rather than crawling the site.
+Every link must return a clean 200 — no 3xx redirect, no 4xx. Drop `-L` when you specifically
+want to catch a 3xx rather than follow it.
+
+Finally, **read the whole article through once more for flow** — the last thing you do in this
+pass. The interlinking must not have interrupted the article, a section, or a paragraph. Watch
+for link-cluttered paragraphs, awkward anchors, and sentences that now exist only to hold a
+link. Fix anything that blocks flow — rephrase, merge, or cut — without asking.
+
+---
+
+## §12 — External links (unchanged)
+
+External links must be nofollow and open in a new tab. Internal links open in the same tab and
+are NOT nofollow.
+
+Keep up to **5 external links ONLY**. Choose the ones with the greatest impact, keep those, and
+remove the rest, fixing the context around them so it makes sense without the link.
+
+**NEVER link to a competitor's pricing page.** Reading a competitor's pricing page to source
+their figures is still required — the link itself never ships. Check every external link for a
+pricing destination: `/pricing`, `/pricing-plans`, `/plans`, `/packages`, `/cost`, a `#pricing`
+anchor, or any page whose purpose is to sell their plans. Where you find one, **change the URL to
+that competitor's homepage** (root domain, e.g. `https://www.zenoti.com/`) and keep it nofollow +
+new tab. Then fix the anchor text and the surrounding sentence so both still make sense pointing
+at a homepage — anchor text like "Zenoti's pricing page" becomes "Zenoti". If the sentence
+existed only to send the reader to that pricing page, delete the sentence. If the homepage
+version of the link then adds nothing, drop the link entirely rather than keep a hollow one.
+This applies to every provider that isn't us, including in listicle pricing segments;
+`pabau.com/pricing/` is our own page and is unaffected.
+
+External links count toward nothing in §4 — that budget is internal editorial links only.
+
+---
+
+## §13 — What to report
+
+The `Links:` line in your change-log carries, in this order:
+
+- cluster + subcluster + tier, and whether it came from the spreadsheet or from your reasoning;
+- the funnel stage, and RANKING or INERT from §9;
+- the engine (`gutenberg` / `classic` / `elementor`);
+- final in-body editorial link count against the budget (e.g. `4/5`);
+- the pillar up-link (target + anchor), or the BLOCKED_PILLAR reason;
+- on a code page: the subhub you linked and why, plus the next-step if any;
+- the funnel link (target), or `NO_BOFU_IN_CLUSTER`;
+- dispositions as counts by code — `KEEP n · REWRITE_ANCHOR n · REROUTE n · REMOVE n` — with the
+  reason codes for every REROUTE and REMOVE;
+- picks: kept / replaced, and any REPLACE_PICK target;
+- both CTA placements: already there or added;
+- the gate's final line, verbatim (`PASS | 0 checks failed, N warnings`);
+- external links: how many kept, any pricing-page URL you rewrote to a homepage;
+- anything skipped, with its code: `NOT_RELEVANT`, `BLOCKED_PILLAR`, `BLOCKED_ELEMENTOR`,
+  `NO_BOFU_IN_CLUSTER`, retirement bucket, product-updates, out-of-folder.
+
+Also surface, for David rather than for the article: merge candidates from §9, and — when this
+article is BOFU — that rule G wants 1–3 inbound boost links pointed **at** it from
+high-PageRank, high-traffic same-cluster pages. That is an edit to other pages, so name it as a
+finding here; never edit another page from this pass.
+
+---
+
+## Out of scope for /fact (report, never fake)
+
+This pass edits ONE article. The rulebook's corpus-level work belongs to the bulk interlinking
+project and is deliberately not attempted here:
+
+- the 28-day corpus-wide cannibalization sweep and primary designation across all in-scope pages;
+- inbound boost links to BOFU articles (they are edits to *other* pages);
+- the post-removal orphan simulation over the whole graph — §2 uses the per-target inbound count
+  from `graph.json` instead;
+- cross-corpus rotation ledgers for subhub and funnel distribution — `resolve`'s per-article
+  rotation seed is the stand-in;
+- merges, 301s, URL and slug changes: never, under any circumstance.
+
+The link graph behind the inbound counts is `~/Desktop/linkmap/graph.json`. If
+`cluster_lookup.py` warns that it is more than 48 hours old, say so in your report; refreshing it
+(`cd ~/Desktop/linkmap && ./refresh.sh`) is a wrap-up step for the /fact orchestrator, not
+something to run per article.
+
+Note: a newly published article or draft may not be indexed yet, so don't rely on a search index
+to read it.

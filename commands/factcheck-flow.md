@@ -134,9 +134,17 @@ articles process concurrently). To each subagent pass:
   user-supplied values/edits; omit rejected findings).
 
 Each subagent fetches its article ONCE, runs its four sequential passes (approved
-fact-check fixes → editorial → link audit → block guarantees) in memory, and writes
+fact-check fixes → editorial → link pass → block guarantees) in memory, and writes
 everything back in a SINGLE save via the `wordpress-access` skill. They do not ask
 further questions.
+
+The link pass (`3-links.md`) resolves each article's content cluster from
+`~/Desktop/pabau-content-clusters.xlsx` — the source of truth, read at runtime by
+`bin/cluster_lookup.py` — and links only inside that cluster, at most five in-body editorial
+links (three on a code page). It ends in its own mechanical gate, so expect the gate's
+`PASS | 0 checks failed` line back on every `Links:` line, the same way Pass E reports the
+sentence gate. An editor that reports `LINKPLAN_BLOCKED` could not reach the spreadsheet: that
+is a setup problem to relay, not a reason to re-run the article with links improvised.
 
 The block-guarantee pass ALWAYS runs last and enforces the contract in
 `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — required document order plus the
@@ -178,5 +186,10 @@ already there, or not applicable, the one-line block-contract status the
 editor reported for each of the other guarantees, the sentence gate's summary line
 (longest sentence + how many were rewritten), and anything skipped. Note
 any article whose grave error was flagged but dropped after independent verification, and
-any article that hit the two-rewrite ceiling and needs manual attention. End with the
-reminder to purge the WP Rocket cache for each edited URL.
+any article that hit the two-rewrite ceiling and needs manual attention. Collect the
+link-pass findings that are about OTHER pages and list them once for the user rather than per
+article: merge candidates from close-variant pairs, BOFU articles that need inbound boosts,
+`NO_BOFU_IN_CLUSTER` clusters, and any `BLOCKED_PILLAR` or `BLOCKED_ELEMENTOR` article. End with
+the reminder to purge the WP Rocket cache for each edited URL, plus — once for the whole run,
+not per article — refreshing the link atlas (`cd ~/Desktop/linkmap && ./refresh.sh`) so the next
+run's inbound counts include what this one changed.

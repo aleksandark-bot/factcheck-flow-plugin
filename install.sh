@@ -75,6 +75,18 @@ if curl -fsSL "$REPO_RAW/bin/render_visual.py" -o "$FF/bin/render_visual.py"; th
 else
   echo "  NOTE: could not download bin/render_visual.py — /fact cannot build article visuals." >&2
 fi
+if curl -fsSL "$REPO_RAW/bin/cluster_lookup.py" -o "$FF/bin/cluster_lookup.py"; then
+  chmod +x "$FF/bin/cluster_lookup.py" 2>/dev/null || true
+  echo "  - cluster lookup installed"
+else
+  echo "  NOTE: could not download bin/cluster_lookup.py — /fact's link pass will be blocked." >&2
+fi
+if curl -fsSL "$REPO_RAW/bin/elementor_guard.py" -o "$FF/bin/elementor_guard.py"; then
+  chmod +x "$FF/bin/elementor_guard.py" 2>/dev/null || true
+  echo "  - Elementor guard installed"
+else
+  echo "  NOTE: could not download bin/elementor_guard.py — engine detection falls back to REST." >&2
+fi
 
 # --- 1b. Download the Pabau reference guides from the repo -----------------
 # These define voice/terminology (Pabau-style-guide), product/positioning
@@ -192,7 +204,7 @@ fetch "skills/wordpress-access/SKILL.md" "$HOME/.claude/skills/wordpress-access/
 
 # /SEO command + helpers (the seo-research/seo-write prompts are fetched in the loop above)
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
-for b in gsc_query keyword_picker serp_picker dfs_lists sentence_check serp_fetch render_visual; do
+for b in gsc_query keyword_picker serp_picker dfs_lists sentence_check serp_fetch render_visual cluster_lookup elementor_guard; do
   fetch "bin/$b.py" "$FF/bin/$b.py"; chmod +x "$FF/bin/$b.py" 2>/dev/null || true
 done
 

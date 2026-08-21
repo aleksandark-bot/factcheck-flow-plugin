@@ -109,6 +109,24 @@ like the other prompts. The command is `commands/SEO.md`. Helpers: `bin/gsc_quer
 server entry in `~/.claude.json` — so if you already have that MCP server configured, it works
 with no extra setup.
 
+### Cluster spreadsheet (required for the link pass)
+
+`/fact`'s link pass resolves every article's content cluster from a spreadsheet, and refuses to
+guess when it can't reach it. Each user needs:
+
+1. **`~/Desktop/pabau-content-clusters.xlsx`** — the cluster assignment workbook (`Posts`,
+   `Clusters` and `Review queue` sheets), or the same file pointed to via
+   `$PABAU_CLUSTERS_XLSX`. It is the source of truth for which cluster a page belongs to and is
+   never re-derived.
+2. **openpyxl** (`python3 -m pip install --user openpyxl`) — `bin/cluster_lookup.py` reads the
+   workbook with it.
+3. Optional but recommended: **`~/Desktop/linkmap/graph.json`** (or `$PABAU_LINKMAP_GRAPH`) —
+   the current internal-link graph, which supplies inbound counts for the anti-orphan and
+   equity-spreading rules. Without it the pass still runs; inbound counts show as `?`.
+
+Without the spreadsheet the link pass reports `LINKPLAN_BLOCKED` and changes no links; the rest
+of `/fact` runs normally.
+
 ### GSC access (required for published articles)
 
 The "already ranking" list reads Google Search Console via a **service-account key** — a
@@ -130,9 +148,10 @@ The three passes are plain editable files under `prompts/`:
 - `prompts/1-factcheck.md` — accuracy / category / tag / link / structure review.
 - `prompts/2-editorial.md` — your house style guide (fluff, US English, structure,
   meta descriptions, etc.).
-- `prompts/3-links.md` — internal/external link rules. **Edit the site paths, the
-  minimum internal-link count, the replacement blog source, and the banned-link list**
-  to match your own site (the defaults are specific to one site).
+- `prompts/3-links.md` — internal/external link rules. The internal half is cluster-based:
+  **edit the site paths, the four editable folders, the link budgets, and the banned-link
+  list**, and point `bin/cluster_lookup.py` at your own cluster workbook via
+  `$PABAU_CLUSTERS_XLSX` (the defaults are specific to one site).
 
 Reference guides under `guides/` define voice, product context, and the block contract, and
 are read by the editorial pass and the fact-check reviewer:
