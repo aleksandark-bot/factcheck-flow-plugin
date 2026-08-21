@@ -382,6 +382,7 @@ python3 ~/.claude/factcheck-flow/bin/cluster_lookup.py verify \
   "cluster": "med-spa-aesthetics",
   "cta_promotional": true,
   "cta_conclusion": true,
+  "total_outbound": 23,
   "links": [
     {"type": "ADD_PILLAR",  "target": "https://pabau.com/industry/medical-spa-software/",
      "anchor": "software built for med spas", "host": "EXISTING_SENTENCE"},
@@ -401,8 +402,11 @@ Every existing link needs a row, every added link needs a row. `cluster` is requ
 the article is not in the spreadsheet. On a target published after the snapshot, add
 `"cluster_confirmed": true` to that row once you have resolved its cluster yourself.
 
-The gate checks: no `/lp/` survivor; the edited page is in the four folders; the budget; exactly
-one pillar up-link and that it is the right pillar; every target legal under §3 (including the
+`total_outbound` is every outbound link the saved page will carry, CTA links excluded — the
+gate uses it for the 50-link ceiling.
+
+The gate checks: no `/lp/` survivor; the edited page is in the four folders; the budget and the
+50-link ceiling; exactly one pillar up-link and that it is the right pillar; every target legal under §3 (including the
 billing wall); exactly one subhub on a code page; anchors — none banned, none over 3 uses; picks
 inside the cluster and at most 5; no `/book-demo/` link removed or rerouted; the TOFU funnel
 link; the engine recorded. It warns where a removal may orphan a page.

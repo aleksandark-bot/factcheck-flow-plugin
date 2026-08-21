@@ -831,7 +831,15 @@ def print_verify(a):
         if len(got) != 1:
             bad("code page: %d subhub links, need exactly 1 (see `subhubs`)" % len(got))
 
-    # 6. anchors
+    # 6. the absolute page ceiling
+    total = plan.get("total_outbound")
+    if isinstance(total, int) and total > 50:
+        bad("page carries %d outbound links, ceiling 50 (CTA links excluded)" % total)
+    elif total is None:
+        warns.append("record total_outbound (every outbound link on the page, CTA links "
+                     "excluded) so the 50-link ceiling can be checked")
+
+    # 7. anchors
     seen = {}
     for l in final:
         a_txt = (l.get("anchor") or "").strip().lower()
@@ -847,7 +855,7 @@ def print_verify(a):
         if txt.startswith("http"):
             bad("BAD_ANCHOR: bare URL %r" % txt)
 
-    # 7. picks stay inside the cluster
+    # 8. picks stay inside the cluster
     for p in picks:
         pp = sheet["posts"].get(p)
         if is_lp(p):
@@ -859,7 +867,7 @@ def print_verify(a):
     if len(picks) > 5:
         bad("Continue your research: %d picks, max 5" % len(picks))
 
-    # 8. CTA contract
+    # 9. CTA contract
     cta = [l for l in links if "/book-demo/" in norm(l.get("target"))]
     if plan.get("cta_promotional") is not True or plan.get("cta_conclusion") is not True:
         if len(cta) < 2:
@@ -870,7 +878,7 @@ def print_verify(a):
                 (l.get("type") or "").upper() in ("REMOVE", "REROUTE"):
             bad("a /book-demo/ link is never removed or rerouted: %s" % l.get("target"))
 
-    # 9. anti-orphan on removals
+    # 10. anti-orphan on removals
     for l in links:
         if (l.get("type") or "").upper() in ("REMOVE", "REROUTE"):
             g = gi["nodes"].get(norm(l.get("target")), {})
@@ -879,7 +887,7 @@ def print_verify(a):
                              "compliant same-cluster ADD or KEEP_ANTI_ORPHAN"
                              % (l.get("target"), g.get("in")))
 
-    # 10. funnel mandate
+    # 11. funnel mandate
     stage = (plan.get("stage") or stage_guess(u, (post or {}).get("title", ""))).upper()
     if stage == "TOFU" and fold in ("/blog/", "/templates/") and not exempt:
         fun = [l for l in final if (l.get("type") or "").upper() == "ADD_FUNNEL"
@@ -888,7 +896,7 @@ def print_verify(a):
             bad("TOFU post with no same-cluster BOFU funnel link (G) — add one or set "
                 "no_bofu_in_cluster true and log NO_BOFU_IN_CLUSTER")
 
-    # 11. engine recorded
+    # 12. engine recorded
     if (plan.get("engine") or "").lower() not in ("gutenberg", "classic", "elementor"):
         bad("record engine: gutenberg | classic | elementor (rule F)")
 
