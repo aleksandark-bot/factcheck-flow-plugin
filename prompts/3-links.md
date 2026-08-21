@@ -2,8 +2,9 @@
   PROMPT 3 — LINK PASS (applied automatically in Stage 3, inside the article-editor)
 
   This file implements the Pabau internal-linking rulebook for ONE article. The rulebook is
-  corpus-wide; the per-article adaptations are marked "per-article" below and the corpus-only
-  work is listed under "Out of scope for /fact" at the end — you report it, you never fake it.
+  corpus-wide, so some of its rules are adapted to a single article here; the parts that cannot
+  be done one article at a time are listed under "Out of scope for /fact" at the end — you
+  report those, you never fake them.
 
   The EXTERNAL-link rules in §12 are unchanged from the previous version of this pass.
 -->
