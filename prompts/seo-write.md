@@ -16,8 +16,8 @@ through S4, S5, S6, the whole of the writing stage, and the /fact hand-off — r
 turn. Held by the writer, they are read once and discarded when it returns.
 
 **So: read NO writing guide here.** Not `Pabau-style-guide.md`, not `WordPress-blocks.md`, not
-`2-editorial.md`, not `About-Pabau.md`, not `Meta-title-best-practices.md`. The one guide this
-half does need is:
+`2-editorial.md`, not `About-Pabau.md`, not `Visuals.md`, not `Meta-title-best-practices.md`.
+The one guide this half does need is:
 
 - `~/.claude/factcheck-flow/guides/Originality-and-search-intent.md` — the two-bar rule in
   full, the mirage battery, and the specificity tests. **Read it now.** S4's outline lives or
@@ -36,9 +36,10 @@ is the writer's call, not yours.
 
 ## Optimization stance (governs S4 and S6 — and is passed to the writer)
 
-Four principles that override any "leave it as-is" instinct elsewhere in this file. When a
+Six principles that override any "leave it as-is" instinct elsewhere in this file. When a
 default below says "preserve" or "only if it improves," these win. The writer carries its own
-copy of these; yours is what shapes the outline it receives.
+copy of these — plus a seventh that is purely a writing mechanic (name the entity, skip the
+pronoun) and needs nothing from you. Yours is what shapes the outline it receives.
 
 1. **Be only as conservative as you NEED to be.** The job is to optimize, not to protect the
    existing draft. Overwriting, rewriting, and resequencing existing copy to work in the target
@@ -48,11 +49,20 @@ copy of these; yours is what shapes the outline it receives.
    the guardrails (facts, Pabau positioning/non-negotiables, publish status, and — on a
    published post — the URL/slug). Everything else is fair game. A timid pass that "preserves"
    the article but fails to insert the entities or answer the query is a FAILED pass.
-2. **Every question-heading is answered in its FIRST sentence.** Any heading phrased as a
-   question (or that plainly implies one — "How to…", "What is…", "…cost", "…vs…") MUST be
-   answered directly and completely in the first sentence of that section — no throat-clearing,
-   no "There are several factors to consider," no restating the question. Give the answer, then
-   elaborate. This is a hard rule (it also wins featured snippets). Applies to FAQ answers too.
+2. **Every question-heading is answered in its FIRST sentence — as a self-contained
+   capsule.** Any heading phrased as a question (or that plainly implies one — "How to…",
+   "What is…", "…cost", "…vs…") MUST be answered directly and completely in the first sentence
+   of that section — no throat-clearing, no "There are several factors to consider," no
+   restating the question. Give the answer, then elaborate. Applies to FAQ answers too.
+
+   The sharpened version, and the one to PLAN for: that opening answer is a CAPSULE. It runs
+   20-25 words, up to 50 only if it is still tightly answering the question, and it has to make
+   complete sense QUOTED ON ITS OWN — with the heading gone and nothing before or after it.
+   That is the test, because that is exactly how a featured snippet and an answer engine will
+   use it. Aim for roughly 60-70% of the article's sections opening this way; the rest stays
+   ordinary explanatory or procedural prose. All capsules and no prose reads mechanical, which
+   is why the target is two-thirds and not everything. No inline links inside a capsule
+   sentence — put them in the elaboration that follows.
 3. **Answer the reader's problem NEAR THE TOP.** The core payoff must be reachable by a skim
    reader without scrolling deep. Put the direct answer in the intro (and reflect it in Key
    takeaways). For a LISTICLE specifically: name the actual providers/picks in the Key takeaways
@@ -65,7 +75,22 @@ copy of these; yours is what shapes the outline it receives.
    entry, a process diagram for a how-to, a UI screenshot, an "at a glance" visual near the top.
    Plan WHERE images belong and what each depicts; the writer sources them and owns the block,
    alt-text, and caption contract. Every image needs a caption, including ones already in the
-   article. Missing obvious images is an incomplete optimization.
+   article. Missing obvious images is an incomplete optimization. Separately, the article ships
+   at least one ORIGINAL VISUAL WE BUILT — plan which node carries it and what it plots, from
+   figures that are already in the article. The writer builds it against `Visuals.md`.
+
+5. **Cover the whole fan-out, not just the head query.** A compound query gets broken into
+   narrower sub-queries before an answer is assembled, and the page that appears across several
+   branches is the one that gets used. The Stage-1 answer surface already handed you the SERP's
+   own visible branches (`paa` + `related_searches`); S4 turns them into a named branch list and
+   the outline must answer each one, or say why a branch is out of scope for this article.
+   Answer each branch in its own place, in a capsule, so it can be lifted whole.
+
+6. **Information gain beats more words.** For a page already ranking at 4-20, the thing standing
+   between it and the top is not length — it is something the top results contain and we don't,
+   plus something we contain that none of them do. Name BOTH sides in the outline. Adding a
+   thousand words of the same information the SERP already has is the failure mode this
+   principle exists to prevent, and a longer article that says nothing new usually loses ground.
 
 ---
 
@@ -111,6 +136,43 @@ Exact-match rule: any keyword placed in a heading must appear verbatim; you MUST
 whole heading around it for grammar/sense (this is mandatory, not optional). A heading keyword
 is ALSO woven into that section's body text by the writer — plan each section's content intent so both
 the heading and its text carry the keyword naturally.
+
+FAN-OUT BRANCHES (Optimization stance #5) — do this BEFORE placing keywords, because it
+changes which nodes exist. Build the branch list from three sources, in this order:
+  1. `answer_surface.paa` — Google's own follow-up questions for this query. Highest value:
+     these are not guesses, they are what the SERP is already asking.
+  2. `answer_surface.related_searches` — the adjacent queries the same searcher runs next.
+  3. Your own decomposition — read the main keyword as a compound question and split it the way
+     an answer engine would: by AUDIENCE (solo practice vs multi-location), by CONSTRAINT
+     (price, time, regulation, country), and by USE CASE. Three to five branches is right.
+Then dedupe them into a NAMED BRANCH LIST of 3-6 items, and for each one write which outline
+node answers it. A branch with no node is either a new node or an explicit out-of-scope note
+with a reason — never silently dropped. Branches that overlap across several sources matter
+most; a page that answers all of them is the one that survives being fanned out.
+Do not turn every branch into an H2. A branch can be answered inside a section, as a capsule,
+or as an FAQ entry — what matters is that the answer is present and liftable.
+
+INFORMATION GAIN (Optimization stance #6) — REQUIRED whenever the page already ranks at 4-20
+for the target query (`page_diagnosis` / `answer_surface.our_position` tells you), and good
+practice otherwise. Name both sides in one line each:
+  · GAIN IN: what the top results cover that we don't — a subtopic with no heading here, a
+    number we never give, a step we skip. S5's competitor pass is what fills this in, so leave
+    the line open now and complete it at S6.
+  · GAIN OUT: what we will carry that none of them do. This is the originality nugget, stated
+    as information rather than as an angle. If GAIN OUT is empty the run has nothing to win on.
+A striking-distance page gets no credit for more words. Plan the delta, not the length.
+
+TITLE MANDATE — if part 1 handed you `title_mismatch_signal: true`, the SERP title and the H1
+must be re-pointed at ONE winnable query bucket this run, whether or not the main keyword
+changed. Name that bucket in the outline and note it for S7; the writer owns the wording. Same
+mandate when a target query carries `ctr_gap: severe` at position 10 or better AND no AI
+Overview is present — it ranks and nobody clicks, so the title is the deliverable, not copy.
+
+SNIPPET TARGET — if `answer_surface.featured_snippet` exists, name the node that will compete
+for it and REQUIRE ITS FORMAT to match the snippet's: a table snippet needs a [TABLE] node, a
+list snippet a [LIST] node, a paragraph snippet a capsule. Matching the format is most of
+winning it. If we already hold the snippet, note that too — and don't restructure that section
+out from under ourselves.
 
 ANSWER-FIRST & TOP-OF-ARTICLE PLACEMENT (Optimization stance #2 + #3 — bake into the outline):
 - For EVERY node whose heading is a question or implies one, note "answer in first sentence" and
@@ -167,6 +229,22 @@ proceed to writing:
   independent of the structural-changes box — an empty box does not lower the bar. Plan where it
   lives. If you can't name one, the article isn't ready — find an angle before writing. Apply the
   intro litmus test to the planned intro (no generic "When it comes to…" opener).
+
+  Two things make a nugget worth more, at no extra effort — apply them when they fit, and never
+  in place of the nugget itself:
+  · NAME IT. A nugget with an ownable two-to-four-word name — a named checklist, a named
+    framework, a named sequence — is repeatable. Repeated across articles in the same words, it
+    becomes the term people and answer engines associate with us, which is exactly what a
+    generic phrasing of the same idea never earns. If a previous Pabau article already named
+    this framework, REUSE THE SAME NAME rather than inventing a synonym; consistency is the
+    whole mechanism. `Originality-and-search-intent.md` already puts named frameworks in the
+    Medium tier — this is how to get the compounding out of them.
+  · MAKE IT THE GAIN OUT. The nugget and the information-gain "GAIN OUT" line are the same
+    thing said two ways: the angle, and the concrete information that angle produces. State it
+    as information — a number, a sequence, a real example, a decision rule — because that is
+    the form a competitor can't paraphrase and an answer engine can quote.
+  A nugget that survives as a claim in the intro and nowhere else is decoration. It has to be
+  the substance of at least one section.
 Also apply specificity: each section is a concrete pain point; flag any section so broad it
 "could be its own blog" to either go deep or split (respect what the SERP rewards).
 
@@ -182,8 +260,13 @@ OUTLINE output — the full heading tree in final document order, each node tagg
   [NEW]        new heading (+ target keyword + one-line content intent)
   [H1-NEW]     new H1 (only if main keyword changed)
   [IMG]        an image to add at/under this node (+ what it shows + why)
-Also list keywords routed to IN-TEXT with their target section, and flag every question-heading
-that S8 must answer in its first sentence.
+  [VISUAL]     the original visual we build (exactly one node carries it; + what it plots)
+  [CAPSULE]    this node opens with a 20-25 word self-contained answer (+ the answer, in one
+               line, so S8 leads with it instead of inventing a preamble)
+  [SNIPPET]    the node competing for the featured snippet (+ the required format)
+Tag roughly 60-70% of the body nodes [CAPSULE] — not all of them. Also list keywords routed to
+IN-TEXT with their target section, the fan-out branch each node answers, and flag every
+question-heading that S8 must answer in its first sentence.
 This OUTLINE is the reference object for S6 (entity grouping) and for the S7 brief.
 ```
 
@@ -224,7 +307,17 @@ Give each subagent exactly one URL, its index `<n>`, and these instructions:
     WEAKNESSES: vague or keyword-stuffed headings, missing or thin tables/lists, disorganized
     flow, obvious subtopics with no heading of their own.
 
-    Total under 600 words. Write it to /tmp/seo-<slug>-entity-<n>.md and write nothing else
+    UNIQUE DATA: the specific things THIS page has that a generic article on the topic would
+    not — a real number with its source, a named framework, a first-hand account, a price, a
+    dated benchmark, an original screenshot, a quoted practitioner. List up to 6, each in one
+    line, and mark any figure with the source the page credits. This is the information-gain
+    ledger: it is what we have to match or beat, and it is the most useful thing in this report.
+
+    ANSWER SHAPE: does the page open each section with a short self-contained answer, or bury
+    it under preamble? One sentence. If it does answer up front, quote ONE example capsule
+    verbatim (under 30 words) so we can see the bar.
+
+    Total under 700 words. Write it to /tmp/seo-<slug>-entity-<n>.md and write nothing else
     there — no preamble, no commentary, no page text. Then return ONE line and nothing else:
     DONE: <n> | <url> | entities=<count> headings=<count> formats=<short comma list>
 
@@ -249,7 +342,19 @@ runs on every /SEO. Give it the file paths (not the contents) and these instruct
     - WEAKNESSES TO BEAT: the pooled weaknesses — and, most important, what NEW useful data we
       could present as a table/list that none of the ranking pages offer.
 
-    Keep the whole reply under 800 words. It is the only thing that survives this stage.
+    INFORMATION-GAIN LEDGER — the deliverable that decides whether a striking-distance page
+    moves, so give it real space:
+    - HAVE: the unique data points that appear on 2+ pages, i.e. the SERP's shared baseline.
+      Anything here that our article lacks is a gap we must close to be a complete answer.
+    - RARE: unique data points that appear on exactly ONE page. These are the differentiators
+      currently in play — note which page holds each.
+    - ABSENT: what NONE of them has, that this topic obviously calls for and we could
+      credibly supply (a real number, a decision rule, a worked example, a practitioner
+      account, a country-specific detail). Be concrete; "more depth" is not an entry.
+    - ANSWER SHAPE: how many of the pages open their sections with a short self-contained
+      answer, and how good the best example was. That sets the bar for our capsules.
+
+    Keep the whole reply under 1000 words. It is the only thing that survives this stage.
 
 What that subagent returns IS the profile. Keep it — S6 turns it into structure revisions and
 the writer receives it in the brief. Delete the /tmp/seo-<slug>-entity-*.md files at S9.
@@ -281,9 +386,25 @@ just its entity coverage. Emulate what works on the SERP and beat it; never copy
   addressing the WEAKNESSES TO BEAT. Any Stage-1 structural_changes still win, and keep the
   planning-time structure rules; the writer reconciles final block ordering against §1.
 
+CLOSE THE INFORMATION-GAIN LINES (S4 left GAIN IN open on purpose):
+- GAIN IN ← the ledger's HAVE entries our article lacks. Each one becomes a specific outline
+  change: a node, a figure inside a node, or a table column. Not "add more detail".
+- GAIN OUT ← the ledger's ABSENT list, filtered to what we can supply honestly. Cross-check it
+  against the nugget from S4: if the ledger shows a competitor already has our nugget, the
+  nugget is not one — pick a different angle now, at planning time, not after it is written.
+- Any RARE entry we can beat outright is worth a node of its own. Note who currently holds it.
+
+FAN-OUT CHECK — walk the branch list from S4 against the final tree. Every branch either has a
+node answering it, or an explicit one-line reason it is out of scope. Do this last, after the
+reorganization, because merging and splitting nodes is what usually orphans a branch.
+
+SNIPPET FORMAT — if a [SNIPPET] node exists, confirm its planned format still matches the
+snippet holder's (table / list / capsule) after the reorganization above.
+
 Output: the FINAL OUTLINE the writer works from — the heading tree with any S6 revisions and
-planned [TABLE]/[LIST] nodes, each node carrying its grouped entities plus table-column / list-item
-notes beneath it. Still no prose written.
+planned [TABLE]/[LIST]/[CAPSULE]/[SNIPPET]/[VISUAL] nodes, each node carrying its grouped
+entities plus table-column / list-item notes beneath it, and the closed GAIN IN / GAIN OUT
+lines. Still no prose written.
 ```
 
 ---
@@ -300,24 +421,43 @@ starts with an empty context and cannot see this conversation. Include, in this 
    template article / standard guide).
 2. MAIN KEYWORD — the current one, and the new one if the selection set a new_main_keyword
    (state "unchanged" if not). If it changed, say explicitly that the writer must land it in
-   the H1, the intro, the meta description, and the SEO title.
+   the SEO title, the H1, the FIRST SENTENCE of the body, and the meta description, as an exact
+   match reading naturally in each. Then the fifth spot, the SLUG: on a DRAFT give the
+   `proposed_slug` from the selection and tell the writer to set it; on a REFRESH write
+   "SLUG: DO NOT TOUCH (published)" in those words. Never leave this line ambiguous.
 3. SEARCH INTENT — your one-paragraph Stage-1 note: the question the query actually asks, the
    SERP-dominant format, and the depth the SERP rewards.
-4. STRUCTURAL CHANGES — the user's Stage-1 box text verbatim (or "empty box — structure was my
-   call"), plus which structural decisions in the outline are yours. The writer needs to know
-   which parts are the user's instruction and which are judgment it may refine.
-5. ORIGINALITY NUGGET — the nugget you named in S4, and which node delivers it. Mark it as
-   REQUIRED: the writer must not let it evaporate into generic copy.
-6. SERP STRUCTURE PROFILE — the merge subagent's output from S5: consensus heading map, format
-   inventory, featured-snippet opportunity, and the WEAKNESSES TO BEAT.
-7. FINAL OUTLINE — the S6 heading tree in document order, every node carrying its tag
-   ([UNCHANGED]/[OPTIMIZED]/[NEW]/[H1-NEW]/[IMG]/[TABLE]/[LIST]), its grouped entities, its
-   content intent, and — for [OPTIMIZED] nodes — the old heading text so the writer can find
-   the section. Flag every question-heading that must be answered in its first sentence.
-8. KEYWORD PLACEMENT — every selected keyword with its role (heading / in-text / FAQ) and its
+4. ANSWER SURFACE — the six lines from Stage 1 step 1b: featured snippet (holder + FORMAT), AI
+   Overview (present? cited domains? are we cited?), the PAA and related-search lines verbatim,
+   the other SERP features present, the title-gap verdict, and our current position. The writer
+   uses the format requirement and the AIO read directly.
+5. FAN-OUT BRANCHES — the named branch list from S4, each with the node that answers it, and
+   each out-of-scope branch with its reason. Tell the writer every listed branch must be
+   answered in its node, in a capsule, and that skipping one is a Skipped-line item.
+6. PAGE DIAGNOSIS (published only) — the GSC verdict (growing / flat / declining), the
+   striking-distance queries with `best_position`, any `ctr_gap: severe` query, and the
+   `title_mismatch_signal` with the ONE query bucket the title and H1 must own if it fired.
+   State plainly whether this run is a rescue, a push, or a defence.
+7. OWNERSHIP — the Stage-1B verdicts in one block: which keywords are ours, which were vetoed
+   as owned elsewhere or split, the competing URL for each, and the decision taken. Add:
+   "never edit the competing page" — it is a finding for David, not work for this run.
+8. INFORMATION GAIN — the closed GAIN IN and GAIN OUT lines from S6, plus the ledger's ABSENT
+   list. Mark GAIN OUT as REQUIRED CONTENT, not as background.
+9. ORIGINALITY NUGGET — the nugget you named in S4, its NAME if it has an ownable one, and
+   which node delivers it. Mark it as REQUIRED: the writer must not let it evaporate into
+   generic copy, and must use the same name throughout rather than paraphrasing it.
+10. SERP STRUCTURE PROFILE — the merge subagent's output from S5: consensus heading map, format
+   inventory, featured-snippet opportunity, the WEAKNESSES TO BEAT, and the ANSWER SHAPE bar.
+11. FINAL OUTLINE — the S6 heading tree in document order, every node carrying its tag
+   ([UNCHANGED]/[OPTIMIZED]/[NEW]/[H1-NEW]/[IMG]/[VISUAL]/[CAPSULE]/[SNIPPET]/[TABLE]/[LIST]),
+   its grouped entities, its content intent, the fan-out branch it answers, and — for
+   [OPTIMIZED] nodes — the old heading text so the writer can find the section. For every
+   [CAPSULE] node give the one-line answer it opens with. Flag every question-heading that
+   must be answered in its first sentence.
+12. KEYWORD PLACEMENT — every selected keyword with its role (heading / in-text / FAQ) and its
    target node. Exact-match rule stated. Note that a heading keyword also goes in that
    section's body text.
-9. BLOCK NODES — which required blocks you planned as [NEW] vs [UNCHANGED], and the note that
+13. BLOCK NODES — which required blocks you planned as [NEW] vs [UNCHANGED], and the note that
    the writer owns their markup and final ordering per WordPress-blocks.md §1.
 
 Keep it dense and factual — it is instructions, not prose. Do NOT paste the article body into
@@ -358,11 +498,62 @@ Keep the returned change-log. It is the /SEO half of the S9 report.
 # STAGE 9 — Cleanup, hand off to /fact
 
 ```
-1. Confirm the writer reported a 2xx save, and that it preserved status and slug. Draft stays
-   draft; a post someone accidentally published is still handled as draft content — NEVER
-   change publish status.
+1. Confirm the writer reported a 2xx save, and that it preserved status. Draft stays draft; a
+   post someone accidentally published is still handled as draft content — NEVER change publish
+   status. SLUG: on a published post confirm the slug is unchanged; on a draft confirm it
+   matches the brief's `proposed_slug` if one was given.
+
+1b. WRITE THE RUN BASELINE (published articles only — a draft has nothing to measure yet).
+   Google actively tests a changed page for roughly two weeks before its position settles, so
+   the position a week from now proves nothing on its own. What makes the next run able to tell
+   improvement from noise is a dated before-picture, and this is the only moment it exists.
+
+     mkdir -p "$HOME/.claude/factcheck-flow/cache/seo-baselines"
+     cp /tmp/seo-<slug>-gsc.json \
+        "$HOME/.claude/factcheck-flow/cache/seo-baselines/<slug>-<YYYY-MM-DD>.json"
+
+   Then write a short sibling file `<slug>-<YYYY-MM-DD>.md` with the Write tool holding: the
+   date, the main keyword before and after, the GSC verdict, the striking-distance queries with
+   their `best_position`, the fan-out branches covered, the nugget delivered, and the REVIEW
+   DATE (today + 14 days). Keep it under 20 lines. Name the review date in the final report.
+
 2. Delete the run's temp files: /tmp/seo-<slug>-kw.json, -sel.json, -gsc.json, -serp.json,
-   -serp-sel.json, -headings.txt, -body.txt, -brief.md, and every -entity-*.md.
+   -serp-sel.json, -cannibal.json, -cannibal-main.json, -headings.txt, -body.txt, -brief.md,
+   and every -entity-*.md. Copy the GSC file to the baseline directory BEFORE deleting it.
+
+2b. REQUEST A RE-CRAWL — published articles ONLY, and only after a confirmed 2xx save:
+
+     python3 "$HOME/.claude/factcheck-flow/bin/index_ping.py" --url "<full article URL>"
+
+   A refresh Google hasn't re-crawled is a refresh that hasn't happened yet, and a sitemap is a
+   crawl-priority hint rather than a request. This is the direct one. It notifies Google that a
+   URL that is ALREADY PUBLIC has changed: it publishes nothing, changes nothing on the site,
+   and cannot expose a draft.
+   · NEVER run it on a draft. The script refuses a non-200 URL, but do not rely on that.
+   · Exit 3 is a SKIP, not a failure (no key installed, quota exhausted, URL unreachable).
+     Report the reason in one line and move on.
+   · One URL per run. This is not a bulk submitter, and the daily quota is shared.
+
+2c. NAME THE CORNER-STONE LINKS — a REPORT-ONLY deliverable, and one of the highest-value
+   things this run produces. A page that already ranks and earns clicks generates authority by
+   ranking, with no backlink involved, and an in-body link from it into this article channels
+   some of that authority here. That is what moves a page the last few positions when the
+   content is already right.
+
+   Produce a shortlist of 3-5 SOURCE pages that should link INTO this article:
+     python3 "$HOME/.claude/factcheck-flow/bin/cluster_lookup.py" resolve --url "<url>"
+     python3 "$HOME/.claude/factcheck-flow/bin/cluster_lookup.py" targets --cluster <id> --sort pr
+   Keep only pages that are (a) in the SAME cluster — the cluster wall binds link planning as
+   much as link writing, (b) already ranking and earning clicks, not just published, and (c)
+   not already carrying a heavy load of outbound links (a page past roughly 50 in-body links is
+   passing very little to any single destination, and overloading one strong page can cost it
+   its own ranking). For each, give the source URL, the section the link would sit in, and a
+   proposed anchor. Vary the anchors — the same anchor repeated across a site stops adding
+   information — and never propose more than one new link per source page.
+
+   **Never edit those pages.** /SEO optimizes ONE article; inbound boost links are edits to
+   other pages and belong to David or to the interlinking project. Name them and stop.
+
 3. HAND OFF TO /fact — IN A FRESH SUBAGENT, NOT IN THIS CONVERSATION.
    /SEO ALWAYS finishes by handing off to /fact, including when the PROCEED GATE was skipped
    and no optimization happened. /fact re-runs the editorial and block passes independently;
@@ -393,8 +584,18 @@ Keep the returned change-log. It is the /SEO half of the S9 report.
        ASK bucket as the normal case and surface any ASK findings in its report instead of
        deciding them itself.
 4. Produce ONE combined report: the writer's change-log + the /fact results (or the instruction
-   to run /fact next, if you took that route), ending with the reminder to purge the WP Rocket
-   cache for the URL.
+   to run /fact next, if you took that route). Add these five lines, which are the /SEO half of
+   the value and exist nowhere else:
+   - `Page diagnosis:` growing / flat / declining, and whether this run was a rescue, a push or
+     a defence. Say plainly that a fresh position means nothing for about two weeks.
+   - `Review date:` the date from step 1b, and the one thing to check on it (the striking-
+     distance queries' positions, not total traffic).
+   - `Ownership findings:` every keyword vetoed as owned elsewhere or split, with the competing
+     URL. These are edits to OTHER pages — name them, never make them.
+   - `Corner-stone links:` the 3-5 source pages from step 2c with their proposed anchors, marked
+     clearly as not-yet-done.
+   - `Re-crawl:` submitted, or the skip reason.
+   End with the reminder to purge the WP Rocket cache for the URL.
 ```
 
 ---
@@ -419,3 +620,10 @@ Keep the returned change-log. It is the /SEO half of the S9 report.
   are ~40k tokens and the body thousands more — kept out of here, they are read once by an
   agent that then discards them, instead of being re-read on every remaining turn.
 - After the keyword gate, S4–S8 run straight through to the /fact handoff (S9).
+- What /SEO deliberately does NOT do, and reports instead: edit any page other than this one
+  (corner-stone inbound links, the competing page in a cannibalization finding), change a
+  published URL or slug, merge or redirect anything. Those are corpus-level decisions with
+  their own sign-off, and naming them precisely is worth more than half-doing them.
+- The baseline files in `cache/seo-baselines/` are the only durable output of a run. They are
+  what makes the NEXT run able to say whether this one worked, so writing one is not optional
+  book-keeping — it is the measurement half of the loop.

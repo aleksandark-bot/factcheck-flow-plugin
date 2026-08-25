@@ -87,6 +87,18 @@ if curl -fsSL "$REPO_RAW/bin/elementor_guard.py" -o "$FF/bin/elementor_guard.py"
 else
   echo "  NOTE: could not download bin/elementor_guard.py — engine detection falls back to REST." >&2
 fi
+if curl -fsSL "$REPO_RAW/bin/gsc_cannibal.py" -o "$FF/bin/gsc_cannibal.py"; then
+  chmod +x "$FF/bin/gsc_cannibal.py" 2>/dev/null || true
+  echo "  - Keyword-ownership pre-flight installed"
+else
+  echo "  NOTE: could not download bin/gsc_cannibal.py — /SEO cannot check for cannibalization." >&2
+fi
+if curl -fsSL "$REPO_RAW/bin/index_ping.py" -o "$FF/bin/index_ping.py"; then
+  chmod +x "$FF/bin/index_ping.py" 2>/dev/null || true
+  echo "  - Re-crawl request helper installed"
+else
+  echo "  NOTE: could not download bin/index_ping.py — /SEO will skip the re-crawl request." >&2
+fi
 
 # --- 1b. Download the Pabau reference guides from the repo -----------------
 # These define voice/terminology (Pabau-style-guide), product/positioning
@@ -204,7 +216,7 @@ fetch "skills/wordpress-access/SKILL.md" "$HOME/.claude/skills/wordpress-access/
 
 # /SEO command + helpers (the seo-research/seo-write prompts are fetched in the loop above)
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
-for b in gsc_query keyword_picker serp_picker dfs_lists sentence_check serp_fetch render_visual cluster_lookup elementor_guard; do
+for b in gsc_query gsc_cannibal keyword_picker serp_picker dfs_lists sentence_check serp_fetch index_ping render_visual cluster_lookup elementor_guard; do
   fetch "bin/$b.py" "$FF/bin/$b.py"; chmod +x "$FF/bin/$b.py" 2>/dev/null || true
 done
 
@@ -1136,6 +1148,28 @@ else
     echo "  - GSC key saved (readable only by you) to $GSC_KEY_DEST"
   else
     echo "  - skipped — set \$PABAU_GSC_KEY or place the JSON at $GSC_KEY_DEST later"
+  fi
+fi
+
+# --- 4e. Indexing key for /SEO's re-crawl request (OPTIONAL) --------------
+# After a refresh, /SEO asks Google to re-crawl the (already public) URL. That call needs a
+# SEPARATE service account which is an OWNER of the Search Console property — the read-only
+# GSC key above returns 403 for it, so the two keys are not interchangeable. Entirely
+# optional: without it /SEO skips the step and says so.
+INDEX_KEY_DEST="$FF/indexing-key.json"
+if [ -f "$INDEX_KEY_DEST" ]; then
+  echo "  - indexing key already present ($INDEX_KEY_DEST) — keeping it"
+else
+  echo ""
+  echo "  OPTIONAL: /SEO can ask Google to re-crawl a refreshed article. That needs a"
+  echo "  service-account key whose account is an OWNER of the Search Console property"
+  echo "  (not the read-only GSC key above). Blank to skip — /SEO just skips the step."
+  read -r -p "  Path to your Indexing API service-account JSON (blank to skip): " IDX_SRC
+  if [ -n "${IDX_SRC:-}" ] && [ -f "$IDX_SRC" ]; then
+    umask 077; cp "$IDX_SRC" "$INDEX_KEY_DEST"; chmod 600 "$INDEX_KEY_DEST"
+    echo "  - indexing key saved (readable only by you) to $INDEX_KEY_DEST"
+  else
+    echo "  - skipped — /SEO will report the re-crawl request as skipped"
   fi
 fi
 

@@ -100,8 +100,51 @@ The flow is split in two so the writing instructions and writing guides stay out
 during the research stages: `prompts/seo-research.md` (S0–S3, read at the start) and
 `prompts/seo-write.md` (S4–S9, read only once you pass the proceed gate). Both are auto-synced
 like the other prompts. The command is `commands/SEO.md`. Helpers: `bin/gsc_query.py` (GSC),
-`bin/dfs_lists.py` (builds all five keyword lists in code), `bin/keyword_picker.py` and
-`bin/serp_picker.py` (the browser pickers).
+`bin/gsc_cannibal.py` (keyword-ownership pre-flight), `bin/dfs_lists.py` (builds all five
+keyword lists in code), `bin/keyword_picker.py` and `bin/serp_picker.py` (the browser pickers),
+`bin/serp_fetch.py` (the SERP + its answer surface), `bin/index_ping.py` (the re-crawl request).
+
+### What the flow decides on, beyond volume and difficulty
+
+- **The whole answer surface, not ten blue links.** `bin/serp_fetch.py` also summarizes the
+  featured snippet (holder + FORMAT, because winning it means matching the format), whether an
+  AI Overview sits on top and which domains it cites, the People-also-ask and related-search
+  queries, every other SERP block present, and a **title-gap** verdict — how many ranking pages
+  actually put the exact keyword in their title. A phrase none of them claimed is far cheaper
+  to win than its difficulty score suggests.
+- **Who already owns the keyword.** `bin/gsc_cannibal.py` (Stage 1B, both branches) asks GSC
+  which page on the site holds each candidate keyword. Two of our own pages competing for one
+  query halves both their chances, so a blocker is a question on the refresh path and a stated
+  decision on the new-article path — never a silent overlap.
+- **Striking distance first.** The GSC pull runs two windows (28 + 90 days), so every query
+  carries a trend, an honest `best_position` (a long average is dragged down by every day the
+  page was being tested), a band, and a CTR gap. Positions 11–20 outrank every net-new keyword:
+  the relevance is already there and what it needs is information gain.
+- **Title/query mismatch and CTR repair.** A page collecting many one-off queries with no
+  coherent bucket has a title problem no body copy fixes, and a page that ranks but gets no
+  clicks needs a title rewrite rather than a new section. Both are detected and routed.
+- **Commercial intent.** Every keyword carries CPC — advertisers bidding is evidence somebody
+  converts; "no advertisers" is a caution flag, never a blue ocean. A tiebreak, never a filter.
+- **Fan-out coverage.** The outline has to answer 3–6 named sub-question branches, built from
+  the SERP's own PAA and related searches plus a decomposition by audience, constraint and use
+  case — the branches an answer engine splits the query into before it assembles an answer.
+- **Information gain, not word count.** The competitor pass returns an information-gain ledger
+  (what the SERP shares, what only one page has, what none has), and the brief carries a closed
+  GAIN IN / GAIN OUT pair. GAIN OUT is the originality nugget stated as information.
+- **Capsules.** Roughly 60–70% of sections open with a 20–25 word self-contained answer that
+  makes sense quoted alone — the form a snippet and an answer engine can lift.
+
+### What it reports instead of doing
+
+`/SEO` edits ONE article. Three things it finds are edits elsewhere, so it names them precisely
+and stops: **ownership findings** (the competing URL for a vetoed keyword), **corner-stone
+links** (3–5 already-ranking pages that should link INTO this article, with anchors), and
+**slug findings on a published post**. It never changes a live URL or publish status.
+
+On a published article it also writes a dated **baseline** to
+`~/.claude/factcheck-flow/cache/seo-baselines/` and requests a re-crawl of the already-public
+URL. Google tests a changed page for roughly two weeks, so the baseline plus a named review
+date is what lets the next run tell improvement from noise.
 
 `bin/dfs_lists.py` needs DataForSEO credentials. It resolves them from `$DATAFORSEO_LOGIN` +
 `$DATAFORSEO_PASSWORD`, or `$DATAFORSEO_AUTH` (base64 `login:password`), or
@@ -140,6 +183,13 @@ secret that is **not** in this repo. Each user needs:
 
 Without it, draft-mode `/SEO` still works; published-mode stops with a clear message until the
 key is set up.
+
+**Optional, separate key — the re-crawl request.** `bin/index_ping.py` asks Google to re-crawl
+a refreshed (already public) URL. The Indexing API needs a service account that is an **OWNER**
+of the property, so the read-only GSC key above returns 403 for it and the two are not
+interchangeable. Put that key at `~/.claude/factcheck-flow/indexing-key.json` or point
+`$PABAU_INDEXING_KEY` at it; the installer offers to copy it. Without it the step is skipped
+with a one-line reason and nothing else changes.
 
 ## Customizing for your site
 

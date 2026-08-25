@@ -38,8 +38,19 @@ truth and override anything below on voice and structure. Read all of them befor
 - `~/.claude/factcheck-flow/guides/About-Pabau.md` — product family, naming rules, pricing,
   competitors. Needed the moment you write Pabau copy.
 
-Read `Meta-title-best-practices.md` when you reach the SERP title — not before; it is about
-titles and nothing else.
+Two guides are TRIGGER-BASED. Read each one when you reach its work, not before:
+
+- `~/.claude/factcheck-flow/guides/Meta-title-best-practices.md` — when you reach the SERP
+  title. It is about titles and nothing else.
+- `~/.claude/factcheck-flow/guides/Visuals.md` — when you reach the article's visual. **This
+  article ships at least one ORIGINAL VISUAL we built** — a chart or diagram rendered to WebP
+  via `bin/render_visual.py` and uploaded to the media library, or one CSS-only interactive
+  block. Never a stock photo, never an invented number: every figure comes from this article
+  and the visual names its source. The brief's `[VISUAL]` node says which section carries it
+  and what it plots. Separately, a `/blog/` article with an EMPTY featured image gets a
+  1200 × 630 brand card built the same way, attached with `featured_media` and never inserted
+  into the body — an existing featured image is never replaced (`Visuals.md` §11). These are
+  two distinct requirements and neither covers for the other.
 
 Non-negotiables carried over from `core-rules.md` and `/fact`: introduce Pabau on first
 mention; qualify product names once; never "Pabau Connect" externally (say "online
@@ -63,7 +74,7 @@ booking"); no feature gating; no free trial; lead with outcomes; headings read n
 
 ## Optimization stance (governs everything you write)
 
-Four principles that override any "leave it as-is" instinct.
+Seven principles that override any "leave it as-is" instinct.
 
 1. **Be only as conservative as you NEED to be.** The job is to optimize, not to protect the
    existing draft. Overwriting, rewriting, and resequencing existing copy to work in the
@@ -73,19 +84,58 @@ Four principles that override any "leave it as-is" instinct.
    are the guardrails (facts, Pabau positioning/non-negotiables, publish status, and — on a
    published post — the URL/slug). A timid pass that "preserves" the article but fails to
    insert the entities or answer the query is a FAILED pass.
-2. **Every question-heading is answered in its FIRST sentence.** Any heading phrased as a
-   question (or that plainly implies one — "How to…", "What is…", "…cost", "…vs…") MUST be
-   answered directly and completely in the first sentence of that section — no
+2. **Every question-heading is answered in its FIRST sentence — as a CAPSULE.** Any heading
+   phrased as a question (or that plainly implies one — "How to…", "What is…", "…cost",
+   "…vs…") MUST be answered directly and completely in the first sentence of that section — no
    throat-clearing, no "There are several factors to consider," no restating the question.
-   Give the answer, then elaborate. This is a hard rule (it also wins featured snippets).
-   Applies to FAQ answers too.
+   Give the answer, then elaborate. Applies to FAQ answers too.
+
+   The capsule spec, which the brief plans for you node by node:
+   - 20-25 words. Up to 50 only if it is still tightly answering the question.
+   - It must make complete sense QUOTED ALONE — heading removed, nothing before or after.
+     Read it back in isolation and ask whether a stranger would understand it. That is
+     precisely how a featured snippet and an answer engine will use it.
+   - No inline links inside the capsule sentence. Links go in the elaboration below it.
+   - Every `[CAPSULE]` node in the brief gets one, and the brief gives you the answer to
+     lead with. Aim for roughly 60-70% of body sections opening this way — NOT all of them.
+     Wall-to-wall Q&A reads mechanical, and the remaining third carries the explanation and
+     the procedure that make the piece worth reading.
+   - Any number, price, rate or statistic gets its source cited AT THE POINT OF CLAIM, in the
+     elaboration rather than in the capsule.
+   - Work at least one FIRST-PERSON practitioner sentence into the article ("we see…", "in
+     practices we onboard…"). It is the one thing a generic AI-written competitor page
+     structurally cannot have. Never invent a customer or a named practice for it.
 3. **Answer the reader's problem NEAR THE TOP.** The core payoff must be reachable by a skim
    reader without scrolling deep. Put the direct answer in the intro and reflect it in Key
    takeaways. For a LISTICLE: name the actual providers/picks in the Key takeaways block, put
    a comparison TABLE right after the intro, and start the per-pick segments immediately
    after that table. Do not bury the list behind long "what to look for" preamble.
 4. **Pull in images where they help.** Build every `[IMG]` node in the brief, and add an image
-   anywhere else a visual materially aids comprehension or matches what the SERP rewards.
+   anywhere else a visual materially aids comprehension or matches what the SERP rewards. Build
+   the `[VISUAL]` node's original visual against `Visuals.md`, and the featured-image card if
+   the post has none.
+
+5. **Answer every fan-out branch.** The brief lists 3-6 named branches — the sub-questions this
+   query gets broken into before an answer is assembled — each with the node that answers it. A
+   page that answers several branches is the one that gets used; a branch you leave unanswered
+   is a hole a competitor fills. Answer each in its node, in a capsule, so it can be lifted
+   whole. If a branch genuinely cannot be answered, put it under "Skipped" with the reason —
+   never quietly drop it.
+
+6. **Information gain, not more words.** The brief's GAIN IN list is what the ranking pages
+   have and we lack: close every item, specifically, with the figure or step or subtopic named.
+   The GAIN OUT list is what we will carry that none of them do: that is REQUIRED CONTENT, and
+   it is the same thing as the originality nugget stated as information. A longer article that
+   adds nothing the SERP doesn't already have usually loses ground — length is not the lever.
+
+7. **Name the entity; skip the pronoun.** In any sentence stating a fact about a product, a
+   company, a feature or a person, write the NAME as the subject rather than "it", "this",
+   "they" or "we". "Pabau's online booking takes deposits at the point of booking", not "It
+   takes deposits". A parser cannot resolve "it" to anything, so a pronoun sentence spends a
+   fact and associates it with nothing. This applies hardest to the Pabau section, image
+   captions, FAQ answers and any sentence carrying a claim — and it is an editing pass, not a
+   style you have to write in from the start. It is also not licence to repeat a name every
+   sentence: ordinary narrative prose still reads naturally.
 
 ## Step 1 — main-keyword swap (only if the brief sets a new main keyword)
 
@@ -97,10 +147,27 @@ Skip entirely if `new_main_keyword` is null. Otherwise update:
    `~/.claude/factcheck-flow/guides/Meta-title-best-practices.md` and re-optimize per it
    (listicle number if applicable, current year if time-sensitive, match micro-intent,
    differentiate in SERP, lead with the pain point). Don't just mirror the H1 if a stronger
-   SERP title exists.
+   SERP title exists. Front-load the exact keyword as near the start as natural phrasing
+   allows — that guide still wins on everything else about the title.
 4. Meta description → rewrite to answer the searcher query as an article excerpt, ≤140 chars.
-5. Intro → rework so the new main keyword appears naturally in the first paragraph; keep the
-   OLD main keyword nearby as a secondary keyword if still valuable (don't shoehorn).
+5. FIRST SENTENCE of the body → the exact keyword belongs at or near the beginning of the
+   article's opening sentence, not merely somewhere in the first paragraph. Keep the OLD main
+   keyword nearby as a secondary keyword if it is still valuable (don't shoehorn).
+
+Those are four of the five classic placements. The fifth is the URL SLUG, and the brief tells
+you which case you are in — never decide it yourself:
+
+- **Draft** — the brief gives a `proposed_slug`. Set it (`slug` in the PUT). A draft has no
+  live URL, no inbound links and no index entry, so aligning the slug costs nothing.
+- **Published** — the brief says `SLUG: DO NOT TOUCH (published)`. Then don't, in any form.
+  Changing a live URL splits its history and needs a redirect plan; it is a separate,
+  explicitly-requested job and never a side effect of an optimization pass.
+
+**TITLE MANDATE.** If the brief's PAGE DIAGNOSIS carries a `title_mismatch_signal` or a
+`ctr_gap: severe` query, rewrite the SERP title and H1 to own the ONE query bucket the brief
+names — **even when `new_main_keyword` is null and you would otherwise skip this whole step.**
+A page that ranks and gets no clicks has a title problem, and no amount of body copy fixes it.
+Read `Meta-title-best-practices.md` for that rewrite too.
 
 Hold these changes for the single save.
 
@@ -122,6 +189,15 @@ disagree, **the outline wins**: reorder, merge, split, or replace sections to ma
 - `[TABLE]` / `[LIST]` node → build it as a real WordPress table/list block carrying NEW
   useful information (an extra column, a fresh comparison axis, real numbers competitors
   omit) — never a decorative rehash of a competitor's table.
+- `[CAPSULE]` node → open it with the brief's one-line answer, written to the capsule spec in
+  stance #2, then elaborate beneath it.
+- `[SNIPPET]` node → the section competing for the featured snippet. **Match the format the
+  brief names**: a table snippet needs a real table block, a list snippet a real list block, a
+  paragraph snippet a capsule. Matching the format is most of winning it, so do not substitute
+  a prettier structure of your own. Where it fits, give both — a capsule answer AND the
+  list/table beneath it.
+- `[VISUAL]` node → build the original visual here, per `Visuals.md`. Its figures come from
+  this article; the caption names the source.
 - `[IMG]` node → insert the planned image as a real WordPress image block (sourcing below;
   markup, alt text and caption contract in `WordPress-blocks.md` §10).
 - IN-TEXT keywords → insert into the most relevant existing sentence/section naturally.
@@ -149,6 +225,11 @@ Hard rules:
 - **LISTICLE PRICING (§9):** every figure comes from the PROVIDER'S OWN WEBSITE; never
   Capterra, G2, GetApp, Software Advice, Trustpilot, or another blog, and pabau.com only for
   Pabau. No published prices → "Contact sales / no published pricing" plus a sentence saying so.
+- **LISTICLE CARDS (§9a):** every provider review opens with a `pabau/provider-card` block
+  directly below the provider's H2, before any prose, and closes with the `Pricing` heading and
+  table. Copy the markup and the card rules from `WordPress-blocks.md` §9a — do not improvise
+  a card. Comparison listicles are also the single format answer engines cite most, so the
+  comparison table and the per-provider structure are the SEO work here, not decoration.
 - Keywords placed in headings are EXACT match, and the heading still reads naturally (reword
   the whole heading around it). A keyword in a heading MUST also appear in that section's text.
 - No keyword stuffing anywhere; every sentence carries information.
@@ -241,6 +322,24 @@ curl -s "$URL" | grep -o '>\*[^<]\{0,80\}\*<' | head -5  # leaked asterisk itali
 Compare each count against what you expect to have written. Only when an assertion fails do
 you pull a small excerpt (`grep -o … -A2 -B2`) to see why.
 
+**Three checks on the BODY YOU HOLD, before the save** — all mechanical, so run them rather
+than trusting your reading of your own copy. Use the same `/tmp/body.html` you gave the
+sentence checker:
+
+```bash
+B=/tmp/body.html
+# 1. Pronoun-opener sentences — stance #7. Each hit is a fact spent on nothing; name the entity.
+grep -oE '(^|>|[.!?]["'"'"']?\s+)(It|This|These|They|That)\s+(is|are|was|were|has|have|can|will|offers|lets|helps|means)\b' "$B" | head -20
+# 2. The exact main keyword in the first sentence, the H1, and the title.
+grep -oiE '<h1[^>]*>[^<]*</h1>' "$B" | head -2
+# 3. Every fan-out branch: grep the branch's distinctive noun and confirm a hit in its node.
+grep -oin '<branch keyword>' "$B" | head -3
+```
+
+Check 1 is a list to WORK THROUGH, not a gate — rewrite the ones stating a fact about a named
+thing, and leave ordinary narrative prose alone. If it returns more than about ten hits in a
+rewritten article, the copy is leaning on pronouns and needs a pass.
+
 ## Rules
 
 - Do NOT pause to ask questions. If one item genuinely cannot be completed (a required value
@@ -263,7 +362,19 @@ line short. Start with `ARTICLE: <url or post id>`, then one line each:
 - `Meta:` title / description / focus keyphrase changes
 - `Blocks:` the block-contract work done (Key takeaways, Pabau section + CTA, Conclusion, Continue your research, FAQ, pricing segments)
 - `Images:` N added (with source) / featured image set / N captions written
-- `Originality nugget:` the nugget as actually delivered, and where it lives
+- `Originality nugget:` the nugget as actually delivered, its NAME if it has one, and where it
+  lives. If the brief named a framework, confirm you used that exact name throughout.
+- `Fan-out branches:` each branch from the brief → the node that answers it, one line each. Any
+  branch you could not answer goes under `Skipped` with the reason.
+- `Information gain:` GAIN IN — what you closed, item by item. GAIN OUT — what you added that
+  no ranking page has.
+- `Capsules:` N of M body sections open with a capsule (aim 60-70%), and whether the `[SNIPPET]`
+  node matches the required format
+- `Title:` whether the TITLE MANDATE applied, and the before → after if you rewrote it
+- `Slug:` set to `<slug>` (draft) / untouched (published)
+- `Visual:` the original visual built (what it plots, its source), and the featured-image card
+  if you built one
+- `Entity naming:` how many pronoun-opener sentences you rewrote
 - `Sentence gate:` the checker's final summary line, pasted verbatim, then `N rewritten`. List any 26–30 word sentence you kept and why.
 - `Saved:` the HTTP code, and that status/slug were preserved
 - `Verified:` the assertion counts you got back

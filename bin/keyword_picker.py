@@ -53,6 +53,17 @@ th{color:#9aa3c0;font-weight:600;font-size:12px;text-transform:uppercase;letter-
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#1d2237}
 .kw{font-weight:600} .why{color:#9aa3c0;font-size:12px}
+/* Chips are always LABELLED — the text says what they mean, so they read correctly with
+   no colour vision at all. Palette stays blue/amber, never red-vs-green. */
+.chip{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9px;font-size:11px;
+      font-weight:600;letter-spacing:.02em;border:1px solid #2a3050;color:#c9d1e6;vertical-align:middle}
+.b-strike{background:#3b2f0b;border-color:#7a6420;color:#ffd979}
+.b-p1{background:#0e2b3f;border-color:#1f5a80;color:#8ed0ff}
+.b-top3{background:#12203a;border-color:#2a4a80;color:#a9c4ff}
+.b-tail{background:#1a1d2e;color:#8a93ad}
+.c-warn{background:#3b2f0b;border-color:#8a6f1f;color:#ffd979}
+.c-gap{background:#0e2b3f;border-color:#1f5a80;color:#8ed0ff}
+.c-main{background:#171a2c;border-color:#3a4270;color:#b6bfe0}
 select,#newmain{background:#0f1220;color:#e7e9f2;border:1px solid #2a3050;border-radius:7px;padding:6px 8px;font:inherit}
 select.on{border-color:#3fb950;color:#fff}
 #newmain{flex:1;min-width:260px}
@@ -88,22 +99,35 @@ const lists = document.getElementById('lists');
 document.getElementById('meta').innerHTML = (DATA.article_title? '<b>'+esc(DATA.article_title)+'</b> — ':'') +
   (DATA.article_url? '<a href="'+esc(DATA.article_url)+'" target="_blank">'+esc(DATA.article_url)+'</a>':'');
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+// Band and flag chips. Colour never carries the meaning on its own — every chip is
+// labelled, so the text is readable with no colour vision at all.
+const BAND={striking:'b-strike',page1:'b-p1',top3:'b-top3',longtail:'b-tail'};
+function badge(b){return b?("<span class='chip "+(BAND[b]||'')+"'>"+esc(b)+"</span>"):"";}
+function flags(r){
+  let out="";
+  if(r.owns==='owned-elsewhere'||r.owns==='split')
+    out+="<span class='chip c-warn'>cannibal: "+esc(r.owns)+"</span>";
+  if(r.title_gap) out+="<span class='chip c-gap'>title gap</span>";
+  if(r.new_main_candidate) out+="<span class='chip c-main'>new-main candidate</span>";
+  return out;
+}
 const allKw=[]; const roleSel={};
 for(const key of ["related","variations","competitor","highly_relevant","gsc_ranking"]){
   const rows=(DATA.lists||{})[key]; if(!rows||!rows.length) continue;
   const h=document.createElement('h2'); h.textContent=LABELS[key]+" ("+rows.length+")"; lists.appendChild(h);
   const gsc = key==="gsc_ranking";
   const t=document.createElement('table');
-  t.innerHTML="<thead><tr><th>Keyword</th>"+(gsc?"<th>Pos.</th><th>Clicks</th><th>Impr.</th><th>Diff.</th><th>Vol.</th>":"<th>Diff.</th><th>Vol.</th><th>Intent</th>")+"<th>Use as</th></tr></thead>";
+  t.innerHTML="<thead><tr><th>Keyword</th>"+(gsc?"<th>Pos.</th><th>Best</th><th>Band</th><th>Trend</th><th>Clicks</th><th>Impr.</th><th>Diff.</th><th>Vol.</th>":"<th>Diff.</th><th>Vol.</th><th>CPC</th><th>Intent</th>")+"<th>Use as</th></tr></thead>";
   const tb=document.createElement('tbody');
   rows.forEach((r,i)=>{
     const id=key+"::"+r.keyword; allKw.push({id,keyword:r.keyword,list:key});
     const tr=document.createElement('tr');
+    const cpc = (r.cpc==null||r.cpc===0) ? "—" : ("$"+Number(r.cpc).toFixed(2));
     const meta = gsc
-      ? "<td class=num>"+(r.position??"")+"</td><td class=num>"+(r.clicks??"")+"</td><td class=num>"+(r.impressions??"")+"</td><td class=num>"+(r.difficulty??"N/A")+"</td><td class=num>"+(r.volume??"")+"</td>"
-      : "<td class=num>"+(r.difficulty??"N/A")+"</td><td class=num>"+(r.volume??"")+"</td><td>"+esc(r.intent||"")+"</td>";
+      ? "<td class=num>"+(r.position??"")+"</td><td class=num>"+(r.best_position??"")+"</td><td>"+badge(r.band)+"</td><td>"+esc(r.trend||"")+"</td><td class=num>"+(r.clicks??"")+"</td><td class=num>"+(r.impressions??"")+"</td><td class=num>"+(r.difficulty??"N/A")+"</td><td class=num>"+(r.volume??"")+"</td>"
+      : "<td class=num>"+(r.difficulty??"N/A")+"</td><td class=num>"+(r.volume??"")+"</td><td class=num>"+cpc+"</td><td>"+esc(r.intent||"")+"</td>";
     const why = r.why||r.opportunity;
-    tr.innerHTML="<td><span class=kw>"+esc(r.keyword)+"</span>"+(why?"<br><span class=why>"+esc(why)+"</span>":"")+"</td>"+meta+
+    tr.innerHTML="<td><span class=kw>"+esc(r.keyword)+"</span>"+flags(r)+(why?"<br><span class=why>"+esc(why)+"</span>":"")+"</td>"+meta+
       "<td><select data-id='"+esc(id)+"'><option value=''>— skip —</option><option value='text'>Text</option><option value='heading'>Heading</option><option value='faq'>FAQ</option></select></td>";
     tb.appendChild(tr);
   });
