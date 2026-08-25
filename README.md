@@ -81,6 +81,10 @@ session after any of these so the settings load.
 
 Accepts full URLs or bare post IDs, whitespace-separated, up to ~5 at a time.
 
+Two single-article commands sit alongside it: `/SEO <url-or-id>` optimizes an article that
+already exists, and `/generate <topic>` writes a new one as a draft. Both finish by handing off
+to `/fact`.
+
 ## /SEO — single-article optimization
 
 `/SEO <url-or-id>` optimizes ONE article end to end: it researches keywords (DataForSEO +
@@ -151,6 +155,89 @@ date is what lets the next run tell improvement from noise.
 `~/.claude/factcheck-flow/dataforseo-key.json`, and finally falls back to the `dataforseo` MCP
 server entry in `~/.claude.json` — so if you already have that MCP server configured, it works
 with no extra setup.
+
+## /generate — create a new article as a draft
+
+`/generate <topic-or-keyword>` writes ONE brand-new article and creates it in WordPress as a
+**draft**. It never publishes, and it never touches an existing post.
+
+Its first question is always **"Is this a locked target keyword, or a topic to research?"**
+
+- **Locked keyword** → the phrase you gave IS the main keyword; research decides everything else.
+- **Topic** → the argument is a seed, and the flow picks the main keyword from the data.
+
+The flow is split in two, like `/SEO`: `prompts/generate-research.md` (G0–G4) and
+`prompts/generate-write.md` (G5–G10, read only after the research is done). The writing itself
+happens in the `article-generator` subagent, which loads the writing guides and the harvested
+source material in its own context and creates the post. The command is `commands/generate.md`.
+
+### The route table — where the article lands
+
+The published URL prefix is decided by the **taxonomy terms**, not by the slug. A draft's `link`
+is only `https://pabau.com/?p=<id>`, so the route is asserted from the terms, at creation and
+again at G10.
+
+| Destination | What puts it there |
+|---|---|
+| `/templates/` | the **tag** `template` (ID 1382) |
+| `/diagnostic-codes/` | the **category** `diagnostic-codes` (1549) + a subcategory (1550 ICD-10-CM / 1551 ICD-11 / 1553 SNOMED CT) |
+| `/procedure-codes/` | the **category** `billing-codes` (1433) + a subcategory (1546 CPT / 1548 HCPCS / 1547 CCSD) |
+| `/blog/` | none of the above — the default for everything else |
+
+The `templates` **category** (4138) does not route anything; only the tag does. Four posts on
+the site carry that category without the tag and they all sit under `/blog/`.
+
+### What it adds on top of /SEO's research
+
+`/SEO` improves a page that exists. `/generate` creates one that does not, and four stages exist
+only because of that difference.
+
+- **A commission check before anything is planned (G2).** Four signals — do we already rank for
+  the seed, does a page (published *or* draft) already cover the question, who owns the keyword
+  in GSC, and does the topic sit inside our cluster footprint. A hit is a blocking question with
+  **[Refresh that page instead]** as the usual answer: a declining page with ranking history
+  out-performs a brand-new page on the same topic, and a second page on an owned keyword adds a
+  third competitor rather than fixing anything. Ending in "run /SEO on that URL" is a successful
+  outcome for this command.
+- **A source harvest, not just an entity pass (G4).** One subagent per ranking page returns the
+  substantive FACTS — figures, rates, requirements, step sequences — each with the source the
+  page credits or marked UNSOURCED, alongside the usual entities, headings, formats and
+  information-gain ledger. Merged, they are the material the article is written from. A model
+  writing a new page from memory fills the gaps itself, and the gaps are where the errors are.
+  Code articles get an extra **authority pass** (CMS/CDC, WHO, AMA, CCSD, MBS) that wins over
+  every ranking page it contradicts.
+- **A written searcher-intent note before any structure exists (G5).** Four questions: who is
+  typing this, what would insult them to be told, what they need in hand when they leave, and
+  what would send them back to the SERP. It is the shortest stage in the flow and the outline is
+  tested against it.
+- **A mandatory outline gate (G7).** Always asked, never skipped. A model that writes structure
+  and prose in one pass anchors every later edit to a shape nobody chose — the human reviewing
+  the finished draft is only ever editing *within* it. Reviewing the outline costs a sentence;
+  reviewing an anchored article costs a rewrite that usually does not happen.
+
+Keyword selection is rebuilt for a page with no authority: **title gap first** (a phrase none of
+the ranking pages put in their title, H1, slug and opening sentence is one they rank for
+incidentally — the only kind a zero-authority page reliably takes), then long-tail and
+bottom-of-funnel before the head term, then the ownership veto, with CPC as the tiebreak. Exactly
+one primary keyword per URL: everything else is either a variant on this page or a **deferred**
+keyword that gets its own page later.
+
+### What it reports instead of doing
+
+- **Corner-stone inbound links** — 3–5 already-ranking pages in the same cluster that should link
+  INTO the new article, with anchors. A page that ranks generates authority by ranking, with no
+  backlink involved, and a new page has none of its own; an orphan starts from zero and stays
+  there. Named, never edited.
+- **Deferred keywords** — the secondary topics that need their own article. These are the next
+  `/generate` runs, not sections of this one.
+- **Ownership findings** — keywords another pabau.com page holds, with the competing URL.
+
+It never publishes, never calls the indexing API (the URL does not exist yet), and never edits
+another page. The durable output is a **commission record** in
+`~/.claude/factcheck-flow/cache/generated/` — the route, the keyword, the verdict, the cluster
+and the deferred keywords — which is what stops a later run from writing the same page twice.
+Every run ends by handing off to `/fact`, which is the human-reviewed pass that verifies the
+finished prose against its sources.
 
 ### Cluster spreadsheet (required for the link pass)
 
@@ -241,6 +328,11 @@ Edit these freely; the workflow picks up your changes on the next run.
 - `agents/factcheck-reporter.md` — Stage 1 worker (read-only).
 - `agents/article-editor.md` — Stage 3 worker (applies all three passes to one
   article, end to end).
+- `commands/SEO.md` + `prompts/seo-research.md` + `prompts/seo-write.md` + `agents/seo-writer.md`
+  — the single-article optimization flow.
+- `commands/generate.md` + `prompts/generate-research.md` + `prompts/generate-write.md` +
+  `agents/article-generator.md` — the new-article flow. The command researches and plans; the
+  agent writes and creates the draft.
 - `skills/wordpress-access/SKILL.md` — REST API read/write helper used by the agents.
 
 ## Safety notes
@@ -248,4 +340,4 @@ Edit these freely; the workflow picks up your changes on the next run.
 - Stage 1 never writes to WordPress — findings are reported for your approval first.
 - Test on a **draft** post before running against live published articles.
 - Drafts stay drafts and published posts stay published; publication status is never
-  changed automatically.
+  changed automatically. `/generate` creates drafts only — it has no path to publishing at all.

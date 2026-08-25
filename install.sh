@@ -24,7 +24,7 @@ echo ""
 mkdir -p "$CLAUDE/commands" "$CLAUDE/agents" "$CLAUDE/skills/wordpress-access" "$PROMPTS" "$GUIDES" "$FF/bin"
 
 # --- 1. Download the editable prompt files from the repo -------------------
-for p in 1-factcheck 2-editorial 3-links seo-research seo-write; do
+for p in 1-factcheck 2-editorial 3-links seo-research seo-write generate-research generate-write; do
   if ! curl -fsSL "$REPO_RAW/prompts/$p.md" -o "$PROMPTS/$p.md"; then
     echo "  ERROR: could not download prompts/$p.md — check your internet connection." >&2
     exit 1
@@ -186,7 +186,7 @@ fetch() { # $1 = repo-relative path, $2 = local destination
   fi
 }
 
-for p in 1-factcheck 2-editorial 3-links seo-research seo-write; do
+for p in 1-factcheck 2-editorial 3-links seo-research seo-write generate-research generate-write; do
   fetch "prompts/$p.md" "$FF/prompts/$p.md"
 done
 for g in core-rules Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent WordPress-blocks Visuals; do
@@ -216,6 +216,13 @@ fetch "skills/wordpress-access/SKILL.md" "$HOME/.claude/skills/wordpress-access/
 
 # /SEO command + helpers (the seo-research/seo-write prompts are fetched in the loop above)
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
+
+# /generate command + its writer agent (the generate-* prompts are fetched in the loop above).
+# /generate CREATES new drafts, so a stale copy of either is worse than none: the route table
+# (which taxonomy term sends a post to /templates/, /diagnostic-codes/ or /procedure-codes/)
+# lives in these files and changes with the site, not with the model.
+fetch "commands/generate.md" "$HOME/.claude/commands/generate.md"
+fetch "agents/article-generator.md" "$HOME/.claude/agents/article-generator.md"
 for b in gsc_query gsc_cannibal keyword_picker serp_picker dfs_lists sentence_check serp_fetch index_ping render_visual cluster_lookup elementor_guard; do
   fetch "bin/$b.py" "$FF/bin/$b.py"; chmod +x "$FF/bin/$b.py" 2>/dev/null || true
 done
@@ -426,6 +433,19 @@ if curl -fsSL "$REPO_RAW/commands/SEO.md" -o "$CLAUDE/commands/SEO.md"; then
   fi
 else
   echo "  ERROR: could not download commands/SEO.md — check your internet connection." >&2
+  exit 1
+fi
+
+# --- 2c. The /generate command --------------------------------------------
+if curl -fsSL "$REPO_RAW/commands/generate.md" -o "$CLAUDE/commands/generate.md"; then
+  echo "  - /generate command installed"
+  if curl -fsSL "$REPO_RAW/agents/article-generator.md" -o "$CLAUDE/agents/article-generator.md"; then
+    echo "  - article-generator agent installed"
+  else
+    echo "  NOTE: could not download agents/article-generator.md — /generate cannot write without it." >&2
+  fi
+else
+  echo "  ERROR: could not download commands/generate.md — check your internet connection." >&2
   exit 1
 fi
 

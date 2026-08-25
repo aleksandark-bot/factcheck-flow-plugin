@@ -68,7 +68,7 @@ fetch() { # $1 = repo-relative path, $2 = local destination
   fi
 }
 
-for p in 1-factcheck 2-editorial 3-links seo-research seo-write; do
+for p in 1-factcheck 2-editorial 3-links seo-research seo-write generate-research generate-write; do
   fetch "prompts/$p.md" "$FF/prompts/$p.md"
 done
 for g in core-rules Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent WordPress-blocks Visuals; do
@@ -98,6 +98,13 @@ fetch "skills/wordpress-access/SKILL.md" "$HOME/.claude/skills/wordpress-access/
 
 # /SEO command + helpers (the seo-research/seo-write prompts are fetched in the loop above)
 fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
+
+# /generate command + its writer agent (the generate-* prompts are fetched in the loop above).
+# /generate CREATES new drafts, so a stale copy of either is worse than none: the route table
+# (which taxonomy term sends a post to /templates/, /diagnostic-codes/ or /procedure-codes/)
+# lives in these files and changes with the site, not with the model.
+fetch "commands/generate.md" "$HOME/.claude/commands/generate.md"
+fetch "agents/article-generator.md" "$HOME/.claude/agents/article-generator.md"
 for b in gsc_query gsc_cannibal keyword_picker serp_picker dfs_lists sentence_check serp_fetch index_ping render_visual cluster_lookup elementor_guard; do
   fetch "bin/$b.py" "$FF/bin/$b.py"; chmod +x "$FF/bin/$b.py" 2>/dev/null || true
 done
