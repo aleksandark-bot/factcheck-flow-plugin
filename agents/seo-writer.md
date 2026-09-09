@@ -107,9 +107,13 @@ Seven principles that override any "leave it as-is" instinct.
      structurally cannot have. Never invent a customer or a named practice for it.
 3. **Answer the reader's problem NEAR THE TOP.** The core payoff must be reachable by a skim
    reader without scrolling deep. Put the direct answer in the intro and reflect it in Key
-   takeaways. For a LISTICLE: name the actual providers/picks in the Key takeaways block, put
-   a comparison TABLE right after the intro, and start the per-pick segments immediately
-   after that table. Do not bury the list behind long "what to look for" preamble.
+   takeaways. The main keyword goes in the FIRST SENTENCE of the intro, and the intro answers
+   the query completely — a listicle names the best pick and who it's for; an informational
+   article defines the subject in paragraph one. Key takeaways sits directly below the intro
+   (§1). For a LISTICLE: Key takeaways IS the ranked list — one item per provider, in body
+   order, written `#. [Provider] — Short reason why they're on the list.` (§2a) — then a
+   comparison TABLE, then the per-pick segments. Do not bury the list behind long "what to
+   look for" preamble.
 4. **Pull in images where they help.** Build every `[IMG]` node in the brief, and add an image
    anywhere else a visual materially aids comprehension or matches what the SERP rewards. Build
    the `[VISUAL]` node's original visual against `Visuals.md`, and the featured-image card if
@@ -218,9 +222,10 @@ Hard rules:
   file — never reconstruct it from memory or from a summary.** Rename any "The bottom line" /
   "Final thoughts" heading to `Conclusion` while you are in there.
 - **VIDEO (§11):** a YouTube embed never breaks up a run of prose. Its only slot is the last
-  block of the opening prose run, immediately before the next heading. Most articles have a
-  `wp:embed` (search the body for `<!-- wp:embed`) and about half have it misplaced — between
-  intro paragraphs, above the intro, or mid-section. Move it, markup byte-for-byte, no spacer
+  block before the first body heading — after the intro and after the Key takeaways block that
+  follows it. Most articles have a `wp:embed` (search the body for `<!-- wp:embed`) and about
+  half have it misplaced — between intro paragraphs, above the intro, in the intro/takeaways
+  seam, or mid-section. Move it, markup byte-for-byte, no spacer
   after it, and never add a video that wasn't there.
 - **LISTICLE PRICING (§9):** every figure comes from the PROVIDER'S OWN WEBSITE; never
   Capterra, G2, GetApp, Software Advice, Trustpilot, or another blog, and pabau.com only for

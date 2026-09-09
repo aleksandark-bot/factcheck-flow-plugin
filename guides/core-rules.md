@@ -124,8 +124,19 @@ Detail, worked examples, and the mirage tests are in `Originality-and-search-int
 
 Any heading that is or implies a question is answered **directly and completely in the
 first sentence** of its section — no preamble, no restating the question, no "it depends"
-before the answer. Same for every FAQ answer. The reader's core answer also belongs near
-the top of the article: in the intro, and reflected in Key takeaways.
+before the answer. Same for every FAQ answer.
+
+**The intro carries the whole answer, and the main keyword is in the first sentence.**
+
+- The **main keyword appears in the article's first sentence** — naturally, as part of a
+  sentence a person would write, never bolted on.
+- The intro **answers the keyword's main query completely**, not partially: a listicle says
+  which provider is the best pick and for whom; an informational article defines the subject
+  in the first paragraph; a "cost" query gives the number; a comparison says which one wins
+  and when. A reader who stops at the intro has their answer.
+- **Key takeaways sits directly below the intro** (order below), with nothing in the seam. On
+  a listicle it is the ranked provider list — `#. [Provider] — short reason` per item,
+  `WordPress-blocks.md` §2a.
 
 ## Required document order
 
@@ -134,10 +145,10 @@ is only the shape:
 
 ```
 H1
-Key takeaways block                 ← always first body element
+Intro                               ← main keyword in the FIRST sentence; answers the query in full
+Key takeaways block                 ← directly below the intro, nothing in between
 [Download box]                      ← template articles only; has its own H2
-Intro
-[YouTube embed]                     ← if there is a video: last block of the intro, immediately before the next heading
+[YouTube embed]                     ← if there is a video: last block before the first body heading
 H2 … body sections
 H2 <Pabau-for-this-purpose section> ← contains the book-demo CTA block
 H2 Conclusion                       ← exactly this word; concludes, links /book-demo/
@@ -154,8 +165,8 @@ spacer block.
 below the provider's H2** (before any prose) and closes with a `Pricing` heading + table —
 markup and card rules in `WordPress-blocks.md` §9a and §9.
 
-**A YouTube video never breaks up a run of prose.** Its one slot is the last block of the
-opening prose run, immediately before the next heading — after every intro paragraph, whether
+**A YouTube video never breaks up a run of prose.** Its one slot is the last block before the
+first body heading — after every intro paragraph and after the Key takeaways block, whether
 the intro is headless or sits under an opening H2. Never between two paragraphs, never before
-the intro, never mid-body-section. Most articles have a `wp:embed` and about half have it in
+the intro, never in the intro/takeaways seam, never mid-body-section. Most articles have a `wp:embed` and about half have it in
 the wrong place: move the block as-is, add no spacer, and never add a video that isn't there.

@@ -89,7 +89,57 @@ clause of prose introducing it, so the reader meets the claim and then sees it. 
 a section whose point is a range, a comparison, a sequence, or a structure, note it as the
 natural home for the visual rather than padding the prose to do the same work.
 
-**A YouTube video never interrupts a run of prose.** Most articles carry a `wp:embed` block and about half have it misplaced — between intro paragraphs, above the intro, or mid body section. Its one slot is the last block of the opening prose run, immediately before the next heading (the intro may be headless or sit under an opening H2; either way, after all of it). Move a misplaced embed, markup untouched, then repair what it left behind: rejoin any paragraph that was split around it, and delete any "watch the video below" line that no longer points at anything. Never add a video, and never add a spacer after one. Full rule: `WordPress-blocks.md` §11.
+**A YouTube video never interrupts a run of prose.** Most articles carry a `wp:embed` block and about half have it misplaced — between intro paragraphs, above the intro, or mid body section. Its one slot is the last block before the first body heading: after every intro paragraph and after the Key takeaways block that follows them (the intro may be headless or sit under an opening H2; either way, after all of it). Move a misplaced embed, markup untouched, then repair what it left behind: rejoin any paragraph that was split around it, and delete any "watch the video below" line that no longer points at anything. Never add a video, and never add a spacer after one. Full rule: `WordPress-blocks.md` §11.
+
+## The intro, the main keyword, and Key takeaways
+
+These four rules are checked on every article, and they are rewrites, not flags — fix them
+here and never ask about them.
+
+**1. The main keyword goes in the first sentence of the article.** Not the first paragraph,
+the first *sentence*. Take the focus keyphrase from the article's Yoast field (or the brief
+handed to you) and work it into that sentence naturally, as part of something a person would
+write. If the exact phrase can't be made to read cleanly, use the closest natural form that
+still contains the head term — never a bolted-on prefix ("When it comes to best EHR for
+private practices, …") and never a keyword-stuffed opener.
+
+**2. The intro must answer the keyword's main query completely.** Partially is a fail. A
+reader who stops at the end of the intro leaves with the answer, and so does an answer engine
+quoting it. By type:
+
+- **Listicle** — the intro says which provider is the best pick and who it's best for, plus
+  the shape of the list ("we compared X, and Y is the strongest fit for Z practices").
+  Naming the criteria without ever naming a winner is the failure mode here.
+- **Informational / "what is"** — the subject is defined in the **first paragraph**, in a
+  sentence that stands alone as a definition. No stakes-setting, no history, no "in today's
+  competitive landscape".
+- **Cost / pricing** — the intro carries the number or the range.
+- **Comparison (X vs Y)** — the intro says which one wins, and the condition under which the
+  other one wins instead.
+- **How-to** — the intro names the outcome and the number of steps to it.
+
+Cut whatever preamble the old intro used to reach the point, then rebuild it: keyword-bearing
+first sentence, the direct answer, then at most a couple of sentences of context. A windup
+that runs three paragraphs before the answer is not an intro.
+
+**3. Key takeaways sits directly below the intro.** The block is no longer the first body
+element. Move it down if it sits above the intro, and leave nothing in the seam between the
+last intro paragraph and the block — no image, no spacer, no video, no comparison table.
+Document order is `WordPress-blocks.md` §1; the block markup is §2.
+
+**4. On a listicle, Key takeaways IS the ranked list of the providers the article chose.**
+One `items` entry per provider, in the article's own order, written literally as:
+
+```
+#. [Provider] — Short reason why they're on the list.
+```
+
+So `1. Pabau — best all-in-one option for practices that want booking, charting and billing
+in one system.` The number and period are part of the item text, the em dash separates the
+provider from the reason, and the reason is one short clause: who the pick is for, or the one
+thing it does best. One item per provider reviewed, none for a provider the article doesn't
+review, and nothing else in the block — no methodology note, no "what to look for" takeaway.
+Rewrite an existing listicle's takeaways into this form; the full contract is §2a.
 
 ## Structure and blocks
 
@@ -101,7 +151,7 @@ Your job in this pass is the *copy* inside that structure, and one structural du
 
 When you write those sections, the content rules are:
 
-- **Key takeaways** — every takeaway a full sentence in sentence case (capitalize only the first word and genuine proper nouns). The block form, the mandatory `"title":"Key takeaways"` attribute, and the casing rule are in §2.
+- **Key takeaways** — sits directly below the intro. On a non-listicle, every takeaway is a full sentence in sentence case (capitalize only the first word and genuine proper nouns). On a **listicle** it is the ranked provider list in the `#. [Provider] — reason` form above. The block form, the mandatory `"title":"Key takeaways"` attribute, the casing rule and the listicle form are in §2 and §2a.
 - **Download box** (template articles) — the H2 reads "Download your free <template name>", grammatical rather than exact-match; the description names what is actually inside this file, in 1–2 sentences. Verify the download URL returns 200 before saving; if nothing resolves, keep the box and record the missing asset under "Skipped". Markup and the URL pattern are in §3.
 - **Pabau section** — 2–4 paragraphs on the actual workflow: what the practice does today, what Pabau does instead, the outcome. Topic-specific H2, never "Why choose Pabau". If a Pabau section already exists elsewhere in the body, move or rework it into this slot rather than writing a second one. Placement, heading rules, and the CTA block are in §4–§5.
 - **Conclusion** — it must genuinely conclude, not summarize: no restating the Key takeaways, no listing what the article covered. Land the judgment the article earned — what the reader should do now, what changes if they do, the trade-off worth remembering — in 2–4 short paragraphs, ending with the inline CTA link. Heading rule and CTA markup are in §6.

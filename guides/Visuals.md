@@ -343,10 +343,12 @@ claim and then sees it.
 - **Never inside** the Key takeaways block, the download box, the Pabau section, the
   Conclusion, the FAQ, or the Continue your research block.
 - **Never between** the Conclusion and the Continue your research block.
+- **Never in the intro/takeaways seam** — nothing sits between the last intro paragraph and
+  the Key takeaways block (`WordPress-blocks.md` §1).
 - **Never immediately adjacent to the YouTube embed** — the video already closes the intro
   run; do not stack a visual against it.
-- **In a listicle**, the natural slots are a comparison visual right after the intro's
-  comparison table, and at most one per provider review — placed inside the review's prose,
+- **In a listicle**, the natural slots are a comparison visual right after the comparison
+  table that follows Key takeaways, and at most one per provider review — placed inside the review's prose,
   never between the provider card and the review's first paragraph.
 - **Introduce it in the prose.** One clause is enough ("the ranges below vary more by area
   than most price lists suggest"). A visual dropped in with no lead-in reads like an ad.

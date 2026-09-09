@@ -374,9 +374,17 @@ articles process concurrently). To each subagent pass:
   user-supplied values/edits; omit rejected findings).
 
 Each subagent fetches its article ONCE, runs its four sequential passes (approved
-fact-check fixes → editorial → link audit → block guarantees) in memory, and writes
+fact-check fixes → editorial → link pass → block guarantees) in memory, and writes
 everything back in a SINGLE save via the `wordpress-access` skill. They do not ask
 further questions.
+
+The link pass (`3-links.md`) resolves each article's content cluster from
+`~/Desktop/pabau-content-clusters.xlsx` — the source of truth, read at runtime by
+`bin/cluster_lookup.py` — and links only inside that cluster, at most five in-body editorial
+links (three on a code page). It ends in its own mechanical gate, so expect the gate's
+`PASS | 0 checks failed` line back on every `Links:` line, the same way Pass E reports the
+sentence gate. An editor that reports `LINKPLAN_BLOCKED` could not reach the spreadsheet: that
+is a setup problem to relay, not a reason to re-run the article with links improvised.
 
 The block-guarantee pass ALWAYS runs last and enforces the contract in
 `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — required document order plus the
@@ -418,8 +426,13 @@ already there, or not applicable, the one-line block-contract status the
 editor reported for each of the other guarantees, the sentence gate's summary line
 (longest sentence + how many were rewritten), and anything skipped. Note
 any article whose grave error was flagged but dropped after independent verification, and
-any article that hit the two-rewrite ceiling and needs manual attention. End with the
-reminder to purge the WP Rocket cache for each edited URL.
+any article that hit the two-rewrite ceiling and needs manual attention. Collect the
+link-pass findings that are about OTHER pages and list them once for the user rather than per
+article: merge candidates from close-variant pairs, BOFU articles that need inbound boosts,
+`NO_BOFU_IN_CLUSTER` clusters, and any `BLOCKED_PILLAR` or `BLOCKED_ELEMENTOR` article. End with
+the reminder to purge the WP Rocket cache for each edited URL, plus — once for the whole run,
+not per article — refreshing the link atlas (`cd ~/Desktop/linkmap && ./refresh.sh`) so the next
+run's inbound counts include what this one changed.
 EOF
 echo "  - /fact command installed"
 
@@ -531,11 +544,18 @@ This is the rule that governs the whole job.
    between passes — you already have the body, including every edit you just made to it.
 3. **Clear the sentence gate BEFORE you save** (Pass E below). The article does not go out
    over the ceiling.
-4. **Save ONCE**, at the end, with a single PUT. Write `payload.json` with the Write tool and
-   send it with `-d @payload.json -o /dev/null -w '%{http_code}\n'`. A draft stays a draft;
-   a published post stays published. If D0b built a featured image, its
-   `featured_media` id rides along in that same payload — it is a field on the post, not a
-   second save.
+4. **Back the article up, then save ONCE**, at the end, with a single PUT. Before the first
+   write, dump the JSON you fetched to `~/Desktop/temp/linkplan-backups/<post-id>.json` (create
+   the directory if needed) — one file per article, so any edit of this run can be reversed.
+   Then write `payload.json` with the Write tool and send it with
+   `-d @payload.json -o /dev/null -w '%{http_code}\n'`. A draft stays a draft; a published post
+   stays published. If D0b built a featured image, its `featured_media` id rides along in that
+   same payload — it is a field on the post, not a second save.
+   **An Elementor article is the exception:** `post_content` is silently ignored on a
+   builder-backed page, so check with `bin/elementor_guard.py <post-id>` before you save. On a
+   `BUILDER` verdict, edit the `_elementor_data` structure instead (preserving its JSON encoding
+   exactly) and flush Elementor CSS after the save; where that data is not readable over REST,
+   change nothing and report `BLOCKED_ELEMENTOR`.
 5. **Verify with grep assertions, not page fetches** (see "Verifying the save" below).
 
 The old four-fetch / four-save shape cost six full copies of the article per run and bought
@@ -547,7 +567,11 @@ thing, not the article.
 - `~/.claude/factcheck-flow/guides/core-rules.md` — **read first, always.** The Pabau
   non-negotiables, voice and mechanics, AI tells, and the required document order.
 - `~/.claude/factcheck-flow/prompts/2-editorial.md` — at Pass B.
-- `~/.claude/factcheck-flow/prompts/3-links.md` — at Pass C.
+- `~/.claude/factcheck-flow/prompts/3-links.md` — at Pass C. It is the single source of truth
+  for internal linking: the cluster wall, the link budget, the pillar and subhub pattern, the
+  funnel and CTA contract, and the mechanical gate that must pass before you save. Cluster
+  assignment comes from `~/Desktop/pabau-content-clusters.xlsx` via
+  `bin/cluster_lookup.py` — never from your own sense of what is related.
 - `~/.claude/factcheck-flow/guides/Visuals.md` — at Pass D0, before you build anything
   visual. It owns the visual contract: what earns a visual, the brand tokens and font, the
   render/upload commands, the block markup, and two verified templates.
@@ -575,8 +599,10 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    the approved `ASK` decisions. Ignore rejected findings.
 2. **Pass B — editorial.** Read `~/.claude/factcheck-flow/prompts/2-editorial.md` and follow
    it in full.
-3. **Pass C — link audit.** Read `~/.claude/factcheck-flow/prompts/3-links.md` and follow it
-   in full.
+3. **Pass C — link pass.** Read `~/.claude/factcheck-flow/prompts/3-links.md` and follow it in
+   full. It opens by resolving the article's content cluster from the spreadsheet, and ends with
+   a mechanical gate (`cluster_lookup.py verify`) that must exit 0 — the link plan is not
+   finished while it fails, exactly like the sentence gate in Pass E.
 4. **Pass D — block guarantees (ALWAYS run this LAST).** Read
    `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — the contract, with the exact
    markup for every block (reference article: https://pabau.com/templates/accutite/, post
@@ -648,7 +674,8 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    The required document order you are enforcing is `WordPress-blocks.md` §1. Never leave a
    heading above a block that renders its own heading (Key takeaways, Continue your research).
 
-   **D1 — Key takeaways (ALWAYS).** Contract: §2. Locate the Key takeaways section near the
+   **D1 — Key takeaways (ALWAYS).** Contract: §2, plus §2a for listicles. Locate the Key
+   takeaways section near the
    top of the article, however it is currently marked up: the proper custom block, a plain
    `<h2>`/`<h3>` "Key takeaways" heading followed by a `<ul>`/paragraphs, a pasted raw
    `<div id="key_takeaways">` (that is the block's *rendered* output, not real block markup),
@@ -661,11 +688,22 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
      markup (the block renders its own header).
    - **Still absent** → add it. Pass B should already have written the section, since it is
      a required one; if it somehow didn't, write it here.
+   - **Position (check every time).** The block belongs **directly below the intro**, not
+     above it — that changed, and most live articles still carry the old order. Move the
+     block down past every intro paragraph, and leave nothing in the seam between the last
+     intro paragraph and the block: no image, no spacer, no embed, no comparison table. On a
+     template article the download box follows the block (D2).
+   - **Listicle → the items ARE the ranked provider list** (§2a): one entry per provider
+     reviewed, in the body's order, each written `#. [Provider] — Short reason why they're on
+     the list.` with the number and period inside the item text. Pass B should have written
+     them this way; if the block still carries lesson-style takeaways, or an item count that
+     doesn't match the providers reviewed, rewrite the items here — this is the one part of
+     D1 where you do touch the copy.
 
    **D2 — Download box (TEMPLATE ARTICLES ONLY).** Contract: §3. A template article is one
    with a `/templates/` URL, or one whose job is to hand the reader a downloadable
-   form/chart/worksheet. Ensure the box sits directly below Key takeaways and above the
-   intro. The wrapper is fixed and copied byte-for-byte from §3; the H2 text, the
+   form/chart/worksheet. Ensure the box sits directly below the Key takeaways block, which
+   itself now follows the intro. The wrapper is fixed and copied byte-for-byte from §3; the H2 text, the
    description, and the `href` are written fresh for THIS article — never carry AccuTite's
    (or any other post's) heading, description, or PDF URL across. Verify the download URL
    before saving:
@@ -703,13 +741,13 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    **D6 — Continue your research (ALWAYS).** Contract: §7. Locate the "Expert picks" /
    "Continue your research" box however it is marked up (the `expert-picks` block, a list
    block, a styled panel, a plain `<ul>`).
-   - No block at all → build one from the up-to-5 qualifying under-linked articles chosen per
-     `3-links.md` in Pass C. Non-block form → convert it, preserving the real links.
+   - No block at all → build one from the up-to-5 same-cluster picks chosen per `3-links.md` §7
+     in Pass C. Non-block form → convert it, preserving the real links.
    - Scan for placeholder, empty, or dead items and remove them: a literal "list item #1" /
      "list item #2", a bare "list item", "Article title", "Lorem ipsum", an empty `<li>`, or
      a link whose href is "#", empty, or a stub like "example.com". Pass C should have filled
      the block with genuine links already; replace any survivor with a real link to a
-     qualifying under-linked article (per `3-links.md`) or delete that item.
+     compliant same-cluster article (per `3-links.md` §7) or delete that item.
    - If **no genuine link items remain and you cannot source any**, remove the whole block
      rather than ship an empty shell or stubs. This is the one case where the article may end
      up without it; note it under "Skipped".
@@ -756,11 +794,11 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
 
    **D10 — Video placement (ONLY IF the article has a video).** Contract: §11. Most articles
    carry one and about half have it misplaced, so check every time: search the body you hold
-   for `<!-- wp:embed`. The embed's one legal slot is the **last block of the opening run of
-   prose, immediately before the next heading** — after every intro paragraph, whether the
-   intro is headless or sits under an opening H2. Move it if it is anywhere else: between
-   intro paragraphs, above the intro (right after Key takeaways), mid body section, inside the
-   Pabau section / Conclusion / FAQ, or after the Conclusion.
+   for `<!-- wp:embed`. The embed's one legal slot is the **last block before the first body
+   heading** — after every intro paragraph and after the Key takeaways block that follows
+   them, whether the intro is headless or sits under an opening H2. Move it if it is anywhere
+   else: between intro paragraphs, above the intro, in the intro/takeaways seam, mid body
+   section, inside the Pabau section / Conclusion / FAQ, or after the Conclusion.
    - Move the block **byte-for-byte**. Don't rewrite its markup, don't normalize the
      `className` attribute (both forms are live), and don't add a spacer after it — no article
      has one.
@@ -859,9 +897,13 @@ then these sections, one line each:
 
 - `Fact-check applied:` — count plus anything notable
 - `Editorial:` — the highlights, not an inventory
-- `Links:` — added / removed / replaced counts, industry + case-study links, external count.
-  On a code article also state the Claim.MD integration link and which cluster pages you linked
-- `Key takeaways block:` already correct / converted / title attribute added / casing fixed / added
+- `Links:` — the full line `3-links.md` §13 specifies: cluster + subcluster + tier (and whether
+  it came from the spreadsheet or your reasoning), funnel stage, RANKING/INERT, engine, final
+  in-body count against the budget (e.g. `4/5`), the pillar up-link, the subhub on a code
+  article, the funnel link, disposition counts with reason codes, picks, both CTA placements,
+  the gate's final line verbatim, external-link count, and anything skipped with its code
+- `Key takeaways block:` already correct / converted / title attribute added / casing fixed / moved below the intro / rewritten as the ranked provider list / added
+- `Intro:` main keyword in the first sentence (yes/rewritten) + whether the intro now answers the query completely
 - `Download box:` already correct / added / URL fixed / not a template article
 - `Pabau section + CTA block:` already correct / CTA block added / section written / section moved
 - `Conclusion:` already correct / renamed from "<old heading>" / rewritten to conclude / written / CTA link added

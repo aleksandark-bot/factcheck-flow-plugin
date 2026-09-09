@@ -15,10 +15,10 @@ Every article, regardless of type:
 
 ```
 H1 (post title)
-Key takeaways block                 ← required, always first body element
+Intro paragraphs                    ← required, no heading of its own; main keyword in the FIRST sentence; answers the query in full
+Key takeaways block                 ← required, directly below the intro — nothing between them
 [Download box]                      ← TEMPLATE ARTICLES ONLY (has its own built-in H2)
-Intro paragraphs                    ← required, no heading of its own
-[YouTube embed]                     ← IF the article has a video: last block of the intro, immediately before the next heading
+[YouTube embed]                     ← IF the article has a video: the last block before the first body heading
 H2 … body sections                  ← the article itself
 H2 <Pabau-for-this-purpose section> ← required; contains the Pabau CTA block
 H2 Conclusion                       ← required, exactly this word, concludes + links book-demo
@@ -28,7 +28,13 @@ Yoast FAQ block
 ```
 
 Notes on order:
-- Schema JSON-LD in a `wp:html` block may sit above Key takeaways — leave it there.
+- **The intro comes first; Key takeaways sits directly below it.** Nothing may sit between
+  the last intro paragraph and the Key takeaways block — no image, no spacer, no video, no
+  comparison table, no pro-tip. The reader gets the answer in prose, then the summary.
+- **The intro must answer the keyword's main query completely**, and the main keyword must
+  appear in the article's **first sentence** — the rules for both are in `core-rules.md`
+  ("Answer-first"); the listicle takeaway form is section 2a below.
+- Schema JSON-LD in a `wp:html` block may sit above the intro — leave it there.
 - `pro-tip` blocks may appear anywhere in the body; they are optional.
 - Images may appear anywhere in the body; every one of them needs a caption (section 10).
 - **Every article carries at least one original visual we built** — a rendered image, or one
@@ -38,9 +44,10 @@ Notes on order:
   ordinary image block and must satisfy section 10 here.
 - **In a listicle, every provider review opens with a provider card** directly below the
   provider's heading (section 9a) and closes with a pricing segment (section 9).
-- **A YouTube video belongs at the end of the opening run of prose, never inside it** — the
-  last block before the next heading. Most articles have one and about half have it in the
-  wrong place; section 11 is the rule and the fix.
+- **A YouTube video belongs at the end of the opening run, never inside the intro prose** —
+  the last block before the first body heading, after Key takeaways and (on a template
+  article) the download box. Most articles have one and about half have it in the wrong
+  place; section 11 is the rule and the fix.
 - The **Pabau section** must come *before* Conclusion. It may be preceded by other body
   sections; nothing may sit between Conclusion and the Continue your research block
   except the conclusion's own paragraphs.
@@ -59,19 +66,51 @@ hardcodes "Key Takeaways" when no title is passed, so the `title` attribute is
 <!-- wp:gutenberg-custom-blocks/key-takeaways {"title":"Key takeaways","items":[{"text":"Takeaway one, written as a full sentence in sentence case."},{"text":"Takeaway two, same treatment."}]} /-->
 ```
 
+**Placement: directly below the intro.** The block is no longer the first body element — the
+intro paragraphs come first, and Key takeaways follows the last of them with nothing in
+between. An article whose Key takeaways sits above the intro gets the block moved down.
+
 - Self-closing (`/-->`), one `items` entry per takeaway, JSON must be valid (escape `"`).
 - 4–5 takeaways is the norm; each is a full sentence in **sentence case** (capitalize only
-  the first word and genuine proper nouns — Pabau, ICD-10, HIPAA, CQC).
+  the first word and genuine proper nouns — Pabau, ICD-10, HIPAA, CQC). On a **listicle** the
+  items are the ranked provider list instead, one per provider — section 2a.
 - Never a plain heading + `<ul>`, never a pasted rendered `<div id="key_takeaways">`.
 - An existing block that is otherwise correct but missing `"title":"Key takeaways"` gets
   the attribute added — that alone is a fix worth making.
+
+### 2a. Listicles — Key takeaways IS the ranked list
+
+On a listicle, Key takeaways is not a set of lessons. It is the ranked shortlist of the
+providers the article chose, in the article's own order, one `items` entry per provider:
+
+```
+#. [Provider] — Short reason why they're on the list.
+```
+
+- Written literally as `1. Pabau — …`, `2. Jane App — …`: the number and the period are part
+  of the item text, because the block renders an unordered list and the numbering has to come
+  from the copy.
+- One entry per provider reviewed, in the same order as the body sections. No provider in the
+  list that the article doesn't review, and no reviewed provider missing from the list.
+- The reason is one short clause — who this pick is for, or the one thing it does best — under
+  the 25-word sentence ceiling and in sentence case after the provider name.
+- The em dash separates the provider from the reason. Keep the provider name bare: no link, no
+  rank label ("Best overall"), no price.
+- Nothing else goes in the block: no "what to look for" takeaway, no methodology note. The
+  number of items equals the number of providers.
+
+```
+<!-- wp:gutenberg-custom-blocks/key-takeaways {"title":"Key takeaways","items":[{"text":"1. Pabau — best all-in-one option for practices that want booking, charting and billing in one system."},{"text":"2. Jane App — strongest fit for small multi-disciplinary practices that bill insurance."},{"text":"3. Cliniko — the cheapest way for a solo practitioner to get online booking running."}]} /-->
+```
+
+The comparison table still follows the block, and the per-provider sections follow the table.
 
 ---
 
 ## 3. Download box — template articles only
 
-Sits directly below Key takeaways and above the intro. Raw `wp:html`, with a built-in H2
-(so no separate heading block).
+Sits directly below the Key takeaways block, which itself follows the intro. Raw `wp:html`,
+with a built-in H2 (so no separate heading block).
 
 The example below is the live AccuTite box — **the wrapper is fixed, the content is not.**
 Reuse the markup and styling exactly; write the H2, the description, and the `href` fresh
@@ -438,26 +477,27 @@ only correct the dimensions if they differ from 800 × 35.
 
 ---
 
-## 11. YouTube videos — end of the intro, never mid-prose
+## 11. YouTube videos — end of the opening run, never mid-prose
 
 Most articles already carry a `wp:embed` YouTube block, and roughly half of them have it in
 the wrong place. The video is optional; its **placement is not**.
 
-**The one legal slot: the last block of the opening run of prose, immediately before the next
-heading.** Two article shapes, one rule:
+**The one legal slot: the last block before the first body heading** — after the intro, after
+the Key takeaways block that follows it, and after the download box on a template article.
+Two article shapes, one rule:
 
 ```
-Key takeaways                       Key takeaways
 Intro paragraph                     H2 <opening section>      ← code articles start on an H2
 Intro paragraph                     Paragraph
 Intro paragraph                     Paragraph
-YouTube embed          ←            Paragraph
+Key takeaways                       Paragraph
+YouTube embed          ←            Key takeaways
 H2 <first body section>             YouTube embed          ←
                                     H2 <next section>
 ```
 
-Either way the reader finishes the intro, then meets the player, then moves on to the next
-heading. Nothing else goes between the embed and that heading.
+Either way the reader finishes the intro and the takeaways, then meets the player, then moves
+on to the next heading. Nothing else goes between the embed and that heading.
 
 **A video must never break up a run of prose.** An embed between two paragraphs splits an
 argument in half: the reader hits a player mid-thought, and the paragraph after it reads like
@@ -468,8 +508,11 @@ which get fixed by moving the block:
   Move the embed down past every remaining intro paragraph.
 - **Mid body section** — the embed sits between two paragraphs under a later H2. Move it up to
   the end of the opening run.
-- **Between Key takeaways and the intro** — the player lands before the article has said
-  anything. Move it down past the whole intro.
+- **Between the intro and Key takeaways** — nothing may sit in that seam (section 1). Move the
+  embed below the Key takeaways block.
+- **Above the intro** (including the old layout's slot between Key takeaways and the intro) —
+  the player lands before the article has said anything. Move it down past the whole intro and
+  past Key takeaways.
 
 And never inside the Pabau section, the Conclusion, or the FAQ; never after the Conclusion or
 between the Conclusion and the Continue your research block.
@@ -511,16 +554,17 @@ even on articles that have one.
 
 ## 12. Quick QA checklist
 
-- [ ] Key takeaways block present, first body element, `"title":"Key takeaways"` set, items in sentence case
-- [ ] Template article: download box below Key takeaways, above intro, built-in H2, download URL returns 200
-- [ ] Intro exists and follows the Key takeaways (and download box, if any)
+- [ ] Intro is the first body element, its FIRST sentence carries the main keyword, and it answers the keyword's main query completely (a listicle names the top pick; an informational article defines the subject in paragraph one)
+- [ ] Key takeaways block sits directly below the intro with nothing in the seam, `"title":"Key takeaways"` set, items in sentence case
+- [ ] Listicle: Key takeaways is the ranked provider list, `#. [Provider] — reason` per item, one item per provider reviewed, same order as the body (section 2a)
+- [ ] Template article: download box directly below Key takeaways, built-in H2, download URL returns 200
 - [ ] Pabau section immediately before Conclusion, topic-specific H2, contains the `book-demo` CTA block
 - [ ] H2 `Conclusion` present (exact word), concludes rather than summarizes, ends with an inline book-demo CTA link
 - [ ] Continue your research (`expert-picks`) block after the Conclusion, ≤5 real working links, no wrapper H2
 - [ ] FAQ is a Yoast FAQ block with schema, under an H2
-- [ ] Listicle: comparison table after intro; every provider review ends with a `Pricing` heading + pricing table, all figures from the provider's own site
+- [ ] Listicle: comparison table after the Key takeaways block; every provider review ends with a `Pricing` heading + pricing table, all figures from the provider's own site
 - [ ] Listicle: a `pabau/provider-card` block directly below each provider's heading, before any prose; no logos, no per-article `<style>` block, card facts match the review
 - [ ] Every image has a `<figcaption>`: full sentence, ends in a period, wrapped in `<em>`, no stray `*`; Pabau-feature screenshots tie the feature to this article's purpose; alt text present and not duplicated into the caption
 - [ ] Every image is followed by one 800 × 35 `wp:spacer` block
-- [ ] Any YouTube embed is the LAST block of the opening prose run, immediately before the next heading — never between paragraphs, never before the intro, never mid-section; markup unchanged, no spacer added
+- [ ] Any YouTube embed is the LAST block before the first body heading (after the intro and Key takeaways) — never between paragraphs, never before the intro, never in the intro/takeaways seam, never mid-section; markup unchanged, no spacer added
 - [ ] No duplicate headings above self-heading blocks; no placeholder items anywhere

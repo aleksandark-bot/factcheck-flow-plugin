@@ -41,8 +41,11 @@ that reads well and does nothing.
    fills the gaps itself, and those gaps are where the errors live.
 2. **Answer the query in the first sentence, above the fold.** A reader who has to scroll to
    find out whether the page answers their question goes back to the SERP, and that bounce is
-   what kills a new page before it ever gets a fair test. The intro states the answer outright;
-   Key takeaways carries it; the H1 and the SERP title front-load the exact keyword.
+   what kills a new page before it ever gets a fair test. The exact main keyword sits in the
+   article's FIRST SENTENCE, and the intro answers the keyword's main query completely — a
+   listicle names the best pick and who it's for, an informational article defines the subject
+   in the first paragraph. Key takeaways carries the answer directly below the intro; the H1
+   and the SERP title front-load the exact keyword.
 3. **The page must be hard to reproduce.** Ask the durability question about the plan: what
    would it take for a competitor with a writer and public sources to produce this page? If the
    answer is "an afternoon", the plan is a rewritten explainer, and no amount of length,
@@ -158,8 +161,10 @@ inventing a preamble. Plan the intro to state the direct answer, and Key takeawa
 
 TYPE-SPECIFIC REQUIREMENTS — apply the one that matches the G0 article type:
 
-  · LISTICLE — the outline MUST (a) name the actual picks/providers in Key takeaways;
-    (b) place a comparison [TABLE] node immediately after the intro, before the first pick;
+  · LISTICLE — the outline MUST (a) plan Key takeaways as the ranked list of the picks, one
+    item per provider in body order, `#. [Provider] — Short reason why they're on the list.`
+    (`WordPress-blocks.md` §2a), sitting directly below the intro;
+    (b) place a comparison [TABLE] node immediately after that block, before the first pick;
     (c) start the per-pick segments right after that table; (d) give every provider review a
     `Pricing` node at its end. Push any "how we chose / what to look for" material BELOW the
     picks or trim it. Plan the table's columns now — name plus the 2-4 axes that decide the

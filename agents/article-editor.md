@@ -157,7 +157,8 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    The required document order you are enforcing is `WordPress-blocks.md` §1. Never leave a
    heading above a block that renders its own heading (Key takeaways, Continue your research).
 
-   **D1 — Key takeaways (ALWAYS).** Contract: §2. Locate the Key takeaways section near the
+   **D1 — Key takeaways (ALWAYS).** Contract: §2, plus §2a for listicles. Locate the Key
+   takeaways section near the
    top of the article, however it is currently marked up: the proper custom block, a plain
    `<h2>`/`<h3>` "Key takeaways" heading followed by a `<ul>`/paragraphs, a pasted raw
    `<div id="key_takeaways">` (that is the block's *rendered* output, not real block markup),
@@ -170,11 +171,22 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
      markup (the block renders its own header).
    - **Still absent** → add it. Pass B should already have written the section, since it is
      a required one; if it somehow didn't, write it here.
+   - **Position (check every time).** The block belongs **directly below the intro**, not
+     above it — that changed, and most live articles still carry the old order. Move the
+     block down past every intro paragraph, and leave nothing in the seam between the last
+     intro paragraph and the block: no image, no spacer, no embed, no comparison table. On a
+     template article the download box follows the block (D2).
+   - **Listicle → the items ARE the ranked provider list** (§2a): one entry per provider
+     reviewed, in the body's order, each written `#. [Provider] — Short reason why they're on
+     the list.` with the number and period inside the item text. Pass B should have written
+     them this way; if the block still carries lesson-style takeaways, or an item count that
+     doesn't match the providers reviewed, rewrite the items here — this is the one part of
+     D1 where you do touch the copy.
 
    **D2 — Download box (TEMPLATE ARTICLES ONLY).** Contract: §3. A template article is one
    with a `/templates/` URL, or one whose job is to hand the reader a downloadable
-   form/chart/worksheet. Ensure the box sits directly below Key takeaways and above the
-   intro. The wrapper is fixed and copied byte-for-byte from §3; the H2 text, the
+   form/chart/worksheet. Ensure the box sits directly below the Key takeaways block, which
+   itself now follows the intro. The wrapper is fixed and copied byte-for-byte from §3; the H2 text, the
    description, and the `href` are written fresh for THIS article — never carry AccuTite's
    (or any other post's) heading, description, or PDF URL across. Verify the download URL
    before saving:
@@ -265,11 +277,11 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
 
    **D10 — Video placement (ONLY IF the article has a video).** Contract: §11. Most articles
    carry one and about half have it misplaced, so check every time: search the body you hold
-   for `<!-- wp:embed`. The embed's one legal slot is the **last block of the opening run of
-   prose, immediately before the next heading** — after every intro paragraph, whether the
-   intro is headless or sits under an opening H2. Move it if it is anywhere else: between
-   intro paragraphs, above the intro (right after Key takeaways), mid body section, inside the
-   Pabau section / Conclusion / FAQ, or after the Conclusion.
+   for `<!-- wp:embed`. The embed's one legal slot is the **last block before the first body
+   heading** — after every intro paragraph and after the Key takeaways block that follows
+   them, whether the intro is headless or sits under an opening H2. Move it if it is anywhere
+   else: between intro paragraphs, above the intro, in the intro/takeaways seam, mid body
+   section, inside the Pabau section / Conclusion / FAQ, or after the Conclusion.
    - Move the block **byte-for-byte**. Don't rewrite its markup, don't normalize the
      `className` attribute (both forms are live), and don't add a spacer after it — no article
      has one.
@@ -373,7 +385,8 @@ then these sections, one line each:
   in-body count against the budget (e.g. `4/5`), the pillar up-link, the subhub on a code
   article, the funnel link, disposition counts with reason codes, picks, both CTA placements,
   the gate's final line verbatim, external-link count, and anything skipped with its code
-- `Key takeaways block:` already correct / converted / title attribute added / casing fixed / added
+- `Key takeaways block:` already correct / converted / title attribute added / casing fixed / moved below the intro / rewritten as the ranked provider list / added
+- `Intro:` main keyword in the first sentence (yes/rewritten) + whether the intro now answers the query completely
 - `Download box:` already correct / added / URL fixed / not a template article
 - `Pabau section + CTA block:` already correct / CTA block added / section written / section moved
 - `Conclusion:` already correct / renamed from "<old heading>" / rewritten to conclude / written / CTA link added

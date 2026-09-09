@@ -167,8 +167,10 @@ preserve and nothing to be conservative about.
 Hard rules:
 
 - **BLOCK CONTRACT** — what you create MUST satisfy `WordPress-blocks.md` in full: the required
-  document order (§1) and the exact markup for the Key takeaways block (§2, mandatory
-  `"title":"Key takeaways"`), the template download box (§3), the `book-demo` CTA block (§4)
+  document order (§1 — the intro FIRST, Key takeaways directly below it) and the exact markup
+  for the Key takeaways block (§2, mandatory `"title":"Key takeaways"`; on a listicle the items
+  ARE the ranked provider list, `#. [Provider] — Short reason why they're on the list.`, one per
+  provider in body order, §2a), the template download box (§3), the `book-demo` CTA block (§4)
   inside the required Pabau section (§5), the `Conclusion` heading and its inline `/book-demo/`
   link (§6), the `expert-picks` Continue your research block (§7), the Yoast FAQ block (§8),
   listicle pricing segments (§9) and provider cards (§9a), and image captions + spacers (§10).

@@ -64,11 +64,13 @@ pronoun) and needs nothing from you. Yours is what shapes the outline it receive
    is why the target is two-thirds and not everything. No inline links inside a capsule
    sentence — put them in the elaboration that follows.
 3. **Answer the reader's problem NEAR THE TOP.** The core payoff must be reachable by a skim
-   reader without scrolling deep. Put the direct answer in the intro (and reflect it in Key
-   takeaways). For a LISTICLE specifically: name the actual providers/picks in the Key takeaways
-   block, and start the provider/pick segments IMMEDIATELY after the intro — preceded by a
-   comparison TABLE (the skim-reader's answer) so someone who reads nothing else still gets the
-   ranked shortlist. Do not bury the list behind long "what to look for / why it matters"
+   reader without scrolling deep. The MAIN KEYWORD goes in the article's FIRST SENTENCE, and the
+   intro answers the keyword's main query COMPLETELY — a listicle names the best pick and who
+   it's for, an informational article defines the subject in the first paragraph. Key takeaways
+   sits directly below the intro and reflects that answer. For a LISTICLE specifically: Key
+   takeaways IS the ranked shortlist — one item per provider, in body order, `#. [Provider] —
+   Short reason why they're on the list.` (`WordPress-blocks.md` §2a) — then a comparison TABLE,
+   then the provider/pick segments. Do not bury the list behind long "what to look for / why it matters"
    preamble; move that below the picks or trim it.
 4. **Pull in images where they help.** Add relevant images anywhere a visual materially aids
    comprehension or matches what the SERP rewards — a comparison/product screenshot per listicle
@@ -181,7 +183,9 @@ ANSWER-FIRST & TOP-OF-ARTICLE PLACEMENT (Optimization stance #2 + #3 — bake in
   Key takeaways to carry it. If the current article buries the payoff behind long preamble,
   reorder now so the answer surfaces early (this is a structural change you are authorized to make).
 - LISTICLE type: the outline MUST (a) name the actual picks/providers in Key takeaways;
-  (b) place a comparison [TABLE] node immediately after the intro, before the first pick; and
+  (b) place a comparison [TABLE] node immediately after the Key takeaways block that follows
+  the intro, before the first pick; plan Key takeaways as the ranked `#. [Provider] — reason`
+  list (§2a); and
   (c) start the per-pick segments right after that table. Push any long "how we chose / what to
   look for" material BELOW the picks (or trim it). Plan the table's columns now (name + the 2–4
   axes that actually decide the pick).
@@ -201,8 +205,9 @@ tag each [UNCHANGED]/[OPTIMIZED]/[NEW] like any other node, and note:
 - **Continue your research** (§7) — plan the block (max 5 under-linked targets, no wrapper H2).
 - **LISTICLE** (§9) — plan a `Pricing` node at the END of every provider review.
 - **Video** (§11) — if the article already carries a YouTube embed, its only slot is the last
-  block of the opening prose run, immediately before the next heading. Never plan a video
-  between paragraphs, above the intro, or inside a body section. If it currently sits in one of
+  block before the first body heading, after the intro and the Key takeaways block. Never plan
+  a video between paragraphs, above the intro, in the intro/takeaways seam, or inside a body
+  section. If it currently sits in one of
   those places, plan the move; never plan a new video.
 
 IMAGE PLANNING (Optimization stance #4): mark outline nodes that should carry an image with an
