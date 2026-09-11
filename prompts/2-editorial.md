@@ -47,7 +47,7 @@ Cut "everything", "nothing", "anything" and bare "thing" hard — a whole articl
 
 1. **Never contrast "everything" with "nothing".** There is no good version of this construction. Delete the sentence and make the point another way.
    - BAD: If everything is important, nothing is important.
-2. **Neither word can perform an action.** Apart from conjugations of "be" and "get", "everything" and "nothing" must not precede a verb. Name the actor that does the thing.
+2. **Neither word can perform an action.** Apart from conjugations of "be" and "get", "everything" and "nothing" must not precede a verb. Name the actor that does the thing, or recast the sentence — passive is fine here. This rule is about those two words, not about voice: do not convert other passive sentences to active.
    - BAD: They draft, the practice approves, and everything leaves a record of who did what and when.
    - GOOD: They draft, the practice approves, and the whole process gets recorded.
 3. **Everywhere else, prefer the specific noun.** "Anything" and "thing" are almost always a placeholder for a word you have not chosen yet.

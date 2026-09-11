@@ -36,6 +36,12 @@ Use contractions (*we've*, *it's*, *you'll*) to make your writing flow. They sou
 
 Vary your sentence length. Lots of long sentences make the reader work too hard. Mix it up. Even a one-word sentence can land hard.
 
+Don't force active voice. Passive voice is fine, and often better, when the actor is unknown, obvious, or beside the point, or when the thing acted on is what the sentence is about. Choose whichever reads more naturally, and never rewrite a sentence just to make it active.
+
+✅ *Consent forms are stored against the patient record.* (who stores them is obvious)
+✅ *The claim is denied if the modifier is missing.* (the claim is the point, not the payer)
+❌ *The system stores consent forms against the patient record, and the payer denies the claim if the modifier is missing.* (actors bolted on for no gain)
+
 Keep every sentence to **25 words or fewer**. Stretch to 30 only when a sentence truly can't be split without losing the meaning, and treat that as rare. When one runs long, split it into two rather than hiding the length behind a semicolon or an em dash.
 
 ✅ *Most no-shows happen because the reminder arrived too late. Send it 48 hours out and you give the patient time to rebook.*

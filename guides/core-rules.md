@@ -81,6 +81,10 @@ These hold in every edit, with no exceptions.
   and keep going until it exits 0. In `/fact` this is a gate that blocks the save.
 - Short does not mean choppy. Vary sentence length; don't buy brevity with a dropped
   subject, a telegraphic fragment, or a clause welded on with a semicolon.
+- **Don't force active voice.** Use passive voice where it reads better: when the actor
+  is unknown, obvious, or irrelevant, or when the thing acted on is the point of the
+  sentence ("The claim is denied if the modifier is missing"). Never rewrite a passive
+  sentence to active just to make it active, and never invent an actor to do it.
 - **Paragraphs: 4 lines / 60 words maximum.**
 - Three or more clause-length list items in a sentence → make it a WordPress list block.
 - Split clauses into their own sentences rather than joining them with em dashes, colons,
@@ -100,8 +104,9 @@ These hold in every edit, with no exceptions.
 - Cut "everything", "nothing", "anything", and bare "thing" down to a handful per article,
   and never pair "everything" against "nothing" as a contrast ("If everything is important,
   nothing is important" — don't write it in any form). Neither word can act: apart from
-  "be"/"get", they never precede a verb. Name the actor instead ("…and everything leaves a
-  record of who did what" → "…and the whole process gets recorded").
+  "be"/"get", they never precede a verb. Name the actor or recast the sentence, passive
+  included ("…and everything leaves a record of who did what" → "…and the whole process
+  gets recorded").
 - No "it's not X, it's Y" phrasing.
 - No "most practices miss…" / "here's the part most clinics avoid" — or anything near it.
 - No generic openers ("When it comes to…"), platitudes, or obvious advice.
