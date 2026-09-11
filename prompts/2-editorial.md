@@ -34,6 +34,10 @@ Remove all fluff: every sentence must be substantial and bring information to th
 
 Remove Claude speak in intro and the rest of the text.
 
+**Tells are fixed by rewriting the sentence, never by swapping the word.** When any of the tells below turns up, do not delete the banned word or replace it with a synonym ("gap" → "space", "real" → "genuine", "it's not X, it's Y" → "rather than X, Y"). Rewrite the sentence entirely with a different structure, and rework the surrounding sentences where they carry the same idea, so no "gap"-like, "real"-like, or contrast-like phrasing is left at all. This applies to every tell in this section.
+- BAD: "This leaves a gap in your records" → "This leaves a space in your records."
+- GOOD: "This leaves a gap in your records" → "Your records stop at the last signed form, so the next clinician has no note of what was discussed."
+
 Do not talk about gaps unless it's an actual, physical gap (like a gap in a brick wall). Remove all mentions of gaps not relating to physical gaps.
 
 Do not call things "real", "true", "actual" or similar, unless a fake version of that thing exists in the article. Examples:

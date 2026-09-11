@@ -112,6 +112,16 @@ These hold in every edit, with no exceptions.
 - No generic openers ("When it comes to…"), platitudes, or obvious advice.
 - Every sentence carries information. Padding gets cut, not rewritten.
 
+**When a sentence carries a tell, rewrite the sentence — never just swap the word.** Deleting
+or replacing the banned word leaves the same AI-shaped sentence behind ("gap" → "space",
+"real" → "genuine", "it's not X, it's Y" → "rather than X, Y"). That is a failed fix. Rebuild
+the sentence from scratch with a different structure, and rework the sentences around it if
+they lean on the same idea, so that no "gap"-like, "real"-like, or contrast-like phrasing
+remains at all. Applies to every tell in the list above.
+- BAD: "This leaves a gap in your records" → "This leaves a space in your records."
+- GOOD: "This leaves a gap in your records" → "Your records stop at the last signed form,
+  so the next clinician has no note of what was discussed."
+
 ## The two-bar rule
 
 Every article must clear both bars, on every run:
