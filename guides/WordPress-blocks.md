@@ -11,13 +11,12 @@ article-editor's final block pass; `/SEO` must produce it when it writes.
 
 ## 1. Required document order
 
-Every article, regardless of type:
+Most articles:
 
 ```
 H1 (post title)
 Intro paragraphs                    ← required, no heading of its own; main keyword in the FIRST sentence; answers the query in full
 Key takeaways block                 ← required, directly below the intro — nothing between them
-[Download box]                      ← TEMPLATE ARTICLES ONLY (has its own built-in H2)
 [YouTube embed]                     ← IF the article has a video: the last block before the first body heading
 H2 … body sections                  ← the article itself
 H2 <Pabau-for-this-purpose section> ← required; contains the Pabau CTA block
@@ -27,10 +26,29 @@ H2 Frequently asked questions
 Yoast FAQ block
 ```
 
+**Template articles (`/templates/`) only — the download box sits between the intro and Key
+takeaways, not after it:**
+
+```
+H1 (post title)
+Intro paragraphs
+Download box                        ← has its own built-in H2
+Key takeaways block                 ← directly below the download box
+[YouTube embed]                     ← IF the article has a video: the last block before the first body heading
+H2 … body sections
+H2 <Pabau-for-this-purpose section>
+H2 Conclusion
+Continue your research block
+H2 Frequently asked questions
+Yoast FAQ block
+```
+
 Notes on order:
-- **The intro comes first; Key takeaways sits directly below it.** Nothing may sit between
-  the last intro paragraph and the Key takeaways block — no image, no spacer, no video, no
-  comparison table, no pro-tip. The reader gets the answer in prose, then the summary.
+- **The intro comes first.** On a non-template article, Key takeaways sits directly below it
+  with nothing in between — no image, no spacer, no video, no comparison table, no pro-tip. On
+  a **template article**, the download box sits in that seam instead, and Key takeaways follows
+  the download box. The reader gets the answer in prose, then (on a template) the download,
+  then the summary.
 - **The intro must answer the keyword's main query completely**, and the main keyword must
   appear in the article's **first sentence** — the rules for both are in `core-rules.md`
   ("Answer-first"); the listicle takeaway form is section 2a below.
@@ -45,9 +63,9 @@ Notes on order:
 - **In a listicle, every provider review opens with a provider card** directly below the
   provider's heading (section 9a) and closes with a pricing segment (section 9).
 - **A YouTube video belongs at the end of the opening run, never inside the intro prose** —
-  the last block before the first body heading, after Key takeaways and (on a template
-  article) the download box. Most articles have one and about half have it in the wrong
-  place; section 11 is the rule and the fix.
+  the last block before the first body heading, after Key takeaways (and, on a template
+  article, after the download box that now sits ahead of Key takeaways). Most articles have
+  one and about half have it in the wrong place; section 11 is the rule and the fix.
 - The **Pabau section** must come *before* Conclusion. It may be preceded by other body
   sections; nothing may sit between Conclusion and the Continue your research block
   except the conclusion's own paragraphs.
@@ -66,9 +84,12 @@ hardcodes "Key Takeaways" when no title is passed, so the `title` attribute is
 <!-- wp:gutenberg-custom-blocks/key-takeaways {"title":"Key takeaways","items":[{"text":"Takeaway one, written as a full sentence in sentence case."},{"text":"Takeaway two, same treatment."}]} /-->
 ```
 
-**Placement: directly below the intro.** The block is no longer the first body element — the
-intro paragraphs come first, and Key takeaways follows the last of them with nothing in
-between. An article whose Key takeaways sits above the intro gets the block moved down.
+**Placement: directly below the intro** on most articles — the block is no longer the first
+body element; the intro paragraphs come first, and Key takeaways follows the last of them with
+nothing in between. **On a template article, Key takeaways sits directly below the download
+box instead** (section 3), so the seam after the intro belongs to the download box, not to Key
+takeaways. An article whose Key takeaways sits above the intro, or above the download box on a
+template article, gets the block moved down.
 
 - Self-closing (`/-->`), one `items` entry per takeaway, JSON must be valid (escape `"`).
 - 4–5 takeaways is the norm; each is a full sentence in **sentence case** (capitalize only
@@ -109,7 +130,7 @@ The comparison table still follows the block, and the per-provider sections foll
 
 ## 3. Download box — template articles only
 
-Sits directly below the Key takeaways block, which itself follows the intro. Raw `wp:html`,
+Sits directly below the intro, before the Key takeaways block (section 1). Raw `wp:html`,
 with a built-in H2 (so no separate heading block).
 
 The example below is the live AccuTite box — **the wrapper is fixed, the content is not.**
@@ -482,9 +503,9 @@ only correct the dimensions if they differ from 800 × 35.
 Most articles already carry a `wp:embed` YouTube block, and roughly half of them have it in
 the wrong place. The video is optional; its **placement is not**.
 
-**The one legal slot: the last block before the first body heading** — after the intro, after
-the Key takeaways block that follows it, and after the download box on a template article.
-Two article shapes, one rule:
+**The one legal slot: the last block before the first body heading** — after the intro and
+after everything required in the opening run ahead of it (Key takeaways, and on a template
+article the download box that now precedes Key takeaways). Two article shapes, one rule:
 
 ```
 Intro paragraph                     H2 <opening section>      ← code articles start on an H2
@@ -555,9 +576,9 @@ even on articles that have one.
 ## 12. Quick QA checklist
 
 - [ ] Intro is the first body element, its FIRST sentence carries the main keyword, and it answers the keyword's main query completely (a listicle names the top pick; an informational article defines the subject in paragraph one)
-- [ ] Key takeaways block sits directly below the intro with nothing in the seam, `"title":"Key takeaways"` set, items in sentence case
+- [ ] Key takeaways block sits directly below the intro with nothing in the seam (or, on a template article, directly below the download box), `"title":"Key takeaways"` set, items in sentence case
 - [ ] Listicle: Key takeaways is the ranked provider list, `#. [Provider] — reason` per item, one item per provider reviewed, same order as the body (section 2a)
-- [ ] Template article: download box directly below Key takeaways, built-in H2, download URL returns 200
+- [ ] Template article: download box directly below the intro, built-in H2, download URL returns 200, with Key takeaways directly below the download box
 - [ ] Pabau section immediately before Conclusion, topic-specific H2, contains the `book-demo` CTA block
 - [ ] H2 `Conclusion` present (exact word), concludes rather than summarizes, ends with an inline book-demo CTA link
 - [ ] Continue your research (`expert-picks`) block after the Conclusion, ≤5 real working links, no wrapper H2
@@ -566,5 +587,5 @@ even on articles that have one.
 - [ ] Listicle: a `pabau/provider-card` block directly below each provider's heading, before any prose; no logos, no per-article `<style>` block, card facts match the review
 - [ ] Every image has a `<figcaption>`: full sentence, ends in a period, wrapped in `<em>`, no stray `*`; Pabau-feature screenshots tie the feature to this article's purpose; alt text present and not duplicated into the caption
 - [ ] Every image is followed by one 800 × 35 `wp:spacer` block
-- [ ] Any YouTube embed is the LAST block before the first body heading (after the intro and Key takeaways) — never between paragraphs, never before the intro, never in the intro/takeaways seam, never mid-section; markup unchanged, no spacer added
+- [ ] Any YouTube embed is the LAST block before the first body heading (after the intro, the download box on a template article, and Key takeaways) — never between paragraphs, never before the intro, never in the seam before Key takeaways, never mid-section; markup unchanged, no spacer added
 - [ ] No duplicate headings above self-heading blocks; no placeholder items anywhere

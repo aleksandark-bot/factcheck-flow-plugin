@@ -149,9 +149,10 @@ before the answer. Same for every FAQ answer.
   which provider is the best pick and for whom; an informational article defines the subject
   in the first paragraph; a "cost" query gives the number; a comparison says which one wins
   and when. A reader who stops at the intro has their answer.
-- **Key takeaways sits directly below the intro** (order below), with nothing in the seam. On
-  a listicle it is the ranked provider list — `#. [Provider] — short reason` per item,
-  `WordPress-blocks.md` §2a.
+- **Key takeaways sits directly below the intro** (order below), with nothing in the seam —
+  except on a template article, where the download box sits in that seam and Key takeaways
+  follows the download box instead. On a listicle it is the ranked provider list — `#.
+  [Provider] — short reason` per item, `WordPress-blocks.md` §2a.
 
 ## Required document order
 
@@ -162,7 +163,6 @@ is only the shape:
 H1
 Intro                               ← main keyword in the FIRST sentence; answers the query in full
 Key takeaways block                 ← directly below the intro, nothing in between
-[Download box]                      ← template articles only; has its own H2
 [YouTube embed]                     ← if there is a video: last block before the first body heading
 H2 … body sections
 H2 <Pabau-for-this-purpose section> ← contains the book-demo CTA block
@@ -171,6 +171,10 @@ Continue your research block        ← expert-picks; no wrapper H2
 H2 Frequently asked questions
 Yoast FAQ block
 ```
+
+**Template articles (`/templates/`) only:** the download box sits between the intro and Key
+takeaways, not after it — `H1 → Intro → Download box → Key takeaways → …`. Full rule and
+markup in `WordPress-blocks.md` §1 and §3.
 
 Never put a heading above a block that renders its own heading (Key takeaways, Continue
 your research). Every image carries a `<figcaption>` and is followed by one 800 × 35

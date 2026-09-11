@@ -608,9 +608,11 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    markup for every block (reference article: https://pabau.com/templates/accutite/, post
    151170; fetch it with `context=edit` if you want to see the real thing). Then enforce all
    twelve guarantees below, in order, against the block markup you hold: original visual →
-   featured image (blog) → Key takeaways → download box (templates) → Pabau section + CTA
-   block → Conclusion → Continue your research → FAQ → provider cards (listicles) →
-   listicle pricing → image captions → video placement.
+   featured image (blog) → Key takeaways (D1) → download box (D2, templates) → Pabau section
+   + CTA block → Conclusion → Continue your research → FAQ → provider cards (listicles) →
+   listicle pricing → image captions → video placement. The checks run in this order, but on a
+   template article the **final document position** is download box, then Key takeaways
+   directly below it — D1 and D2 both enforce that positioning regardless of check order.
 
    D0 runs FIRST inside this pass, so the visual it adds is then covered by D9's caption and
    spacer audit like any other image. D0b is the one step that touches no block markup at
@@ -688,11 +690,13 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
      markup (the block renders its own header).
    - **Still absent** → add it. Pass B should already have written the section, since it is
      a required one; if it somehow didn't, write it here.
-   - **Position (check every time).** The block belongs **directly below the intro**, not
-     above it — that changed, and most live articles still carry the old order. Move the
-     block down past every intro paragraph, and leave nothing in the seam between the last
-     intro paragraph and the block: no image, no spacer, no embed, no comparison table. On a
-     template article the download box follows the block (D2).
+   - **Position (check every time).** On a non-template article the block belongs **directly
+     below the intro**, not above it — that changed, and most live articles still carry the
+     old order. Move the block down past every intro paragraph, and leave nothing in the seam
+     between the last intro paragraph and the block: no image, no spacer, no embed, no
+     comparison table. **On a template article, the block belongs directly below the download
+     box instead (D2)** — the download box sits in the intro/Key-takeaways seam, not Key
+     takeaways.
    - **Listicle → the items ARE the ranked provider list** (§2a): one entry per provider
      reviewed, in the body's order, each written `#. [Provider] — Short reason why they're on
      the list.` with the number and period inside the item text. Pass B should have written
@@ -702,8 +706,9 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
 
    **D2 — Download box (TEMPLATE ARTICLES ONLY).** Contract: §3. A template article is one
    with a `/templates/` URL, or one whose job is to hand the reader a downloadable
-   form/chart/worksheet. Ensure the box sits directly below the Key takeaways block, which
-   itself now follows the intro. The wrapper is fixed and copied byte-for-byte from §3; the H2 text, the
+   form/chart/worksheet. Ensure the box sits directly below the intro, **before** the Key
+   takeaways block (D1) — Key takeaways now follows the download box, not the other way
+   round. The wrapper is fixed and copied byte-for-byte from §3; the H2 text, the
    description, and the `href` are written fresh for THIS article — never carry AccuTite's
    (or any other post's) heading, description, or PDF URL across. Verify the download URL
    before saving:
@@ -1136,7 +1141,7 @@ When writing, editing, or fact-checking Pabau content, read these guides first:
 - \`~/.claude/factcheck-flow/guides/WordPress-blocks.md\` — the block contract + exact markup: document order, Key takeaways block (mandatory \`"title":"Key takeaways"\`), template download box, Pabau CTA (\`book-demo\`) block and the Pabau section before the Conclusion, the \`Conclusion\` heading + its \`/book-demo/\` link, Continue your research (\`expert-picks\`), Yoast FAQ, listicle pricing tables, image captions. Reference article: https://pabau.com/templates/accutite/.
 - \`~/.claude/factcheck-flow/guides/Visuals.md\` — the visual contract: every article ships at least one original visual we built (a rendered chart/diagram, or one CSS-only interactive block), plus the 1200 × 630 featured-image card for a blog article that has none (§11). Brand tokens + Satoshi, the \`bin/render_visual.py\` render/upload commands, block markup, and the verified templates.
 
-Block rules every article must satisfy: the intro comes FIRST, with the main keyword in its first sentence and a complete answer to the keyword's main query; "Key takeaways" directly below the intro with nothing in the seam (capital K only, via the block's \`title\` attribute) — and on a listicle those takeaways ARE the ranked provider list, \`#. [Provider] — short reason why they're on the list.\`, one item per provider in body order; an H2 Pabau section with the CTA block immediately before an H2 headed exactly "Conclusion" that concludes (not summarizes) and ends with a \`/book-demo/\` CTA link; a Continue your research block; a download box on template articles; a caption on every image (full sentence, ends with a period, italic via \`<em>\` — and if it shows a Pabau feature, it says how that feature helps the reader do what the article is about); any YouTube embed as the last block before the first body heading, after the intro and Key takeaways — never breaking up a run of prose, and moved byte-for-byte when it is misplaced (about half are); and in listicles a \`Pricing\` heading + pricing table closing every provider review, with figures from the provider's own website only.
+Block rules every article must satisfy: the intro comes FIRST, with the main keyword in its first sentence and a complete answer to the keyword's main query; "Key takeaways" directly below the intro with nothing in the seam (capital K only, via the block's \`title\` attribute) — except on a template article, where the download box sits in that seam instead and Key takeaways follows it — and on a listicle those takeaways ARE the ranked provider list, \`#. [Provider] — short reason why they're on the list.\`, one item per provider in body order; an H2 Pabau section with the CTA block immediately before an H2 headed exactly "Conclusion" that concludes (not summarizes) and ends with a \`/book-demo/\` CTA link; a Continue your research block; a download box on template articles, directly below the intro and before Key takeaways; a caption on every image (full sentence, ends with a period, italic via \`<em>\` — and if it shows a Pabau feature, it says how that feature helps the reader do what the article is about); any YouTube embed as the last block before the first body heading, after the intro and Key takeaways — never breaking up a run of prose, and moved byte-for-byte when it is misplaced (about half are); and in listicles a \`Pricing\` heading + pricing table closing every provider review, with figures from the provider's own website only.
 
 Every article also ships at least one original visual we built — a rendered chart/diagram (HTML → WebP via \`bin/render_visual.py\`, uploaded to the media library) or one CSS-only interactive block. Never a stock photo, never invented numbers: every figure comes from the article and the visual names its source. Read \`Visuals.md\` before building one. And a \`/blog/\` article with an empty featured image gets a 1200 × 630 brand card built the same way, attached via \`featured_media\` and never inserted into the body — an existing featured image is never replaced (\`Visuals.md\` §11).
 

@@ -126,10 +126,12 @@ Cut whatever preamble the old intro used to reach the point, then rebuild it: ke
 first sentence, the direct answer, then at most a couple of sentences of context. A windup
 that runs three paragraphs before the answer is not an intro.
 
-**3. Key takeaways sits directly below the intro.** The block is no longer the first body
-element. Move it down if it sits above the intro, and leave nothing in the seam between the
-last intro paragraph and the block — no image, no spacer, no video, no comparison table.
-Document order is `WordPress-blocks.md` §1; the block markup is §2.
+**3. Key takeaways sits directly below the intro** — except on a **template article**, where
+the download box sits in that seam and Key takeaways follows the download box instead. The
+block is no longer the first body element. Move it down if it sits above the intro (or above
+the download box, on a template), and leave nothing else in the seam — no image, no spacer,
+no video, no comparison table. Document order is `WordPress-blocks.md` §1; the block markup is
+§2; the download box is §3.
 
 **4. On a listicle, Key takeaways IS the ranked list of the providers the article chose.**
 One `items` entry per provider, in the article's own order, written literally as:
@@ -155,8 +157,8 @@ Your job in this pass is the *copy* inside that structure, and one structural du
 
 When you write those sections, the content rules are:
 
-- **Key takeaways** — sits directly below the intro. On a non-listicle, every takeaway is a full sentence in sentence case (capitalize only the first word and genuine proper nouns). On a **listicle** it is the ranked provider list in the `#. [Provider] — reason` form above. The block form, the mandatory `"title":"Key takeaways"` attribute, the casing rule and the listicle form are in §2 and §2a.
-- **Download box** (template articles) — the H2 reads "Download your free <template name>", grammatical rather than exact-match; the description names what is actually inside this file, in 1–2 sentences. Verify the download URL returns 200 before saving; if nothing resolves, keep the box and record the missing asset under "Skipped". Markup and the URL pattern are in §3.
+- **Key takeaways** — sits directly below the intro, except on a template article where it sits directly below the download box instead. On a non-listicle, every takeaway is a full sentence in sentence case (capitalize only the first word and genuine proper nouns). On a **listicle** it is the ranked provider list in the `#. [Provider] — reason` form above. The block form, the mandatory `"title":"Key takeaways"` attribute, the casing rule and the listicle form are in §2 and §2a.
+- **Download box** (template articles) — sits directly below the intro, before Key takeaways. The H2 reads "Download your free <template name>", grammatical rather than exact-match; the description names what is actually inside this file, in 1–2 sentences. Verify the download URL returns 200 before saving; if nothing resolves, keep the box and record the missing asset under "Skipped". Markup, the URL pattern, and the order are in §3.
 - **Pabau section** — 2–4 paragraphs on the actual workflow: what the practice does today, what Pabau does instead, the outcome. Topic-specific H2, never "Why choose Pabau". If a Pabau section already exists elsewhere in the body, move or rework it into this slot rather than writing a second one. Placement, heading rules, and the CTA block are in §4–§5.
 - **Conclusion** — it must genuinely conclude, not summarize: no restating the Key takeaways, no listing what the article covered. Land the judgment the article earned — what the reader should do now, what changes if they do, the trade-off worth remembering — in 2–4 short paragraphs, ending with the inline CTA link. Heading rule and CTA markup are in §6.
 - **Continue your research** — which articles it links to is governed by `3-links.md`; markup and the 5-item ceiling are in §7.

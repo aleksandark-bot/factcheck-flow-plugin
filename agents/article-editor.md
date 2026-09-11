@@ -91,9 +91,11 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    markup for every block (reference article: https://pabau.com/templates/accutite/, post
    151170; fetch it with `context=edit` if you want to see the real thing). Then enforce all
    twelve guarantees below, in order, against the block markup you hold: original visual →
-   featured image (blog) → Key takeaways → download box (templates) → Pabau section + CTA
-   block → Conclusion → Continue your research → FAQ → provider cards (listicles) →
-   listicle pricing → image captions → video placement.
+   featured image (blog) → Key takeaways (D1) → download box (D2, templates) → Pabau section
+   + CTA block → Conclusion → Continue your research → FAQ → provider cards (listicles) →
+   listicle pricing → image captions → video placement. The checks run in this order, but on a
+   template article the **final document position** is download box, then Key takeaways
+   directly below it — D1 and D2 both enforce that positioning regardless of check order.
 
    D0 runs FIRST inside this pass, so the visual it adds is then covered by D9's caption and
    spacer audit like any other image. D0b is the one step that touches no block markup at
@@ -171,11 +173,13 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
      markup (the block renders its own header).
    - **Still absent** → add it. Pass B should already have written the section, since it is
      a required one; if it somehow didn't, write it here.
-   - **Position (check every time).** The block belongs **directly below the intro**, not
-     above it — that changed, and most live articles still carry the old order. Move the
-     block down past every intro paragraph, and leave nothing in the seam between the last
-     intro paragraph and the block: no image, no spacer, no embed, no comparison table. On a
-     template article the download box follows the block (D2).
+   - **Position (check every time).** On a non-template article the block belongs **directly
+     below the intro**, not above it — that changed, and most live articles still carry the
+     old order. Move the block down past every intro paragraph, and leave nothing in the seam
+     between the last intro paragraph and the block: no image, no spacer, no embed, no
+     comparison table. **On a template article, the block belongs directly below the download
+     box instead (D2)** — the download box sits in the intro/Key-takeaways seam, not Key
+     takeaways.
    - **Listicle → the items ARE the ranked provider list** (§2a): one entry per provider
      reviewed, in the body's order, each written `#. [Provider] — Short reason why they're on
      the list.` with the number and period inside the item text. Pass B should have written
@@ -185,8 +189,9 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
 
    **D2 — Download box (TEMPLATE ARTICLES ONLY).** Contract: §3. A template article is one
    with a `/templates/` URL, or one whose job is to hand the reader a downloadable
-   form/chart/worksheet. Ensure the box sits directly below the Key takeaways block, which
-   itself now follows the intro. The wrapper is fixed and copied byte-for-byte from §3; the H2 text, the
+   form/chart/worksheet. Ensure the box sits directly below the intro, **before** the Key
+   takeaways block (D1) — Key takeaways now follows the download box, not the other way
+   round. The wrapper is fixed and copied byte-for-byte from §3; the H2 text, the
    description, and the `href` are written fresh for THIS article — never carry AccuTite's
    (or any other post's) heading, description, or PDF URL across. Verify the download URL
    before saving:
