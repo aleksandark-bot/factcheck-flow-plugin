@@ -57,13 +57,13 @@ Vague benefit statements lose readers. Paint a picture instead.
 
 Don't write: *"Pabau boosts operational efficiency."* What does that even mean? Drop it down a level. For our customers, *operational efficiency* might mean:
 
-* Your team doesn't have to call clients to confirm appointments  
+* Your team doesn't have to call patients to confirm appointments  
 * You don't have to manually send pre- and aftercare instructions  
-* You can finish work on time instead of replying to client DMs at 9pm
+* You can finish work on time instead of replying to patient DMs at 9pm
 
 A handy framework (borrowed from SaaS marketer Jess Cook) is *"so you can…"*:
 
-* *Swap paper for digital client records so you can work from anywhere.*  
+* *Swap paper for digital patient records so you can work from anywhere.*  
 * *Use an online booking tool so you can save your team hours each week.*
 
 **Swap this:**
@@ -78,11 +78,11 @@ Our online booking platform helps med spa owners reduce no-shows through customi
 
 Don't assume readers will work out the benefit of a feature for themselves. They won't. They'll skim, and if the value isn't right there in the words, they'll keep skimming.
 
-Take the client portal. Vague claims like *"boosts operational efficiency"* or *"streamlines your workflow"* don't paint a picture — readers can't see themselves in them. Spell out what it actually does in someone's day. What can they stop doing manually? What headache disappears once it's set up?
+Take the Client Portal. Vague claims like *"boosts operational efficiency"* or *"streamlines your workflow"* don't paint a picture — readers can't see themselves in them. Spell out what it actually does in someone's day. What can they stop doing manually? What headache disappears once it's set up?
 
 Don't bury the benefit, don't imply it, don't leave it for the reader to join the dots.
 
-❌ *"The client portal boosts operational efficiency."* ✅ *"With the client portal, clients can rebook, reschedule, or cancel themselves — so your front desk isn't fielding 30 calls a day about appointment changes."*
+❌ *"The Client Portal boosts operational efficiency."* ✅ *"With the Client Portal, patients can rebook, reschedule, or cancel themselves — so your front desk isn't fielding 30 calls a day about appointment changes."*
 
 ### **Be human**
 
@@ -90,8 +90,8 @@ Our customers care about outcomes, not technology. They want:
 
 * More time for the parts of the job they love  
 * A clear head at the end of the day  
-* To finish on time, not message clients after hours  
-* Happy clients and an easier life
+* To finish on time, not message patients after hours  
+* Happy patients and an easier life
 
 Lead with the emotional hook — what the technology unlocks for someone's day. Not the technology itself.
 
@@ -105,7 +105,7 @@ So lead with what the technology unlocks — the time saved, the headache avoide
 
 Pabau does a lot. But if you list everything in one go, readers will tune out. Pick three or four benefits that are most relevant to the topic you're writing about — that's the sweet spot.
 
-For example, if you're writing about the client portal, you don't need to mention every single thing the portal does. Focus on the specific pain point you're addressing.
+For example, if you're writing about the Client Portal, you don't need to mention every single thing the portal does. Focus on the specific pain point you're addressing.
 
 **Swap this:**
 
@@ -199,6 +199,32 @@ This applies to Knowledge Base content too — customers often arrive directly f
 
 ## **Words we use**
 
+### **Patient, not client**
+
+Nine times out of ten, the people our readers treat are **patients**. That is the default in
+every route, every geo, and every article — it is a terminology choice, not a US/UK split, so
+it holds on UK-specific articles too.
+
+Rewrite on sight: *client* → *patient*, *clients* → *patients*, *clientele* / *client base* →
+*patient base*, *client record* / *client file* → *patient record* / *patient file*, *client
+communication* → *patient communication*, *client experience* → *patient experience*.
+
+**The four exceptions — and only these four:**
+
+1. **Pabau's own feature names stay exactly as they are.** The **Client Portal**, the **client
+   card**, **Client records**. These are what a customer sees in the product and on
+   pabau.com, so renaming them in an article leaves the reader hunting for a menu item that
+   doesn't exist. Rename the people around the feature, never the feature itself.
+   ❌ *"The patient portal lets clients rebook."* ✅ *"The Client Portal lets patients rebook."*
+2. **A direct quote or a cited source keeps its own wording.** Don't edit inside quote marks.
+3. **A competitor's or third party's product name keeps its wording** — their "client manager"
+   is called that whatever we'd call it.
+4. **Genuinely non-clinical businesses and B2B relationships have clients.** A salon, a barber,
+   a nail bar, an agency and its accounts. Don't call a hairdresser's customers patients.
+
+When a sentence genuinely covers both — a med spa doing injectables and facials — *patient* is
+still the call. Use *client* only where the business does no treating at all.
+
 ### **American English by default**
 
 We've moved from a UK-focused brand to a global one, so we lean toward American English. Most of our blog briefs are built from US keyword research.
@@ -231,7 +257,6 @@ We work globally, so reference both terms when there's a meaningful split — fo
 | Consent form | Release form / intake form |
 | Medical director | Clinic director / Lead doctor |
 | EMR | EHR |
-| Client record | Patient record |
 | GMC number | NPA number |
 | Payment / Invoicing | Billing |
 | Stock | Inventory |

@@ -60,8 +60,8 @@ The wins our customers care about aren't really about software. They want:
 
 * **More time treating patients**, less time on admin  
 * **A smoother day** — not chasing missing info or fielding *"have I been booked in?"* calls  
-* **Happy clients** who come back and refer their friends  
-* **Finishing on time** — not replying to client messages at 9pm  
+* **Happy patients** who come back and refer their friends  
+* **Finishing on time** — not replying to patient messages at 9pm  
 * **Confidence in the system** — patient data safe, compliance handled, nothing falling through the cracks  
 * **Room to scale without complexity** — growth without the tech becoming a bottleneck
 
@@ -72,7 +72,7 @@ Knowing the fears matters too, because empathetic content speaks to these direct
 * **Picking the wrong system** and being stuck with something that doesn't fit how they actually run their business  
 * **A nightmare setup** — losing weeks to migration, training, or workarounds  
 * **Compliance risk** — patient data, GDPR, HIPAA, CQC, and the cost of getting any of it wrong  
-* **Tech failures damaging the client experience** — a clinic running on technology lives or dies by it working  
+* **Tech failures damaging the patient experience** — a clinic running on technology lives or dies by it working  
 * **Hidden costs** — promises that turn out to need add-ons or pricier tiers to actually deliver
 
 **For your writing:** the lens for everything you write is that our customers want the *outcomes* Pabau delivers, not the software itself.
@@ -102,12 +102,12 @@ A practitioner coming to Pabau might be running on a near-full patchwork of free
 Every clinic's setup is different. Here's a flavour of what practitioners might be doing before they come to Pabau:
 
 * **Patient records** — anything from a dedicated EMR through to Excel, Google Sheets, or paper folders.  
-* **Consent forms** — PDFs from template sites, printed, signed, scanned, and manually uploaded to a client file; or a separate digital forms tool (like JotForm) that handles signing but doesn't connect to client records.  
+* **Consent forms** — PDFs from template sites, printed, signed, scanned, and manually uploaded to a patient file; or a separate digital forms tool (like JotForm) that handles signing but doesn't connect to patient records.  
 * **Treatment notes** — handwritten on paper, typed into Word, or simply not recorded at all.  
 * **Appointments** — a generic tool like Calendly that wasn't built for clinical workflows, or bookings flying in across phone calls, emails, and Instagram DMs all at once.  
 * **Before-and-after photos** — the practitioner's personal phone, with everything sitting on the camera roll. Plenty of compliance risk there.  
-* **Client communication** — WhatsApp, personal text messages, or Instagram DMs, with no record kept against the client file.  
-* **Email marketing** — Mailchimp or similar, with no connection to client records or treatment history.  
+* **Patient communication** — WhatsApp, personal text messages, or Instagram DMs, with no record kept against the patient file.  
+* **Email marketing** — Mailchimp or similar, with no connection to patient records or treatment history.  
 * **Reminders** — the front-of-house team phoning every booking the morning of, or someone hand-typing reminder texts one at a time.  
 * **Pre- and aftercare** — emails typed out fresh after each appointment, or printed handouts.  
 * **Inventory** — a spreadsheet, or no system at all.  
@@ -164,7 +164,7 @@ There are upsides (visibility, frictionless booking), but real trade-offs too:
 
 **For your writing:** if you're comparing Pabau to a free or marketplace tool, the angle isn't *"we cost more, they cost nothing."* It's *"free isn't free once you run the numbers"* — and Pabau's flat subscription means customers can grow their bookings without paying more for the privilege.
 
-The marketplace risk is also worth surfacing: customers usually want full control over their brand and client relationships, not to be one listing among many.
+The marketplace risk is also worth surfacing: customers usually want full control over their brand and patient relationships, not to be one listing among many.
 
 ### **Cheaper subscription tools**
 
@@ -209,8 +209,8 @@ One important bit of caution: when you name specific customers in content, alway
 The core Pabau platform is where most of the functionality lives. It covers what a clinic needs to run day-to-day:
 
 * **Calendar and scheduling** — appointments across the team  
-* **Online booking** — clients booking themselves in  
-* **Client records** — full patient files with treatment history  
+* **Online booking** — patients booking themselves in  
+* **Client records** — full patient files with treatment history (the feature name keeps its wording; the people in it are patients)  
 * **Digital forms and consent** — medical questionnaires, intake, treatment-specific forms  
 * **Before-and-after photos** — captured and tied to records  
 * **Treatment notes**   
@@ -250,9 +250,9 @@ One feature worth knowing about specifically: within **Pabau GO** (our iOS app f
 
 Patients are guided to complete medical forms, sign consents, and get before-photo prompts ahead of their visit. For the practitioner, this shows up in the app as a checklist of pre-appointment steps.
 
-Everything the patient completes flows into their client record automatically.
+Everything the patient completes flows into their patient record automatically.
 
-It's a strong story in content about cutting admin and improving the client experience — what could be a back-and-forth on email or paper becomes a self-service journey the patient completes when it suits them.
+It's a strong story in content about cutting admin and improving the patient experience — what could be a back-and-forth on email or paper becomes a self-service journey the patient completes when it suits them.
 
 ---
 
@@ -364,7 +364,7 @@ Customers move through three stages once they sign up. Each stage has a differen
 
 ### **1\. Onboarding — data migration**
 
-When a new customer signs up, the first job is getting their existing data into Pabau — client records, appointment history, inventory, and so on.
+When a new customer signs up, the first job is getting their existing data into Pabau — patient records, appointment history, inventory, and so on.
 
 This is handled by the onboarding team and is largely a technical exercise: making sure nothing gets lost in the move.
 
@@ -381,7 +381,7 @@ New Pabau customers get a documented portal *and* a dedicated person looking out
 
 Once the data is in, customers move to Customer Success for **account optimization.**
 
-This is where the core features get set up properly: booking rules, client communications, forms, payment flows, and the various other moving parts that make Pabau work for a specific clinic.
+This is where the core features get set up properly: booking rules, patient communications, forms, payment flows, and the various other moving parts that make Pabau work for a specific clinic.
 
 This stage matters more than people realize.
 

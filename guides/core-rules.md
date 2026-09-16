@@ -85,6 +85,16 @@ These hold in every edit, with no exceptions.
 
 - **US English.** "Practice", not "clinic", in most cases. Convert UK medical terms. On a
   UK-specific article keep UK legislation and bodies, but still prefer "practice".
+- **"Patient", not "client" — nine times out of ten.** The people a practice treats are
+  patients: rewrite "client", "clients", "clientele", "client base", "client record",
+  "client file", and "client experience" to the patient form. This is a terminology
+  default, not a US/UK split, so it holds on UK articles too. Four exceptions, and only
+  these four: **Pabau's own feature names stay verbatim** — the Client Portal, the client
+  card, Client records — where you rename the people around the feature but never the
+  feature ("Through the Client Portal, patients rebook themselves"); a **direct quote or
+  cited source** keeps its own wording; a **competitor's product name** keeps its wording;
+  and a **genuinely non-clinical business or B2B relationship** has clients, not patients
+  (a salon, a barber, an agency and its accounts). Full rule in `Pabau-style-guide.md`.
 - **25 words per sentence, hard ceiling — measured, not eyeballed.** Never over 30. The
   26–30 band is a per-sentence exception you must justify, not a second budget. Applies to
   every piece of prose: intro, body, Key takeaways items, captions, FAQ answers, meta

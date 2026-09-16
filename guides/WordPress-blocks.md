@@ -407,7 +407,7 @@ the dataset, so use form (b) instead.
 ```
 
 Columns: `Plan` and `Price` are mandatory; add up to two more axes that actually decide the
-purchase (users, patient/client limits, key inclusions). Keep the columns consistent across
+purchase (users, patient limits, key inclusions). Keep the columns consistent across
 every provider in the same listicle. Heading level matches the article's provider-review
 hierarchy (H3 under H2 provider headings, H4 under H3s).
 
@@ -429,7 +429,7 @@ ships with the plugin, so **no per-article `<style>` block is needed** (and none
 added). Real example, live on post 163682:
 
 ```
-<!-- wp:pabau/provider-card {"rating":"4.5","bottomLine":"Pabau Scribe writes the note into the client record that already holds the appointment.","who":"Med spas and aesthetics clinics\nDermatology, physical therapy and wellness practices\nMulti-location groups standardizing documentation\nOwners who want HIPAA and GDPR in one platform","price":"From $62/month","siteUrl":"https://pabau.com/pricing/","siteText":"pabau.com/pricing","works":"Notes land in the client record, with no export step\nTuned for aesthetics, wellness and allied health\nEvery subscription includes every feature","doesnt":"Not an add-on for Epic or Oracle Health\nNo standalone scribe plan, you adopt the platform","topPick":true,"pickLabel":"Top pick","priceNote":"one user, full platform"} /-->
+<!-- wp:pabau/provider-card {"rating":"4.5","bottomLine":"Pabau Scribe writes the note into the patient record that already holds the appointment.","who":"Med spas and aesthetics clinics\nDermatology, physical therapy and wellness practices\nMulti-location groups standardizing documentation\nOwners who want HIPAA and GDPR in one platform","price":"From $62/month","siteUrl":"https://pabau.com/pricing/","siteText":"pabau.com/pricing","works":"Notes land in the patient record, with no export step\nTuned for aesthetics, wellness and allied health\nEvery subscription includes every feature","doesnt":"Not an add-on for Epic or Oracle Health\nNo standalone scribe plan, you adopt the platform","topPick":true,"pickLabel":"Top pick","priceNote":"one user, full platform"} /-->
 ```
 
 Attributes (all strings unless noted):

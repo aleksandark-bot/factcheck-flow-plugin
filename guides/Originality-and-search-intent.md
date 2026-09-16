@@ -304,8 +304,9 @@ Grow and Convert's method for breaking a broad topic down:
    into 9.
 
 Pabau parallel: "clinic marketing" is an entire blog, not a post. Break it into the real
-sub-questions — "how to get more aesthetic clients from Instagram," "reactivating lapsed patients
-by SMS," "setting up a membership plan that retains clients" — and write each specifically.
+sub-questions — "how to get more aesthetic patients from Instagram," "reactivating lapsed
+patients by SMS," "setting up a membership plan that retains patients" — and write each
+specifically.
 
 **Caveat — the SERP decides breadth.** Some head keywords legitimately want a broad, organized
 overview (Section 1's depth signal). When the SERP rewards breadth, provide breadth — but make
@@ -354,7 +355,7 @@ already runs a clinic. Do they think *"Wow, no one has ever given me this advice
 shit, thanks"* and bounce? Expert content **skips the basics** because the author knows the
 reader already knows them.
 
-> **Mirage:** "To reduce no-shows, make sure clients know their appointment time and send them a
+> **Mirage:** "To reduce no-shows, make sure patients know their appointment time and send them a
 > reminder." (Every clinic owner already does this. No shit.)
 
 > **Passes:** "Reminders alone plateau around a 10–15% no-show rate. The clinics that get below
@@ -396,7 +397,7 @@ copied into any competitor's article on the topic, it's too generic — cut or s
 > of what was injected, before-and-after photos, and the practitioner's notes — tied to one
 > patient timeline. On paper that means four places to check before a follow-up; digitally it's
 > one screen the practitioner opens mid-appointment. The compliance win is real, but the daily
-> win is not hunting through a filing cabinet between clients."
+> win is not hunting through a filing cabinet between patients."
 
 ---
 
@@ -417,7 +418,7 @@ Take the keyword **"how to reduce no-shows in a clinic."**
    top (snippet play). H2s = the sequence steps, in order. An FAQ for the PAA questions. Our
    nugget lives across the step sections (the copy, the workflow, the number).
 4. **Write each section (Sections 3–4 of this guide).** Concrete detail per step; real message
-   copy; run each through the mirage battery — cut "make sure clients know their time"; keep the
+   copy; run each through the mirage battery — cut "make sure patients know their time"; keep the
    deposit mechanics and the reschedule-link workflow. Introduce Pabau once, outcome-led, where
    the automated sequence is shown. No fabricated stats.
 5. **Checklist (Section 6).** Confirm intent, name the nugget in one sentence, intro passes the
