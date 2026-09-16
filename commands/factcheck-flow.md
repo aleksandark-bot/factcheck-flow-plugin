@@ -31,7 +31,10 @@ The two buckets are the reporter's own split, and they map straight onto what yo
 - **`AUTO`** — one line per finding, already in the shape
   `<type> | <location> | <what is wrong> → <the fix>`. These are applied without asking.
   Do NOT expand, re-derive, or re-verify them; pass each line through to Stage 3 verbatim,
-  tagged with its article.
+  tagged with its article. One `AUTO` type is a signal rather than a fix: a `code-state` line
+  (it carries `CODE_PAGE_HALF_MIGRATED`) names a page the flow deliberately leaves alone. Pass
+  it through verbatim like the rest, and note its article for the once-per-run list in the
+  final report.
 - **`ASK`** — the long seven-field form, and the only findings Stage 2 looks at.
 
 Articles that returned `CORRECT: No fix needed` contribute zero findings but still go
@@ -180,7 +183,10 @@ reports the checker's final summary line verbatim; an article whose change-log h
 
 Once all Stage 3 subagents return, compile a single consolidated summary for the user.
 Each editor returns a compact change-log; relay it, don't re-derive it. Per article:
-fact-check fixes applied, editorial highlights, link changes, the visual that was built
+fact-check fixes applied, editorial highlights, link changes, a `Code page:` line (one of the
+four states — templated, broken (with the `pdc_*` fields that were filled), half-migrated, or old
+shape — plus any `pdc_*` values corrected; "not a code page" where it isn't one; the
+half-migrated articles themselves go in the once-per-run block below, not per article), the visual that was built
 (route, what it shows, media id or `pv-viz` class), whether a featured image was built,
 already there, or not applicable, the one-line block-contract status the
 editor reported for each of the other guarantees, the sentence gate's summary line
@@ -189,7 +195,11 @@ any article whose grave error was flagged but dropped after independent verifica
 any article that hit the two-rewrite ceiling and needs manual attention. Collect the
 link-pass findings that are about OTHER pages and list them once for the user rather than per
 article: merge candidates from close-variant pairs, BOFU articles that need inbound boosts,
-`NO_BOFU_IN_CLUSTER` clusters, and any `BLOCKED_PILLAR` or `BLOCKED_ELEMENTOR` article. End with
+`NO_BOFU_IN_CLUSTER` clusters, and any `BLOCKED_PILLAR` or `BLOCKED_ELEMENTOR` article. List
+every `CODE_PAGE_HALF_MIGRATED` article in that same once-per-run block — sourced from a
+Stage 1 `code-state` line, an editor's `Code page:` line, or both, listed once each rather than
+per article: the flow deliberately leaves those alone — they need David's migration process,
+not an edit. End with
 the reminder to purge the WP Rocket cache for each edited URL, plus — once for the whole run,
 not per article — refreshing the link atlas (`cd ~/Desktop/linkmap && ./refresh.sh`) so the next
 run's inbound counts include what this one changed.

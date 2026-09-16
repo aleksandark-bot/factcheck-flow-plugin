@@ -101,6 +101,10 @@ for this query — not material to reproduce. Match their coverage; never their 
    H1 and of the SERP title. A reader who has to scroll to find out whether this page answers
    their question goes back to the SERP, and on a page with no ranking history that bounce is
    what kills it before it gets a fair test.
+   **Carve-out — a code page has no body intro.** On a code article (Step 1a), on EITHER code
+   route, the answer-first sentence is `pdc_definition`, the template-rendered Code
+   Definition, and the body opens on Key takeaways. Apply this rule to `pdc_definition` there,
+   not to the body. `/blog/` and `/templates/` keep a body intro and this rule as written.
 2. **Capsules, at roughly two-thirds.** Every `[CAPSULE]` node in the brief opens with the
    one-line answer the brief gives you, written to spec:
    - 20-25 words. Up to 50 only if it is still tightly answering the question.
@@ -176,7 +180,8 @@ Hard rules:
   listicle pricing segments (§9) and provider cards (§9a), and image captions + spacers (§10).
   **Copy the markup from that file — never reconstruct it from memory or from a summary.** The
   Conclusion heading is the word `Conclusion` and nothing else; it concludes rather than
-  summarizes.
+  summarizes. **§13 overrides §1's document order on a CODE article, on either code route** — no body
+  intro, Key takeaways first. `/blog/` and `/templates/` keep §1 as written.
 - **NO VIDEO.** Never add a YouTube embed to a new article. §11 governs where an existing one
   sits; this article has none and gets none.
 - **TEMPLATE ARTICLES** — the download box is required and it has its own H2. If the brief names
@@ -184,7 +189,10 @@ Hard rules:
   template's content anyway and record `Skipped: download box — no template file supplied` so a
   human can attach it. Never link a download that 404s.
 - **CODE ARTICLES** — the code facts come from the authority file. The link budget is 3 in-body
-  links, all inside billing: the pillar, one subhub, at most one next step.
+  links, all inside billing: the pillar, one subhub, at most one next step. A code page also
+  carries a template-rendered top area built from `pdc_*` post meta, and the body shape is the
+  SAME on both code routes — **Step 1a below governs it, and on it the body has no intro at
+  all.**
 - **LISTICLE PRICING (§9)** — every figure comes from the PROVIDER'S OWN WEBSITE; never
   Capterra, G2, GetApp, Software Advice, Trustpilot or another blog, and pabau.com only for
   Pabau. No published prices → "Contact sales / no published pricing" plus a sentence saying so.
@@ -221,6 +229,118 @@ names the feature and says how it helps the reader do what this article is about
 required, descriptive and separate from the caption. One purposeful image beats three
 decorative ones.
 
+## Step 1a — code pages: the `pdc_*` meta and the top area
+
+CODE ARTICLES ONLY. Skip this entirely on `/blog/` and `/templates/` — their instructions are
+unchanged.
+
+**Read `WordPress-blocks.md` §13 before you write a line of this.** It holds the field table,
+the rendered order and the body contract; do not work from this summary alone and do not
+reconstruct the field names from memory.
+
+On a code page the whole area between the H1 and the first H2 — badge, H1, flag line, Code
+Definition, Related Information card, the Pabau CTA panel and the trust card — is rendered by a
+WordPress page template out of post meta. None of it lives in `post_content`. Two consequences
+you must hold on to:
+
+- The template's CTA panel and trust card are **fixed boilerplate**. Write no copy for them,
+  never copy them into the body, and **never count them toward the body's own Pabau section or
+  `book-demo` CTA** — the body still needs both of its own.
+- The tail is unchanged on both routes: Pabau section + `book-demo` CTA → `Conclusion` →
+  Continue your research → FAQ.
+
+### Write the `pdc_*` fields — BOTH routes
+
+There are **eight ALWAYS-REQUIRED fields, two CONDITIONAL ones and five OPTIONAL ones**
+(`WordPress-blocks.md` §13). The brief's CODE FIELD RECORD supplies the sourced values. Write all
+eight required fields, in the create POST's `meta` object (Step 4):
+
+| Required field | Where its value comes from |
+|---|---|
+| `pdc_code_type` | the record — `ICD-10-CM Code` on `/diagnostic-codes/`, `CPT Code` or `HCPCS Code` on `/procedure-codes/` |
+| `pdc_code` | the record, dotted, exactly as the authority writes it |
+| `pdc_descriptor` | the record's OFFICIAL descriptor, verbatim, 7th-character clause included |
+| `pdc_h1_descriptor` | you write it: a short plain-language descriptor, NOT the official text |
+| `pdc_definition` | you write it — see below |
+| `pdc_chapter` | the record; a GENERIC slot — the first of the three most useful reference facts for this code system |
+| `pdc_category` | the record; the second such slot |
+| `pdc_group` | the record; the third such slot |
+
+`pdc_chapter` / `pdc_category` / `pdc_group` are **generic slots**, not literally "the chapter",
+"the category" and "the group". On an ICD-10-CM code they carry exactly that, but on an HCPCS
+code they carry whatever the three most useful reference facts are — the live J8650 page carries
+`Level II`, `J — Drugs administered other than oral method` and
+`Deleted, effective 31 December 2025`. Write the right three facts for the code system, then
+label them with `pdc_label_1/2/3` if the default labels would be wrong.
+
+Two fields are **CONDITIONAL**:
+
+- `pdc_billable` and `pdc_specific` — required, `yes` or `no`, on an **ICD-10-CM** page. **Left
+  empty** where the code system has no billable/specific distinction to report; the live HCPCS
+  page J8650 has both empty and that is correct, not a gap. Empty values hide the "Billable Code
+  • Specific Code" flag line under the H1 **and** the "Billable" row in Related Information.
+  **Never write `yes`/`no` into them just to make the page look complete.** If the authority does
+  not state a billable/specific status for that code system, they stay empty.
+
+The remaining five fields are **OPTIONAL. Never fill any of them to satisfy a completeness
+check** — an empty optional field is not a gap:
+
+- `pdc_h1_prefix` — **always left empty**, on every route. The template supplies the H1 prefix
+  ("ICD code", "HCPCS code"). Do not send it, do not invent a prefix, and do not treat its
+  emptiness as a missing field.
+- `pdc_also_known` — send it **only** where the CODE FIELD RECORD names a genuine synonym the
+  authority itself gives for this code. Empty is the normal, correct state and the Related
+  Information row hides when it is empty. A record line reading `NOT STATED` for the synonym
+  means **leave `pdc_also_known` empty** — it is not a gap, it needs no `Skipped` entry, and it
+  is never filled with a guess or a paraphrase of the descriptor.
+- `pdc_label_1`, `pdc_label_2`, `pdc_label_3` — they RELABEL the three Related Information rows
+  that `pdc_chapter`, `pdc_category` and `pdc_group` fill, in that order (1 → chapter,
+  2 → category, 3 → group). **Empty means "use the template's default label for this code
+  type"**, and the defaults are already right for the common cases: an ICD-10-CM page with all
+  three empty renders Chapter / Category / Group, and the HCPCS page renders **Level** for row 1
+  with `pdc_label_1` empty. Set one **only** to override a default that would be wrong for this
+  code — J8650 sets `pdc_label_3` to `Status` because its `pdc_group` carries a deletion status
+  rather than a code group. Never set one to the value the default would produce anyway.
+
+A `NOT STATED` line against any of the **eight required** fields is reported under `Skipped`,
+never filled with a guess: these strings render on the live page and are invisible in the
+WordPress editor. A `NOT STATED` against a conditional or optional field is not a gap at all.
+
+### The Code Definition (`pdc_definition`)
+
+Plain text. **No HTML, no links.** One or two paragraphs separated by `\n\n`, roughly 40-110
+words. The live formula, which you follow:
+
+> `<CODE> is the billable ICD-10-CM code for <official descriptor>.` — then one or two sentences
+> of scope, then (often) a second paragraph on where the code sits and what assignment turns on.
+
+Its first sentence carries the main keyword; the whole thing answers the query completely on its
+own. It is prose, so every editorial rule applies to it — US English, the AI tells, the 25/30-word
+ceiling, no hedging preamble setting up stakes.
+
+### BOTH code routes — the full new shape (state 1, **Templated**)
+
+`/diagnostic-codes/` and `/procedure-codes/` get IDENTICAL treatment. There is exactly **one**
+code template and it is named `template-diagnostic-code.php`; the name is awkward on a procedure
+page, but it is correct and it serves ICD, CPT and HCPCS pages alike. There is no separate
+procedure-code template, and none is coming — do not go looking for one.
+
+- Set `"template": "template-diagnostic-code.php"` in the create POST, on **either** code route.
+  It is a registered template, so this will **not** 400. **This create POST is the
+  one write in the whole factcheck-flow that sets `template`**, and it is required here. The
+  guides' rule is "never send `template` **on an edit**" — it governs `/fact` and `/SEO`, which
+  edit existing posts, and it does not apply to this create. Do not read `core-rules.md`,
+  `WordPress-blocks.md` §13 or the `wordpress-access` skill as forbidding it: omitting `template`
+  here ships a code page whose whole top area never renders.
+- **The body carries no intro.** `post_content` opens on the optional JSON-LD `wp:html` schema
+  block, then the Key takeaways block, then the video embed if there is one (`/generate` adds
+  none), then the first H2. Key takeaways is the FIRST content block; the "directly below the
+  intro" rule in §2 does not apply, because there is no body intro for it to sit below.
+- `pdc_definition` **is** the article's intro. Write it as such.
+- The opening H2 section ALSO carries the full main keyword and a complete answer, in more depth.
+  **That overlap with the Code Definition is by design — do not de-duplicate it, do not vary the
+  keyword to avoid it, and do not soften either one.**
+
 ## Step 2 — meta
 
 - **SEO/meta title** — read `~/.claude/factcheck-flow/guides/Meta-title-best-practices.md` now
@@ -231,7 +351,9 @@ decorative ones.
 - **Meta description** — answers the searcher's query as an excerpt, ≤140 characters, carrying
   the exact main keyword.
 - **Yoast focus keyphrase** (`_yoast_wpseo_focuskw`) — the main keyword, exactly.
-- **First sentence of the body** — the exact main keyword at or near its beginning.
+- **First sentence of the body** — the exact main keyword at or near its beginning. On a code
+  article there is no body intro, so this placement lives in
+  `pdc_definition`'s first sentence and in the opening H2 section instead.
 
 ## Step 3 — sentence gate (MANDATORY, blocks the create)
 
@@ -243,6 +365,21 @@ it.**
 # Write the body you are about to save with the Write tool, then:
 python3 ~/.claude/factcheck-flow/bin/sentence_check.py --file /tmp/gen-<run>-body.html
 ```
+
+**Any non-empty `pdc_definition` you are about to save is gated too — whatever the route.**
+`/diagnostic-codes/` and `/procedure-codes/` both get one, it is prose that ships on the live
+page, and it is not in the body file. There is no route on which a `pdc_definition` may be sent
+ungated. Write the `pdc_definition` text to its own local file — plain text, exactly as you will
+send it — and pass it alongside the body in the SAME invocation, so one run covers both units:
+
+```bash
+python3 ~/.claude/factcheck-flow/bin/sentence_check.py \
+  --file /tmp/gen-<run>-body.html --defn /tmp/gen-<run>-defn.txt
+```
+
+The definition must clear the gate before you create the post, on the same terms as the body.
+The gate is cleared only when that combined run exits 0. Rewrite it in the file you hold and
+re-run until the whole invocation exits 0.
 
 It prints one line per offending sentence — word count, where it lives, the sentence itself —
 then a summary and PASS/FAIL. Rewrite every sentence it lists **in the body you hold**, then
@@ -301,14 +438,39 @@ The payload carries, and nothing else:
   "categories": [<topic category ids>, <route category id if any>],
   "tags": [<topic tag ids>, <1382 if this is a /templates/ article>],
   "featured_media": <media id, on /blog/ always>,
+  "template": "template-diagnostic-code.php",
   "meta": { "_yoast_wpseo_focuskw": "<main keyword>",
             "_yoast_wpseo_title": "<SEO title>",
-            "_yoast_wpseo_metadesc": "<meta description>" }
+            "_yoast_wpseo_metadesc": "<meta description>",
+            "pdc_code_type": "<…>", "pdc_code": "<…>", "pdc_descriptor": "<…>",
+            "pdc_h1_descriptor": "<…>", "pdc_definition": "<…>",
+            "pdc_chapter": "<…>", "pdc_category": "<…>", "pdc_group": "<…>",
+            "pdc_billable": "<yes|no — only where the code system has the distinction>",
+            "pdc_specific": "<yes|no — same>" }
 }
 ```
 
+The `meta` object carries the **eight always-required** `pdc_*` keys, plus `pdc_billable` and
+`pdc_specific` only where the code system has a billable/specific distinction, plus any
+`pdc_label_1/2/3` override the code needs. `pdc_h1_prefix` is never sent, and `pdc_also_known` is
+sent only on a genuine authority-named synonym.
+
+`template` and the `pdc_*` keys are CODE-ARTICLE ONLY, and both code routes are treated
+identically:
+
+- **`/diagnostic-codes/` and `/procedure-codes/`** — send `template` set to
+  `template-diagnostic-code.php` AND the eight required `pdc_*` fields (Step 1a). It is a
+  registered template on either route and will not 400. This is the one create that sets
+  `template`; the "never send `template`" rule elsewhere is an edit-time rule and does not apply
+  here.
+- `/blog/` and `/templates/` — omit both. The `meta` object carries only the three Yoast keys.
+
 Do NOT discard the response here — you need the new post ID from it. Read `id`, `status` and
 `slug` and nothing else from the response.
+
+**A rejected `meta` key does not fail the request.** WordPress returns 201 with the meta write
+silently dropped, so a 2xx is not evidence the fields landed — Step 5 reads them back and
+asserts. Never assume a meta write succeeded.
 
 **THE ROUTE.** Set exactly the terms the brief names, and check them against this table before
 you send:
@@ -347,6 +509,22 @@ curl -s -u "$WP_USER:$WP_APP_PASSWORD" \
 
 Assert: `status == "draft"`, the route terms are present, category 1 is absent, and
 `featured_media` is non-zero on a `/blog/` article.
+
+**On a CODE ARTICLE, read the meta back separately and assert it, field by field:**
+
+```bash
+curl -s -u "$WP_USER:$WP_APP_PASSWORD" \
+  "$WP_BASE_URL/wp-json/wp/v2/posts/<NEW_ID>?context=edit&_fields=meta,template"
+```
+
+Each of the eight required `pdc_*` values you sent must come back EXACTLY as sent — same string,
+same whitespace, same `\n\n` breaks in `pdc_definition`. A dropped or altered field is reported,
+not assumed away. An empty `pdc_h1_prefix`, `pdc_also_known` or `pdc_label_*` in the read-back is
+correct and is never "fixed", and so is an empty `pdc_billable` / `pdc_specific` on a code system
+with no billable/specific distinction. Also assert the template, the same on either code route:
+`template == "template-diagnostic-code.php"` (state 1, Templated). If a field did not land,
+re-send just that field with `POST /wp-json/wp/v2/posts/<ID>` carrying only `meta`, read it back
+again, and if it still does not stick record it under `Skipped` with the field name.
 
 **Check the slug specifically.** WordPress does not reject a slug that is already taken — it
 silently appends `-2`, and a `-2` slug is a permanent scar on a URL nobody has published yet.
@@ -396,8 +574,16 @@ re-deriving it, and it is the ONLY thing it will know about what you wrote. Star
 - `Capsules:` N of M body sections open with a capsule (aim 60-70%), and whether the `[SNIPPET]`
   node matches the required format
 - `Entity naming:` how many pronoun-opener sentences you rewrote
+- `Code page:` code articles only — the route; the §13 state the page ships in (`Templated`, on
+  either code route); that `template` was set to `template-diagnostic-code.php`; the eight
+  required `pdc_*` fields you wrote, by name; whether `pdc_billable` / `pdc_specific` were
+  written or correctly left empty because the code system has no such distinction; whether
+  `pdc_also_known` was warranted, and any `pdc_label_1/2/3` override you set and why (and
+  "`pdc_h1_prefix` left empty by design"); and the Step 5 read-back assertion result, field by
+  field or "all eight returned as sent"
 - `Sentence gate:` the checker's final summary line, pasted verbatim, then `N rewritten`. List
-  any 26–30 word sentence you kept and why.
+  any 26–30 word sentence you kept and why. On ANY code article, say that the Code Definition was
+  gated in the same run via `--defn` and give its result too.
 - `Created:` the HTTP code, the post ID, and `status: draft` confirmed
 - `Verified:` the assertion results from step 5, and the note that block rendering is unverified
   because a draft has no public URL

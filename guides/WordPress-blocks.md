@@ -43,12 +43,37 @@ H2 Frequently asked questions
 Yoast FAQ block
 ```
 
+**Templated code pages (`/diagnostic-codes/` and `/procedure-codes/` — one template serves
+both routes) only — the whole top area is rendered by the page template out of post meta, so the
+body starts at Key takeaways:**
+
+```
+H1 + Code Definition + Related Information + Pabau CTA + trust card   ← ALL template-rendered from post meta; NOT in post_content
+Key takeaways block                 ← the FIRST block in the body; there is no intro above it
+[YouTube embed]                     ← IF the article has a video: directly beneath Key takeaways
+H2 <opening section>                ← body starts here
+H2 … body sections
+H2 <Pabau-for-this-purpose section>
+H2 Conclusion
+Continue your research block
+H2 Frequently asked questions
+Yoast FAQ block
+```
+
+Detect the page and check its `pdc_*` fields per **section 13** — a code page that is *not*
+templated keeps the "Most articles" shape above, intro first.
+
 Notes on order:
 - **The intro comes first.** On a non-template article, Key takeaways sits directly below it
   with nothing in between — no image, no spacer, no video, no comparison table, no pro-tip. On
   a **template article**, the download box sits in that seam instead, and Key takeaways follows
   the download box. The reader gets the answer in prose, then (on a template) the download,
   then the summary.
+- **On a templated code page the intro is not in the body at all.** It lives in the
+  `pdc_definition` meta field, which the template renders as *Code Definition* above the
+  body, so Key takeaways is the first block in `post_content` and the intro/takeaways seam
+  rule has nothing to govern. Never write a body intro on such a page. Detection, the field
+  contract, and the four page states are in section 13.
 - **The intro must answer the keyword's main query completely**, and the main keyword must
   appear in the article's **first sentence** — the rules for both are in `core-rules.md`
   ("Answer-first"); the listicle takeaway form is section 2a below.
@@ -90,6 +115,10 @@ nothing in between. **On a template article, Key takeaways sits directly below t
 box instead** (section 3), so the seam after the intro belongs to the download box, not to Key
 takeaways. An article whose Key takeaways sits above the intro, or above the download box on a
 template article, gets the block moved down.
+
+**On a templated code page Key takeaways is the first body element** — what it used to be
+everywhere — because the intro sits in the `pdc_definition` meta field and not in
+`post_content` (section 13). Leave it at the top and never write an intro above it.
 
 - Self-closing (`/-->`), one `items` entry per takeaway, JSON must be valid (escape `"`).
 - 4–5 takeaways is the norm; each is a full sentence in **sentence case** (capitalize only
@@ -503,22 +532,31 @@ only correct the dimensions if they differ from 800 × 35.
 Most articles already carry a `wp:embed` YouTube block, and roughly half of them have it in
 the wrong place. The video is optional; its **placement is not**.
 
-**The one legal slot: the last block before the first body heading** — after the intro and
-after everything required in the opening run ahead of it (Key takeaways, and on a template
-article the download box that now precedes Key takeaways). Two article shapes, one rule:
+**The one legal slot: the last block before the first body heading** — after everything the
+opening run puts ahead of it: the intro wherever the body has one, the download box on a
+template article, and the Key takeaways block always. Three article shapes, one rule:
 
 ```
-Intro paragraph                     H2 <opening section>      ← code articles start on an H2
-Intro paragraph                     Paragraph
-Intro paragraph                     Paragraph
-Key takeaways                       Paragraph
-YouTube embed          ←            Key takeaways
-H2 <first body section>             YouTube embed          ←
-                                    H2 <next section>
+Most articles             Old-shape code article    Templated code page (§13)
+──────────────────────    ──────────────────────    ─────────────────────────
+Intro paragraph           H2 <opening section>      Key takeaways
+Intro paragraph           Paragraph                 YouTube embed         ←
+Intro paragraph           Paragraph                 H2 <opening section>
+Key takeaways             Paragraph                 Paragraph
+YouTube embed        ←    Key takeaways
+H2 <first body section>   YouTube embed        ←
+                          H2 <next section>
 ```
 
-Either way the reader finishes the intro and the takeaways, then meets the player, then moves
-on to the next heading. Nothing else goes between the embed and that heading.
+The middle column is the **old, non-templated** code-article shape: the article opens on an
+H2, the prose runs under it, and Key takeaways follows that prose. It still applies to every
+code page that is not templated. On a **templated** code page (section 13) there is no body
+intro: Key takeaways is the first block, the embed sits directly beneath it, and the first
+body H2 follows the embed.
+
+In every shape the reader finishes the opening run — the intro where there is one, then the
+takeaways — meets the player, then moves on to the next heading. Nothing else goes between
+the embed and that heading.
 
 **A video must never break up a run of prose.** An embed between two paragraphs splits an
 argument in half: the reader hits a player mid-thought, and the paragraph after it reads like
@@ -529,8 +567,10 @@ which get fixed by moving the block:
   Move the embed down past every remaining intro paragraph.
 - **Mid body section** — the embed sits between two paragraphs under a later H2. Move it up to
   the end of the opening run.
-- **Between the intro and Key takeaways** — nothing may sit in that seam (section 1). Move the
-  embed below the Key takeaways block.
+- **Between the intro and Key takeaways** — on an article that has a body intro, the only thing
+  allowed in that seam is a template article's download box (section 1), so an embed there is a
+  misplacement. Move it below the Key takeaways block. A templated code page has no body intro
+  and therefore no such seam (section 13).
 - **Above the intro** (including the old layout's slot between Key takeaways and the intro) —
   the player lands before the article has said anything. Move it down past the whole intro and
   past Key takeaways.
@@ -575,10 +615,13 @@ even on articles that have one.
 
 ## 12. Quick QA checklist
 
-- [ ] Intro is the first body element, its FIRST sentence carries the main keyword, and it answers the keyword's main query completely (a listicle names the top pick; an informational article defines the subject in paragraph one)
-- [ ] Key takeaways block sits directly below the intro with nothing in the seam (or, on a template article, directly below the download box), `"title":"Key takeaways"` set, items in sentence case
+- [ ] Intro is the first body element (except a templated code page — section 13), its FIRST sentence carries the main keyword, and it answers the keyword's main query completely (a listicle names the top pick; an informational article defines the subject in paragraph one)
+- [ ] Key takeaways block sits directly below the intro with nothing in the seam (or, on a template article, directly below the download box; or, on a templated code page, FIRST in the body with no intro above it — section 13), `"title":"Key takeaways"` set, items in sentence case
 - [ ] Listicle: Key takeaways is the ranked provider list, `#. [Provider] — reason` per item, one item per provider reviewed, same order as the body (section 2a)
 - [ ] Template article: download box directly below the intro, built-in H2, download URL returns 200, with Key takeaways directly below the download box
+- [ ] Templated code page (section 13): no intro in the body, Key takeaways is the FIRST block, and the video — if there is one — sits directly beneath it
+- [ ] Templated code page: all EIGHT always-required `pdc_*` fields present and correct (`pdc_code_type`, `pdc_code`, `pdc_descriptor`, `pdc_h1_descriptor`, `pdc_definition`, `pdc_chapter`, `pdc_category`, `pdc_group`); the two conditional fields (`pdc_billable`, `pdc_specific`) set to `yes`/`no` on an ICD-10-CM page and left empty where the code system has no billable/specific distinction — empty is correct there, never reported as a gap, and never invented; the five optional fields (`pdc_h1_prefix`, `pdc_also_known`, `pdc_label_1`, `pdc_label_2`, `pdc_label_3`) left empty unless genuinely warranted — never filled in to satisfy a completeness check; nothing blanked or deleted; the `template` value untouched and never sent on an edit
+- [ ] Old-shape code page left on the old contract — never migrated; a page with `pdc_*` meta set but `template` empty is `CODE_PAGE_HALF_MIGRATED` (reported, not fixed) on either code route (section 13)
 - [ ] Pabau section immediately before Conclusion, topic-specific H2, contains the `book-demo` CTA block
 - [ ] H2 `Conclusion` present (exact word), concludes rather than summarizes, ends with an inline book-demo CTA link
 - [ ] Continue your research (`expert-picks`) block after the Conclusion, ≤5 real working links, no wrapper H2
@@ -587,5 +630,228 @@ even on articles that have one.
 - [ ] Listicle: a `pabau/provider-card` block directly below each provider's heading, before any prose; no logos, no per-article `<style>` block, card facts match the review
 - [ ] Every image has a `<figcaption>`: full sentence, ends in a period, wrapped in `<em>`, no stray `*`; Pabau-feature screenshots tie the feature to this article's purpose; alt text present and not duplicated into the caption
 - [ ] Every image is followed by one 800 × 35 `wp:spacer` block
-- [ ] Any YouTube embed is the LAST block before the first body heading (after the intro, the download box on a template article, and Key takeaways) — never between paragraphs, never before the intro, never in the seam before Key takeaways, never mid-section; markup unchanged, no spacer added
+- [ ] Any YouTube embed is the LAST block before the first body heading (after the intro, the download box on a template article, and Key takeaways — or, on a templated code page, directly beneath Key takeaways with no intro above it) — never between paragraphs, never before the intro, never in the seam before Key takeaways, never mid-section; markup unchanged, no spacer added
 - [ ] No duplicate headings above self-heading blocks; no placeholder items anywhere
+
+---
+
+## 13. Code pages — the template-rendered top area
+
+On a **templated code page**, the whole area between the H1 and the first H2 is rendered by
+a WordPress page template out of post meta. **None of it lives in `post_content`**, so none
+of it is visible in the WordPress editor and none of it comes back in `content.raw`. Read
+only the body and you miss page-visible, fact-checkable content.
+
+Reference articles — already verified, never fetch them again. Diagnostic:
+`https://pabau.com/diagnostic-codes/icd-10-code-s65419a/` (post `221716`), plus
+`icd-10-code-s36418d` (`221711`), `icd-10-code-s82122r` (`221757`), `icd-10-code-t24011s`
+(`221743`) and `icd-10-code-s62211b` (`221739`). Procedure:
+`https://pabau.com/procedure-codes/hcpcs-code-j8650/` (post `220410`).
+
+### What the template renders, in order
+
+1. Badge — e.g. "ICD-10-CM Code"
+2. H1 — e.g. "ICD code S65.419A — Unspecified thumb blood vessel laceration"
+3. Flag line — "Billable Code • Specific Code" (rendered only when `pdc_billable`/`pdc_specific` are set; absent on J8650)
+4. Horizontal rule
+5. **Code Definition** — a titled block of 1–2 prose paragraphs. **This is the article's intro now.**
+6. **Related Information** — a card of three labelled rows fed by `pdc_chapter` / `pdc_category` / `pdc_group` (labelled Chapter / Category / Group by default on ICD-10-CM, relabelled by `pdc_label_1-3`), a Billable row when `pdc_billable` is set, plus an optional "Code also known as" row
+7. **Automate coding with Pabau** — a dark CTA panel with an animated mock of Pabau suggesting the code, and two `/book-demo/` buttons
+8. **Why practices choose Pabau** — a four-item trust card plus a "HIPAA compliant • SOC 2 certified • GDPR-compliant • Trusted by 4,000+ clinics worldwide" line
+9. Table of contents rail
+10. …then `post_content` begins.
+
+**Items 7 and 8 are fixed template boilerplate.** No per-article copy feeds them — the CTA's
+mock screen interpolates `pdc_code` and `pdc_h1_descriptor` and nothing else. There is
+nothing in them to write, edit, fact-check, or duplicate: never write copy for them, never
+edit them, never copy them into the body, and **never count them toward the body's own Pabau
+section or CTA requirements**. The body keeps its own Pabau section and `book-demo` CTA even
+though the template already renders one above it — that is correct and intended, not a
+duplicate to remove.
+
+`post_content` on a templated code page begins:
+
+```
+[optional wp:html JSON-LD schema]
+wp:gutenberg-custom-blocks/key-takeaways      ← FIRST content block. No intro above it.
+wp:embed  (YouTube)                            ← directly beneath Key takeaways
+wp:heading (the opening H2)                    ← body starts here
+```
+
+The tail of the article is **unchanged**: body H2s → the H2 Pabau section containing the
+`book-demo` CTA (§5) → H2 `Conclusion` ending in a `/book-demo/` link (§6) → Continue your
+research (§7) → H2 Frequently asked questions → Yoast FAQ block (§8).
+
+### The `pdc_*` meta fields
+
+All are registered, readable at `context=edit`, and writable over REST.
+
+**Eight are ALWAYS REQUIRED, two are CONDITIONAL, five are OPTIONAL.** A templated page must
+carry all eight always-required fields; an empty one is a gap to fill from the article. The
+two conditional fields are required only on a code system that reports that status. The five
+optional fields are **never** "filled in" to satisfy a completeness check — empty is their
+normal, correct state.
+
+| Field | Required? | Feeds | Shape / rule |
+|---|---|---|---|
+| `pdc_code_type` | **required** | the badge | `ICD-10-CM Code`, `CPT Code`, `HCPCS Code`, … |
+| `pdc_code` | **required** | H1, CTA mock | the code itself, dotted — `S65.419A` |
+| `pdc_descriptor` | **required** | data, not rendered directly | the **official** descriptor, verbatim, including the 7th-character clause — "Laceration of blood vessel of unspecified thumb, initial encounter" |
+| `pdc_h1_descriptor` | **required** | H1 after the dash, CTA mock | a short plain-language descriptor — "Unspecified thumb blood vessel laceration". Not the official text. |
+| `pdc_h1_prefix` | *optional* | H1 before the code | **Always left empty.** Empty on every live page; the template falls back to "ICD code". Leave it alone in every state, in every command. |
+| `pdc_billable` | **conditional** | flag line + Related Information row | `yes` / `no` on an **ICD-10-CM** page, where it is required (every live diagnostic page sets `yes`). **Left empty** where the code system has no billable/specific distinction to report — the live HCPCS page J8650 has it empty, which is correct and never reported as a gap. Empty hides both the flag line under the H1 and the "Billable" row in Related Information. Never invented to make a page look complete. |
+| `pdc_specific` | **conditional** | flag line | Same rule as `pdc_billable`: `yes` / `no` and required on an **ICD-10-CM** page, left empty where the code system has no such distinction (J8650 has it empty). Empty hides the flag line. Never invented. |
+| `pdc_definition` | **required** | **Code Definition** | plain text, **no HTML and no links**, 1–2 paragraphs separated by `\n\n`, ~40–110 words on live pages |
+| `pdc_chapter` | **required** | Related Information row 1 | A generic slot, labelled by `pdc_label_1`. On ICD-10-CM: `<range> <official chapter title>` — "S00-T88 Injury, poisoning and certain other consequences of external causes". On HCPCS J8650: `Level II`. |
+| `pdc_category` | **required** | Related Information row 2 | A generic slot, labelled by `pdc_label_2`. On ICD-10-CM: `<code> <official category title>` — "S65 Injury of blood vessels at wrist and hand level". On HCPCS J8650: `J — Drugs administered other than oral method`. |
+| `pdc_group` | **required** | Related Information row 3 | A generic slot, labelled by `pdc_label_3`. On ICD-10-CM: `<code> <official group title>` — "S65.419 Laceration of blood vessel of unspecified thumb". On HCPCS J8650: `Deleted, effective 31 December 2025`. |
+| `pdc_also_known` | *optional* | optional Related Information row | Written **only** when the authority names a genuine synonym for the code. Empty is the normal, correct state, and the row is hidden when empty. Never invent one. |
+| `pdc_label_1` | *optional* | the Related Information row label for `pdc_chapter` | Empty means "use the template's default label for this code type" — that is the normal state. Set it only to override a default that would be wrong for this code. Never blank one that is already set. |
+| `pdc_label_2` | *optional* | the row label for `pdc_category` | Same rule: empty = the code-type default; set only to override a wrong default; never blanked. |
+| `pdc_label_3` | *optional* | the row label for `pdc_group` | Same rule. J8650 sets it to `Status`, because its `pdc_group` carries "Deleted, effective 31 December 2025" rather than a code group. |
+
+**No optional field is ever filled in to satisfy a completeness check.** An empty
+`pdc_h1_prefix`, `pdc_also_known` or `pdc_label_*` is not a gap and is never reported as one.
+Neither is an empty `pdc_billable`/`pdc_specific` pair on a code system that reports no such
+status — J8650 is the live example.
+
+**The three `pdc_label_*` fields relabel the Related Information rows**, in order:
+`pdc_label_1` labels the `pdc_chapter` row, `pdc_label_2` the `pdc_category` row, and
+`pdc_label_3` the `pdc_group` row. Empty means "use the template's default label for this code
+type", and those defaults are code-type-dependent and already correct for the common cases: an
+ICD-10-CM page with all three empty renders **Chapter / Category / Group**, and the HCPCS page
+renders **Level** for row 1 with `pdc_label_1` empty. Set one **only** to override a default
+that would be wrong for this code — J8650 sets `pdc_label_3` to `Status` because its
+`pdc_group` carries "Deleted, effective 31 December 2025" rather than a code group, so "Group"
+would have been wrong. Never blank a label that is already set, and never set one to the value
+the default would produce anyway.
+
+**`pdc_chapter`, `pdc_category` and `pdc_group` are generic slots**, not literally "the
+chapter", "the category" and "the group". On J8650 they carry `Level II`, `J — Drugs
+administered other than oral method`, and `Deleted, effective 31 December 2025`. They hold the
+three most useful reference facts for that code system, labelled by `pdc_label_*` accordingly.
+
+The live `pdc_definition` formula on the ICD-10-CM pages:
+
+> `<CODE> is the billable ICD-10-CM code for <official descriptor>.` — then one or two
+> sentences of scope, then (often) a second paragraph on where the code sits and what
+> assignment turns on.
+
+### Detecting a templated code page
+
+```
+renders the code top area  ==  post.template == "template-diagnostic-code.php"
+                               (states 1 and 2 below — Templated, or Broken)
+
+fully Templated            ==  post.template == "template-diagnostic-code.php"
+                               AND all eight always-required pdc_* fields are non-empty
+                               AND pdc_billable + pdc_specific set, on an ICD-10-CM page
+```
+
+The template — not the meta — decides whether the top area renders. The required fields then
+decide whether it renders complete (**Templated**) or with blanks (**Broken**). Both are
+handled under the new contract; only the gap-filling differs.
+
+`template` is not returned by WordPress by default. The wordpress-access `_fields=` list
+**already includes it** — use that list unmodified. If you build your own `_fields=` and omit
+`template`, every check below silently reads as "not templated".
+
+**There is one code template — `template-diagnostic-code.php` — and it serves both code
+routes**, `/diagnostic-codes/` and `/procedure-codes/`, ICD, CPT and HCPCS pages alike
+(verified on the HCPCS page J8650). The name is awkward on a procedure page. It is still the
+correct value there, so never "fix" it to something else. The full list of registered post
+templates, read straight out of WordPress's own validation error: `elementor_canvas,
+elementor_header_footer, elementor_theme, template-diagnostic-code.php,
+wp-templates/p-medical-certificate-generator.php`. Every rule here is keyed on the `template`
+value plus meta presence, never on the URL folder.
+
+Roll-out today: nearly every `/diagnostic-codes/` page is templated, while most
+`/procedure-codes/` pages you meet are still old shape.
+
+There are **four states**, disjoint and exhaustive, and every code page is in exactly one of
+them. They are the same four on both code routes.
+
+| # | `template` | `pdc_*` meta | State | What you do |
+|---|---|---|---|---|
+| 1 | `template-diagnostic-code.php` | every required field present | **Templated** | The contract: no body intro, Key takeaways first, meta owned and checked. |
+| 2 | `template-diagnostic-code.php` | one or more required fields empty | **Broken** | The top area renders with blanks. Handle exactly as Templated, plus fill the empty required fields from the article. |
+| 3 | empty | any `pdc_*` set | **Half-migrated** | A defect — the meta is dead and the page renders the old layout. **Change nothing structural**, treat the body as old shape, and report `CODE_PAGE_HALF_MIGRATED`. |
+| 4 | empty | none set | **Old shape** | The old contract, unchanged. Never migrated. |
+
+"Required field" in rows 1 and 2 means the eight always-required fields, plus `pdc_billable`
+and `pdc_specific` where the code system reports them. An empty conditional pair on a code
+system that has no billable/specific distinction does **not** make a page Broken.
+`icd-10-code-t86859` is a live example of state 3.
+
+**One further case, not a state.** A page whose `template` is set to something other than
+`template-diagnostic-code.php` (`elementor_canvas`, `elementor_header_footer`, `elementor_theme`,
+`wp-templates/p-medical-certificate-generator.php`) does not render the code top area at all.
+Treat the body as old shape and report the `template` value; do not try to fix it.
+
+**Never migrate an old-shape page yourself.** Do not set `template` on an existing page, do
+not invent `pdc_*` values for a page that has none, and do not strip a body intro from a page
+that still needs one. Migration is a separate process. This flow
+*preserves* the new top area where it exists and *fills gaps* in it — it never creates or
+removes it.
+
+**Never delete, blank, or "clean up" a `pdc_*` field or the `template` value.** A blanked
+field silently empties a section of the live page that nobody can see in the editor.
+
+### Who checks and writes the meta
+
+The `pdc_*` values are page-visible factual claims, so the **fact-check checks them** against
+the official source — CDC/NCHS ICD-10-CM tabular list for ICD, the AMA for CPT, CMS for
+HCPCS — exactly as body claims are verified. Report each finding with a `meta:<field>`
+location, so the editor knows it is a meta write and not a body edit:
+
+```
+AUTO 3. factual | meta:pdc_category | reads "S65 Injury of blood vessels at hand level" → "S65 Injury of blood vessels at wrist and hand level"
+```
+
+- A wrong **`pdc_code`** is the grave-error case (`CONFIRM: true`) — the whole page is built on it.
+- `pdc_descriptor`, `pdc_chapter`, `pdc_category`, `pdc_group`, `pdc_code_type`, and
+  `pdc_billable`/`pdc_specific` where they are set, are ordinary `factual` AUTO findings. An
+  empty conditional field is never a finding.
+- `pdc_definition` is prose: check its claims like any body prose.
+- `pdc_h1_descriptor` and `pdc_also_known` are editorial, not official text — flag them only
+  when they contradict the code.
+
+**The editorial pass owns `pdc_definition` and `pdc_h1_descriptor` as prose.** Everything in
+`core-rules.md` and the style guide applies to the Code Definition: US English, the AI tells,
+paragraph length, and the 25/30-word sentence ceiling. It stays plain text — no HTML, no
+links, `\n\n` between paragraphs.
+
+**Answer-first has two homes on a templated code page.** `pdc_definition` **is the intro**:
+its first sentence carries the main keyword — the live formula leads with the bare code,
+which satisfies it — and the definition answers the query completely on its own. The
+**opening H2 section** carries it too, in more depth: the full main keyword and a complete
+answer. The overlap between the two is by design. The rule that a code intro starts with a
+definition, with no hedging language setting up stakes, now governs `pdc_definition`.
+
+**Writing meta.** The single PUT gains a `meta` object alongside `content` and any
+`featured_media`. Send **only the `pdc_*` keys that changed** — WordPress merges registered
+meta, so omitted keys are untouched. **Never send `template` on an edit** — `/fact` and
+`/SEO` never write it in any state; the only write that sets it is `/generate`'s **create
+POST**, now on either code route. After the save, read back
+`?context=edit&_fields=meta` and assert each value you sent came back as you sent it; a
+silently-dropped meta write is reported, not assumed.
+
+### Body rules on a templated code page
+
+These apply to **states 1 and 2** — Templated and Broken. A Broken page is treated exactly
+like a Templated one here; the only extra work is filling its empty required fields. States
+3 and 4 keep the old-shape body rules (intro first, then Key takeaways).
+
+- **Never add an intro to the body.** Key takeaways is the first content block, below the
+  optional schema `wp:html` and nothing else.
+- **Key takeaways position: first.** The "directly below the intro" rule (§2) does not apply
+  — there is no body intro for it to sit below.
+- **Video: directly beneath Key takeaways**, still the last block before the first body
+  heading (§11). Unchanged in effect; it is now the second content block rather than the fourth.
+- **A body intro found on a templated page is a defect** — it duplicates the Code Definition.
+  Do not delete the prose: fold its substance into the opening H2 section, then move Key
+  takeaways to the top. Nothing is lost and nothing is duplicated.
+- Everything after the first H2 is unchanged: the original visual (`Visuals.md`) is still
+  required, image captions and spacers unchanged (§10), Pabau section + `book-demo` CTA (§5),
+  `Conclusion` (§6), Continue your research (§7), Yoast FAQ (§8).
+- Featured images are still **not** built for code articles (`Visuals.md` §11) — unchanged.

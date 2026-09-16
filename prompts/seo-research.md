@@ -125,6 +125,8 @@ You are running the /SEO optimization flow for a single article: $ARGUMENTS
    - H1, and the full heading tree (H2/H3/H4) in document order
    - the body blocks (so you can later place content precisely)
    - current Yoast focus keyphrase, SEO/meta title, and meta description
+   - `template` and the `pdc_*` meta values — both come back in that skill's `_fields=` list.
+     Step 6b classifies the code-page state from them, so do not drop them from the fetch.
 4. Write two small files Stage 2's helper needs (this costs nothing and saves a large
    keyword-matching pass later):
    - /tmp/seo-<slug>-headings.txt : one heading per line, exactly as written
@@ -133,7 +135,43 @@ You are running the /SEO optimization flow for a single article: $ARGUMENTS
    from the H1 + slug. State it explicitly.
 6. Classify the ARTICLE TYPE (affects editorial + meta-title rules): listicle, code article
    (diagnostic/procedure code), template article, or standard guide.
-7. Emit a short setup summary: main keyword, type, status, is_draft, heading count. No changes.
+6b. CODE ARTICLE ONLY — classify the CODE-PAGE STATE from `template` + the `pdc_*` meta, per
+   `WordPress-blocks.md` §13. It decides WHERE THE ARTICLE'S INTRO LIVES, so it changes what
+   the writer may touch. Never key it on the URL folder: ONE template,
+   `template-diagnostic-code.php`, serves both `/diagnostic-codes/` and `/procedure-codes/`, so
+   the classification is identical on either route.
+   The states are DISJOINT: the page is **exactly one** of these four, and you emit exactly one
+   name. Test them in this order and stop at the first match. The eight ALWAYS-REQUIRED fields
+   are `pdc_code_type`, `pdc_code`, `pdc_descriptor`, `pdc_h1_descriptor`, `pdc_definition`,
+   `pdc_chapter`, `pdc_category`, `pdc_group`. `pdc_billable` and `pdc_specific` are
+   CONDITIONAL — `yes`/`no` on an ICD-10-CM page, EMPTY where the code system has no
+   billable/specific distinction (the live HCPCS page J8650 has both empty, correctly) — and an
+   empty one is NEVER a missing required field. `pdc_h1_prefix`, `pdc_also_known` and
+   `pdc_label_1`/`pdc_label_2`/`pdc_label_3` are OPTIONAL, are expected to be empty, and NEVER
+   count as missing.
+     1. `template` is the code template `template-diagnostic-code.php`
+        AND all eight required fields non-empty       → TEMPLATED
+     2. `template` is the code template AND one or more of the eight required fields
+        empty                                         → BROKEN (list which of the EIGHT are
+        empty — never list a conditional or optional field)
+     3. `template` empty and any `pdc_*` set          → HALF-MIGRATED (the page renders the OLD
+        layout — a genuine defect), on either code route
+     4. `template` empty and no `pdc_*` set           → OLD SHAPE
+   Note separately if `template` is set to something that
+   is NOT a code template (`elementor_canvas`, `elementor_header_footer`, `elementor_theme`,
+   `wp-templates/p-medical-certificate-generator.php`): the code top area does not render at all,
+   so treat the body as old shape and just report the template value.
+   On TEMPLATED and BROKEN, also capture `pdc_definition` and `pdc_h1_descriptor` verbatim: the
+   definition IS the intro, it is absent from `content.raw`, and a main-keyword swap has to reach
+   it.
+   On HALF-MIGRATED, record `CODE_PAGE_HALF_MIGRATED` now — the page needs the site migration
+   process, not a structural edit, and S9 reports it. Nothing structural changes, but the
+   ordinary optimization work on the old-shape body still happens.
+   /SEO optimizes the article it finds and NEVER migrates it between states: never set
+   `template` (it is never sent on an edit), never invent `pdc_*` values for a page that has
+   none, never blank one, and never fill an optional field to make the set look complete.
+7. Emit a short setup summary: main keyword, type, status, is_draft, heading count, and — on a
+   code article — the code-page state. No changes.
 ```
 
 ---
@@ -629,7 +667,8 @@ Selection semantics (apply in EVERY path — auto, scarce, picker):
   echo a near-identical phrase. use_as_faq is mutually exclusive with use_in_heading, and a new
   main keyword is never an FAQ.
 - new_main_keyword → apply in the H1, intro text, meta description, and SEO title (Stage 7);
-  implies use_in_heading. At most ONE new_main_keyword.
+  implies use_in_heading. At most ONE new_main_keyword. On a TEMPLATED or BROKEN code page the
+  "intro text" is `pdc_definition` (plus `pdc_h1_descriptor`), not body copy — see S0 step 6b.
 - a keyword with nothing selected is NOT used.
 ```
 
@@ -641,6 +680,10 @@ Selection is done. **Now read `~/.claude/factcheck-flow/prompts/seo-write.md`** 
 S4 → S9 from it. Carry forward, and nothing else:
 
 - is_draft, article type, post ID / slug / URL, status
+- on a code article, the **CODE-PAGE STATE** (S0 step 6b) — exactly ONE of templated / broken /
+  half-migrated / old shape; which of the EIGHT ALWAYS-REQUIRED `pdc_*` fields are empty
+  if broken; and the current `pdc_definition` + `pdc_h1_descriptor` if templated or broken — the
+  brief carries them to the writer
 - the CURRENT MAIN KEYWORD, and the heading tree
 - the Stage 1 record: `selected_competitor_urls`, `structural_changes`, and your one-paragraph
   SERP-dominant-format / intent note

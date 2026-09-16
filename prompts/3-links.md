@@ -291,8 +291,9 @@ next-step may be a BOFU billing guide or template.
 both placements:
 
 1. one in the **Pabau promotional section** — satisfied by the Pabau CTA (`book-demo`) block
-   where it exists; where no block exists (Elementor articles, templated code pages), an inline
-   CTA link in the Pabau-promotional prose;
+   where it exists; where no block exists (Elementor articles), an inline CTA link in the
+   Pabau-promotional prose. A code page — templated or old-shape — carries the `book-demo`
+   block normally, so never substitute an inline CTA there;
 2. one **inline CTA link closing the Conclusion** — short "Book a demo"-style anchor inside a
    closing sentence naming the benefit for this reader. `WordPress-blocks.md` owns the format.
 

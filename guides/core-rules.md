@@ -66,6 +66,18 @@ These hold in every edit, with no exceptions.
   one next-step. Full rulebook in `3-links.md`.
 - **No URL containing `/lp/` is ever a link target** — not in the body, not in a Continue your
   research pick. Existing ones are removed.
+- **Never blank a code page's `pdc_*` meta, and never change its `template`.** On a templated
+  code page those meta fields are page-visible content the WordPress editor cannot show, so an
+  emptied or deleted value silently strips a section off the live page. Fill gaps in the eight
+  always-required fields, never remove. The two conditional fields (`pdc_billable`,
+  `pdc_specific`) are `yes`/`no` on an ICD-10-CM page and stay empty where the code system has
+  no such distinction — empty is correct there, never a gap, and never invented. Leave the five
+  optional fields (`pdc_h1_prefix`, `pdc_also_known`, `pdc_label_1`, `pdc_label_2`,
+  `pdc_label_3`) empty rather than inventing values to look complete, and never blank a
+  `pdc_label_*` that is already set. **Never send `template` on an edit**: `/fact` and `/SEO`
+  never write it, and the only write that sets it is `/generate`'s create POST — on either code
+  route, always `template-diagnostic-code.php`. Never migrate an old-shape code page yourself.
+  Contract in `WordPress-blocks.md` §13.
 - **Never remove or reroute a `/book-demo/` link.** Every article ends with two: one in the
   Pabau promotional section, one closing the Conclusion.
 
@@ -153,6 +165,14 @@ before the answer. Same for every FAQ answer.
   except on a template article, where the download box sits in that seam and Key takeaways
   follows the download box instead. On a listicle it is the ranked provider list — `#.
   [Provider] — short reason` per item, `WordPress-blocks.md` §2a.
+- **On a templated code page the intro is not in the body** — it is the `pdc_definition` meta
+  field, which the page template renders as *Code Definition*. Its first sentence carries the
+  main keyword (the live formula leads with the bare code, which satisfies it) and it answers
+  the query completely on its own. The **opening H2 section** carries the full keyword and a
+  complete answer as well; the overlap is by design. Key takeaways is therefore the first body
+  block. `pdc_definition` is prose: everything in "Voice and mechanics" and "AI tells" applies
+  to it, the sentence ceiling included. Detection and the field contract are in
+  `WordPress-blocks.md` §13.
 
 ## Required document order
 
@@ -176,6 +196,13 @@ Yoast FAQ block
 takeaways, not after it — `H1 → Intro → Download box → Key takeaways → …`. Full rule and
 markup in `WordPress-blocks.md` §1 and §3.
 
+**Templated code pages (`/diagnostic-codes/` and `/procedure-codes/` — one template,
+`template-diagnostic-code.php`, serves both) only:** the H1, the Code Definition (the intro),
+Related Information, and the CTA and trust panels are rendered by the page template from
+`pdc_*` post meta and are not in `post_content` — the body starts at Key takeaways: `Key
+takeaways → [YouTube embed] → H2 <opening section> → …`. Never add a body intro there.
+Detection, the fields, and the four page states are in `WordPress-blocks.md` §13.
+
 Never put a heading above a block that renders its own heading (Key takeaways, Continue
 your research). Every image carries a `<figcaption>` and is followed by one 800 × 35
 spacer block.
@@ -187,5 +214,7 @@ markup and card rules in `WordPress-blocks.md` §9a and §9.
 **A YouTube video never breaks up a run of prose.** Its one slot is the last block before the
 first body heading — after every intro paragraph and after the Key takeaways block, whether
 the intro is headless or sits under an opening H2. Never between two paragraphs, never before
-the intro, never in the intro/takeaways seam, never mid-body-section. Most articles have a `wp:embed` and about half have it in
+the intro, never in the intro/takeaways seam, never mid-body-section. On a templated code page
+there is no body intro, so the slot is directly beneath Key takeaways — still the last block
+before the first body heading. Most articles have a `wp:embed` and about half have it in
 the wrong place: move the block as-is, add no spacer, and never add a video that isn't there.

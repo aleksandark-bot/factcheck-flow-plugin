@@ -45,7 +45,13 @@ that reads well and does nothing.
    article's FIRST SENTENCE, and the intro answers the keyword's main query completely — a
    listicle names the best pick and who it's for, an informational article defines the subject
    in the first paragraph. Key takeaways carries the answer directly below the intro; the H1
-   and the SERP title front-load the exact keyword.
+   and the SERP title front-load the exact keyword. **Carve-out — a code page.** On a
+   code article, on EITHER code route, the answer-first rule is unchanged but its home moves:
+   that first sentence lives in the `pdc_definition` Code Definition, which the template renders
+   above the body, and the body has no intro at all. "Key takeaways directly below the intro"
+   therefore does not apply there either — Key takeaways is the FIRST content block of the body.
+   `/blog/` and `/templates/` keep this rule exactly as written. See the
+   CODE ARTICLE requirement in G6.
 3. **The page must be hard to reproduce.** Ask the durability question about the plan: what
    would it take for a competitor with a writer and public sources to produce this page? If the
    answer is "an afternoon", the plan is a rewritten explainer, and no amount of length,
@@ -158,6 +164,10 @@ title must own and the benefit the H1 must promise.
 ANSWER-FIRST — for EVERY node whose heading is a question or implies one, note "answer in first
 sentence" and WHAT that one-sentence answer is, so the writer leads with it rather than
 inventing a preamble. Plan the intro to state the direct answer, and Key takeaways to carry it.
+**Carve-out — a code article has no body intro, on either code route:** there, plan the direct
+answer into `pdc_definition` (the template-rendered Code Definition) and into the opening H2
+section, and plan Key takeaways as the body's FIRST block. `/blog/` and `/templates/` plan the
+intro as written.
 
 TYPE-SPECIFIC REQUIREMENTS — apply the one that matches the G0 article type:
 
@@ -180,6 +190,23 @@ TYPE-SPECIFIC REQUIREMENTS — apply the one that matches the G0 article type:
     of 3 in-body links, all inside billing — the pillar, one subhub, at most one next step — so
     plan fewer link opportunities, not more. Never plan a price or a reimbursement figure that
     the authority does not state.
+    A code page also renders a template-driven TOP AREA out of `pdc_*` post meta, and the two
+    code routes are planned IDENTICALLY — one template, `template-diagnostic-code.php`, serves
+    both:
+      - Plan NO body intro node, on either code route. The Code Definition (`pdc_definition`)
+        is the intro, and the body opens on Key takeaways. Plan the definition as its own
+        planning item: 1-2 plain-text paragraphs, ~40-110 words, first sentence carrying the
+        main keyword, answering the query completely on its own. Then plan the OPENING H2 to
+        carry the full main keyword and a complete answer TOO — that overlap is deliberate, so
+        do not plan around it or ask the writer to vary it.
+    Note in the outline that the values for the **eight always-required** `pdc_*` fields come
+    from the brief's CODE FIELD RECORD; that `pdc_billable` and `pdc_specific` are CONDITIONAL —
+    written as `yes`/`no` on ICD-10-CM, left empty where the code system has no billable/specific
+    distinction; that `pdc_h1_prefix`, `pdc_also_known` and `pdc_label_1/2/3` are OPTIONAL and
+    stay empty unless the authority genuinely names a synonym or a default row label would be
+    wrong for this code; and that the template's own
+    CTA and trust panels are fixed boilerplate — never plan a node for them and never count them
+    toward the body's Pabau section or CTA.
   · STANDARD GUIDE — no extra requirements beyond the branch list and the block contract.
 
 REQUIRED BLOCKS — plan them as outline nodes NOW; do not leave them to be discovered during
@@ -300,7 +327,8 @@ with an empty context and cannot see this conversation. Include, in this order:
    repeat the naming convention and the sibling slug you checked it against.
 3. MAIN KEYWORD — the one primary keyword, and the FIVE-SPOT placement: SERP title, H1, the
    FIRST SENTENCE of the body, the meta description, and the slug — exact match, reading
-   naturally in each. Name the benefit the H1 must promise alongside it.
+   naturally in each. On a code article, on either code route, the third spot is the first sentence of
+   `pdc_definition` and the opening H2 section, because the body has no intro (§13). Name the benefit the H1 must promise alongside it.
 4. SEARCHER INTENT — the G5 note, verbatim, all four answers. Then the one-paragraph G1 note:
    the question the query actually asks, the SERP-dominant format, and the depth it rewards.
 5. ANSWER SURFACE — the six lines from G1 step 1b: featured snippet (holder + FORMAT), AI
@@ -340,6 +368,37 @@ with an empty context and cannot see this conversation. Include, in this order:
 16. VISUALS — the [VISUAL] node, what it plots and which of the article's figures it uses; every
    [IMG] node; and, for a `/blog/` article, that the post has NO featured image and needs a
    1200 × 630 brand card built and attached via `featured_media`.
+17. CODE PAGE — on a CODE ARTICLE only, and omitted entirely otherwise. Paste the G4 CODE FIELD
+   RECORD verbatim, with its source URLs and its `NOT STATED` lines intact, and state the
+   treatment — the SAME on both code routes — in these terms:
+   State that there are EIGHT ALWAYS-REQUIRED `pdc_*` fields — `pdc_code_type`, `pdc_code`,
+   `pdc_descriptor`, `pdc_h1_descriptor`, `pdc_definition`, `pdc_chapter`, `pdc_category`,
+   `pdc_group` — TWO CONDITIONAL ones, `pdc_billable` and `pdc_specific` (required `yes`/`no` on
+   an ICD-10-CM page, left EMPTY where the code system has no billable/specific distinction;
+   empty hides the flag line and the Billable row, and is never invented), and FIVE OPTIONAL ones
+   that are never filled to satisfy a completeness check: `pdc_h1_prefix` (always left empty; the
+   template supplies the prefix), `pdc_also_known` (written only where the authority names a
+   genuine synonym; empty is normal and the row hides) and `pdc_label_1/2/3` (they relabel the
+   three Related Information rows fed by `pdc_chapter`/`pdc_category`/`pdc_group`, in that order;
+   empty means the template's code-type default, and one is set only to override a default that
+   would be wrong for this code). Also state that any non-empty `pdc_definition` must clear
+   the sentence gate via `--defn` in the same run as the body, on BOTH routes.
+   - BOTH code routes (§13 state 1, **Templated**): "Set `template:
+     template-diagnostic-code.php` in the create POST — one template serves `/diagnostic-codes/`
+     and `/procedure-codes/` alike, so this is correct on either route and will not 400. This
+     create is the one write that sets
+     `template`, and the 'never send `template`' rule is an edit-time rule that does not apply
+     here. Write the eight required `pdc_*` fields, plus `pdc_billable`/`pdc_specific` where the
+     code system has them, plus any `pdc_label_*` override the code needs. The body carries NO
+     intro — `post_content`
+     opens on the optional JSON-LD `wp:html` block, then Key takeaways, then the first H2.
+     `pdc_definition` IS the intro." Add the definition's spec (plain text, no HTML, no links,
+     `\n\n` between paragraphs, ~40-110 words) and the live formula: `<CODE> is the billable
+     ICD-10-CM code for <official descriptor>.` then scope, then often a second paragraph on
+     where the code sits. State that the opening H2 repeats the main keyword and a complete
+     answer ON PURPOSE.
+   Point the writer at `WordPress-blocks.md` §13 for the field table, the four-state table and
+   the markup; do not restate any of them here.
 
 Keep it dense and factual — it is instructions, not prose. Do NOT restate block markup; the
 writer reads the contract. Then stop. G9 dispatches the writer; you write no article copy at any
@@ -383,7 +442,7 @@ Keep the returned change-log. It is the /generate half of the G10 report.
    yourself, in one call — the route is the one thing a reader will notice and the one thing the
    writer cannot see, because a draft's `link` is only `https://pabau.com/?p=<id>`:
 
-     GET /wp-json/wp/v2/posts/<ID>?context=edit&_fields=id,slug,status,categories,tags,featured_media
+     GET /wp-json/wp/v2/posts/<ID>?context=edit&_fields=id,slug,status,categories,tags,featured_media,template,meta
 
    Assert, and say each result in one line:
    · `status == "draft"`. If it is anything else, say so LOUDLY — that is the one failure in
@@ -396,6 +455,21 @@ Keep the returned change-log. It is the /generate half of the G10 report.
    · Category 1 (`Uncategorized`) is absent, and at least one real topic category is present.
    · `slug` matches the brief's `proposed_slug`.
    · For a `/blog/` article, `featured_media` is a non-zero ID.
+   · On a CODE ARTICLE, the `pdc_*` meta arrived. A rejected meta key does NOT fail the request,
+     so it has to be read back: all EIGHT ALWAYS-REQUIRED fields (`pdc_code_type`, `pdc_code`,
+     `pdc_descriptor`, `pdc_h1_descriptor`, `pdc_definition`, `pdc_chapter`, `pdc_category`,
+     `pdc_group`) are present and non-empty, and `pdc_code` in
+     particular matches the code exactly. An empty `pdc_h1_prefix`, `pdc_also_known` or
+     `pdc_label_*` is CORRECT
+     — they are optional, they are never filled to pass this check, and their emptiness is not a
+     mismatch. So is an empty `pdc_billable` / `pdc_specific` on a code system with no
+     billable/specific distinction — conditional, not required. On BOTH code routes assert
+     `template == "template-diagnostic-code.php"`
+     (§13 state 1, Templated) and that `pdc_definition` is non-empty — with the template set and
+     the definition blank, the live page renders a titled empty box where the intro should be.
+     One template serves both code routes, so the assertion is the same on
+     `/procedure-codes/` as on `/diagnostic-codes/`. Report any real mismatch as a failure; do
+     not fix it here, hand it back to the writer.
    Then state the URL the post will have when published: `https://pabau.com/<prefix>/<slug>/`.
 
 2. NO INDEXING PING, EVER. `bin/index_ping.py` submits an ALREADY-PUBLIC URL to Google. This URL
@@ -459,7 +533,10 @@ Keep the returned change-log. It is the /generate half of the G10 report.
 7. PRODUCE ONE COMBINED REPORT: the writer's change-log plus these six lines, which are the
    /generate half of the value and exist nowhere else:
    - `Created:` post ID, status draft, and the URL it will have when published.
-   - `Route:` the destination and the exact terms set, with the assertion result from step 1.
+   - `Route:` the destination and the exact terms set, with the assertion result from step 1. On
+     a code article, carry the writer's `Code page:` line through here too, and add your own
+     `template` / `pdc_*` read-back result from step 1 next to it, naming the §13 state the page
+     ships in — `Templated`, on either code route.
    - `Commission:` the G2 verdict, and the competing URL if one was found.
    - `Corner-stone links:` the 3-5 source pages from step 4 with their proposed anchors, marked
      clearly as not-yet-done. Say that a new page with no inbound link starts from zero.

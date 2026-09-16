@@ -49,6 +49,29 @@ carries the term IDs:
 | `/procedure-codes/` | the **category** `billing-codes` (1433) + its subcategory |
 | `/blog/` | none of the above — the default for every other article |
 
+**The two code routes produce the same page shape, and that shape is not cosmetic.** A code
+page renders its whole top area — badge, H1, flag line, Code Definition, Related Information card
+— from `pdc_*` post meta rather than from `post_content` (`WordPress-blocks.md` §13). Both routes
+get the **eight always-required** `pdc_*` fields, sourced by the G4 authority pass and written by
+the writer, plus the two CONDITIONAL fields `pdc_billable` and `pdc_specific` where the code
+system has a billable/specific distinction to report. The five OPTIONAL fields are never filled
+to look complete: `pdc_h1_prefix` is always left empty, `pdc_also_known` only where the authority
+names a genuine synonym, and `pdc_label_1/2/3` only to override a code-type default label that
+would be wrong for this code.
+
+- **Both code routes** — the create POST also sets `template: template-diagnostic-code.php`, and
+  the body has **no intro**: it opens on the optional JSON-LD schema block, then Key takeaways.
+  `pdc_definition` is the intro. This is §13 state 1, **Templated**. That create POST is the one
+  write in the flow that sets `template`; the "never send `template`" rule is an edit-time rule
+  and does not apply to it.
+- There is **one** code template and it is named `template-diagnostic-code.php`. The name is
+  awkward on a procedure page, but it is correct: that single template serves ICD, CPT and HCPCS
+  pages alike. Sending it on a `/procedure-codes/` create is right and will not 400.
+
+`/blog/` and `/templates/` are unchanged. On BOTH code routes a non-empty `pdc_definition` clears
+the sentence gate in the same run as the body (`--defn`) — the gate is not route-specific. G10
+reads `template` and `meta` back and asserts both.
+
 Two human gates, and only two. Everything else runs automatically:
 
 - **COMMISSION GATE (G2)** — asked only when a pabau.com page already covers this topic or

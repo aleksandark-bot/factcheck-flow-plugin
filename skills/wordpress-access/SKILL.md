@@ -67,7 +67,7 @@ AND `content.raw` (the whole body twice) plus Yoast's `yoast_head` and
 `yoast_head_json` blobs and a `_links` map — several times the size of what you need.
 
 ```bash
-FIELDS='id,slug,link,status,type,title,content,excerpt,categories,tags,meta,featured_media'
+FIELDS='id,slug,link,status,type,title,content,excerpt,categories,tags,meta,template,featured_media'
 
 curl -s -u "$WP_USER:$WP_APP_PASSWORD" \
   "$WP_BASE_URL/wp-json/wp/v2/posts/<POST_ID>?context=edit&_fields=$FIELDS"
@@ -83,6 +83,13 @@ curl -s -u "$WP_USER:$WP_APP_PASSWORD" \
 
 If that returns `{"content":{"raw":"…"}}`, use `content.raw` in `FIELDS`. If it returns
 the whole content object anyway, keep plain `content`.
+
+**Why `template` is in the list.** On pabau.com, `template` together with the `pdc_*` keys
+inside `meta` decides whether a code page renders its top area (badge, H1, flag line, Code
+Definition, Related Information) from post meta instead of from `post_content`. That area is
+page-visible and fact-checkable but never appears in `content.raw`. `template` is not
+returned by default, so if it is missing from `_fields=`, every such check silently reads as
+"not templated". Keep it in the list. See `WordPress-blocks.md` §13 for the contract.
 
 **2. Fetch once per article, per job.** You keep the body you fetched; re-fetching it
 between editing passes re-reads something you already hold.
@@ -154,10 +161,27 @@ content, and it puts a second full copy of the body into context. Discard the re
 body with `-o /dev/null` — you already know what you sent, so the status code is the
 entire signal you need. On a non-2xx code, re-run without `-o /dev/null` to read the error.
 
+**Writing meta.** A `meta` object may ride along in the same PUT as `content` — it does not
+need a save of its own. WordPress *merges* registered meta, so send only the keys that
+changed; keys you omit are left untouched (confirmed by test). After the save, read the meta
+back and assert each value you sent came back as sent:
+
+```bash
+curl -s -u "$WP_USER:$WP_APP_PASSWORD" \
+  "$WP_BASE_URL/wp-json/wp/v2/posts/<POST_ID>?context=edit&_fields=meta"
+```
+
+A rejected meta write does not fail the request — the PUT still returns 200 — so the read-back
+is the only proof the value landed. Report a dropped meta write; never assume it applied.
+
 ## Rules
 
 - Update ONLY the fields you intend to change (`content`, `title`, `slug`, `status`,
   `categories`, `tags`, `author`, `meta`, `excerpt`/meta description as needed).
+- **Never send `template` on an edit.** `/fact` and `/SEO` never write it, in any state — a
+  code page's `template` is set by the site's migration process, not by an editing pass. The
+  only write that sets it is `/generate`'s **create POST**, and only on the
+  `/diagnostic-codes/` route. Contract: `WordPress-blocks.md` §13.
 - A draft (`status: draft`) stays a draft; a published post (`status: publish`) stays
   published. Never change publication status unless explicitly instructed.
 - Keep all existing HTML/Gutenberg block structure intact unless an instruction says

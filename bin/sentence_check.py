@@ -10,11 +10,20 @@ Usage
   sentence_check.py --post 151170            # fetch raw block markup via the WP REST API
   sentence_check.py --url https://site/slug/ # resolve the slug, then fetch
   sentence_check.py --file article.html      # check a local file
+  sentence_check.py --defn definition.txt    # check a plain-text Code Definition
+  sentence_check.py --file body.html --defn definition.txt   # both, one verdict
   cat article.html | sentence_check.py       # check stdin
+
+On a templated code page (/diagnostic-codes/, later /procedure-codes/) the intro
+between the H1 and the first H2 is the `pdc_definition` post meta, not
+post_content. --post / --url pick it up automatically; --defn checks a local copy
+before it is written. Its sentences are located as meta:pdc_definition, so the
+fix is a meta write and not a body edit.
 
 Options
   --max N     soft ceiling, the number to write to   (default 25)
   --hard N    absolute ceiling, never acceptable     (default 30)
+  --defn F    local file of plain-text Code Definition prose (combines with --file)
   --json      machine-readable output
   --all       list every sentence with its count, not just violations
   --top N     show at most N violations (default: all)
@@ -34,6 +43,7 @@ import html
 import json
 import os
 import re
+import select
 import sys
 import urllib.error
 import urllib.parse
@@ -42,6 +52,24 @@ import urllib.request
 # ── credentials ────────────────────────────────────────────────────────────────
 
 CRED_KEYS = ("WP_BASE_URL", "WP_USER", "WP_APP_PASSWORD")
+
+# The credentials file comes in two shapes, both documented by the wordpress-access
+# skill: `KEY=VALUE` lines, or a plain document carrying labelled lines like
+# "Site URL: …" / "Username: …" / "Application Password: …". Parse either.
+# A leading list marker and/or bold markup is common, since the file is often a
+# pasted note: "- Site URL: …", "**Application Password:** …".
+_LABEL_PREFIX = r"^\s*(?:[-*+•]\s*)?\**\s*"
+
+
+def _label(names):
+    return re.compile(_LABEL_PREFIX + r"(?:" + names + r")\s*\**\s*:\s*\**\s*(\S.*?)\s*\**$", re.I)
+
+
+CRED_LABELS = (
+    (_label(r"site\s*url|wp\s*base\s*url|base\s*url"), "WP_BASE_URL"),
+    (_label(r"user\s*name|wp\s*user"), "WP_USER"),
+    (_label(r"application\s*password|app\s*password|wp\s*app\s*password"), "WP_APP_PASSWORD"),
+)
 
 
 def load_credentials():
@@ -58,12 +86,18 @@ def load_credentials():
                 if not line or line.startswith("#"):
                     continue
                 line = re.sub(r"^export\s+", "", line)
-                if "=" not in line:
-                    continue
-                key, val = line.split("=", 1)
-                key = key.strip()
-                if key in CRED_KEYS and not creds.get(key):
-                    creds[key] = val.strip().strip("'\"")
+                if "=" in line:
+                    key, val = line.split("=", 1)
+                    key = key.strip()
+                    if key in CRED_KEYS and not creds.get(key):
+                        creds[key] = val.strip().strip("'\"")
+                        continue
+                for pattern, key in CRED_LABELS:
+                    match = pattern.match(line)
+                    if match and not creds.get(key):
+                        val = match.group(1).strip().strip("'\"")
+                        creds[key] = val.rstrip("/") if key == "WP_BASE_URL" else val
+                        break
     return creds
 
 
@@ -79,6 +113,7 @@ def wp_get(path, creds):
 
 
 def fetch_post_content(post_id=None, url=None):
+    """Return (raw block markup, pdc_definition meta) for one post."""
     creds = load_credentials()
     missing = [k for k in CRED_KEYS if not creds.get(k)]
     if missing:
@@ -91,19 +126,57 @@ def fetch_post_content(post_id=None, url=None):
         slug = [s for s in urllib.parse.urlparse(url).path.split("/") if s]
         if not slug:
             die(f"could not read a slug out of {url}")
-        found = wp_get(f"/wp-json/wp/v2/posts?slug={slug[-1]}&context=edit", creds)
+        fields = "&_fields=id,content.raw,meta"
+        found = wp_get(
+            f"/wp-json/wp/v2/posts?slug={slug[-1]}&context=edit{fields}", creds
+        )
         if not found:
             for ptype in ("pages",):
                 found = wp_get(
-                    f"/wp-json/wp/v2/{ptype}?slug={slug[-1]}&context=edit", creds
+                    f"/wp-json/wp/v2/{ptype}?slug={slug[-1]}&context=edit{fields}", creds
                 )
                 if found:
                     break
         if not found:
             die(f"no post found for slug '{slug[-1]}'")
-        return found[0].get("content", {}).get("raw", "")
-    post = wp_get(f"/wp-json/wp/v2/posts/{post_id}?context=edit", creds)
-    return post.get("content", {}).get("raw", "")
+        return post_prose(found[0])
+    post = wp_get(
+        f"/wp-json/wp/v2/posts/{post_id}?context=edit&_fields=content.raw,meta", creds
+    )
+    return post_prose(post)
+
+
+def post_prose(post):
+    """Split one REST post payload into (body markup, Code Definition meta)."""
+    content = post.get("content", {}).get("raw", "")
+    meta = post.get("meta") or {}
+    definition = meta.get("pdc_definition") or ""
+    if not isinstance(definition, str):
+        definition = ""
+    return content, definition
+
+
+def stdin_has_data():
+    """True only if stdin is redirected AND already has bytes waiting.
+
+    Used so `--defn` alone never blocks on an idle pipe (a non-interactive shell
+    leaves stdin open but empty), while a genuinely piped body is still picked up.
+    """
+    if sys.stdin.isatty():
+        return False
+    try:
+        return bool(select.select([sys.stdin], [], [], 0.0)[0])
+    except (OSError, ValueError):
+        return False
+
+
+def read_text_file(path, flag):
+    """Read an input file, failing with the usage exit code rather than a traceback."""
+    try:
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            return fh.read()
+    except OSError as exc:
+        die(f"{flag}: cannot read {path} — {exc.strerror}")
 
 
 def die(msg):
@@ -227,6 +300,24 @@ def extract_units(content):
     return unique
 
 
+def definition_units(definition):
+    """Return [(location, text)] for the plain-text Code Definition meta field.
+
+    It is prose, not block markup, so it never goes through extract_units(): its
+    paragraphs are split on blank lines and each one is its own unit.
+    """
+    units = []
+    paragraphs = [p for p in re.split(r"\n\s*\n", definition or "") if p.strip()]
+    for index, para in enumerate(paragraphs, 1):
+        text = html.unescape(para).replace("\u00a0", " ").replace("\u200b", "")
+        text = re.sub(r"\s+", " ", text).strip()
+        if not text:
+            continue
+        loc = "meta:pdc_definition" if index == 1 else f"meta:pdc_definition[{index}]"
+        units.append((loc, text))
+    return units
+
+
 # ── sentence splitting ─────────────────────────────────────────────────────────
 
 ABBREVIATIONS = (
@@ -275,9 +366,11 @@ def count_words(sentence):
 # ── reporting ──────────────────────────────────────────────────────────────────
 
 
-def analyze(content, max_words, hard_words):
+def analyze(content, max_words, hard_words, definition=""):
     rows = []
-    for loc, text in extract_units(content):
+    units = extract_units(content) if content else []
+    units = units + definition_units(definition)
+    for loc, text in units:
         for sentence in split_sentences(text):
             rows.append(
                 {
@@ -307,6 +400,9 @@ def main():
     src.add_argument("--post", help="WordPress post ID")
     src.add_argument("--url", help="article URL (slug is resolved to an ID)")
     src.add_argument("--file", help="local file of raw block markup / HTML")
+    ap.add_argument(
+        "--defn", help="local file of plain-text Code Definition prose (pdc_definition)"
+    )
     ap.add_argument("--max", type=int, default=25, help="soft ceiling (default 25)")
     ap.add_argument("--hard", type=int, default=30, help="absolute ceiling (default 30)")
     ap.add_argument("--json", action="store_true", help="machine-readable output")
@@ -314,26 +410,34 @@ def main():
     ap.add_argument("--top", type=int, default=0, help="show at most N violations")
     args = ap.parse_args()
 
+    content, definition = "", ""
     if args.post or args.url:
         try:
-            content = fetch_post_content(post_id=args.post, url=args.url)
+            content, definition = fetch_post_content(post_id=args.post, url=args.url)
         except urllib.error.HTTPError as exc:
             die(f"WP API returned HTTP {exc.code} — check the ID/URL and credentials")
         except urllib.error.URLError as exc:
             die(f"could not reach the WP API: {exc.reason}")
     elif args.file:
-        with open(args.file, encoding="utf-8", errors="replace") as fh:
-            content = fh.read()
-    else:
+        content = read_text_file(args.file, "--file")
+    elif not args.defn:
         if sys.stdin.isatty():
             ap.print_help()
             return 2
         content = sys.stdin.read()
+    elif stdin_has_data():
+        # A body piped in alongside --defn. Checked without blocking: with --defn
+        # given, an idle stdin means "definition only", not "wait for a body".
+        content = sys.stdin.read()
 
-    if not content.strip():
+    if args.defn:
+        # An explicit file is the copy about to be written, so it wins over meta.
+        definition = read_text_file(args.defn, "--defn")
+
+    if not content.strip() and not definition.strip():
         die("no content to check")
 
-    result = analyze(content, args.max, args.hard)
+    result = analyze(content, args.max, args.hard, definition)
 
     if args.json:
         print(json.dumps(result, indent=2))

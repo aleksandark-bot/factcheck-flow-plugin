@@ -45,6 +45,17 @@ act on — they are edits to other pages or to a live URL, and each has its own 
 - **Slug findings on a published post** — if the slug is genuinely the problem, say so. Never
   change a live URL, and never change publish status.
 
+On a CODE ARTICLE, S9 adds a `Code page:` line — the page's state (one of the four: templated /
+broken / half-migrated / old shape) and which `pdc_*` meta fields the writer rewrote or filled.
+Relay it verbatim.
+/SEO optimizes the shape it finds and NEVER migrates a code page, so when the state is
+half-migrated, surface `CODE_PAGE_HALF_MIGRATED` to the user and say the page needs the site
+migration process rather than another /SEO pass — the ordinary optimization work still happened.
+One template, `template-diagnostic-code.php`, serves both code routes, so the state never
+depends on whether the article is a `/diagnostic-codes/` or a `/procedure-codes/` page. The
+contract is `WordPress-blocks.md` §13, which
+the `seo-writer` subagent carries: do not read it here, and do not restate it in any dispatch.
+
 On a published article S9 also writes a dated BASELINE to
 `~/.claude/factcheck-flow/cache/seo-baselines/` and requests a re-crawl of the (already public)
 URL. The baseline is what lets the next run tell improvement from noise, so it is not optional.

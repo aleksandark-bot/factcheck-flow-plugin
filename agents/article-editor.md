@@ -22,7 +22,9 @@ This is the rule that governs the whole job.
 
 1. **Fetch the article ONCE**, at the very start, via the `wordpress-access` skill — REST,
    `context=edit`, with that skill's `_fields=` list. Never WebFetch the public URL to read
-   the article: the site's nav and footer would consume most of the response.
+   the article: the site's nav and footer would consume most of the response. That list carries
+   `template` and `meta`, so the copy you hold already tells you whether this is a templated
+   code page — D0c reads both from it and costs no extra request.
 2. **Run all four passes against the copy you hold**, in memory, in order. Do not re-fetch
    between passes — you already have the body, including every edit you just made to it.
 3. **Clear the sentence gate BEFORE you save** (Pass E below). The article does not go out
@@ -33,7 +35,17 @@ This is the rule that governs the whole job.
    Then write `payload.json` with the Write tool and send it with
    `-d @payload.json -o /dev/null -w '%{http_code}\n'`. A draft stays a draft; a published post
    stays published. If D0b built a featured image, its `featured_media` id rides along in that
-   same payload — it is a field on the post, not a second save.
+   same payload — it is a field on the post, not a second save. So does a `meta` object, if
+   D0c or Pass B changed any `pdc_*` field on a code page: `{"content": …, "featured_media": …,
+   "meta": {"pdc_definition": "…"}}` is one save, not three. **Send only the `pdc_*` keys you
+   actually changed** — WordPress merges registered meta, so every key you leave out is left
+   untouched (confirmed by test). **Never send `template` on an edit** — this agent only edits,
+   so it never writes that field, in any state. (`/fact` and `/SEO` never write it; the one
+   write that sets it is `/generate`'s create POST, which is not this agent.)
+   After the PUT returns 2xx, read the meta straight back —
+   `?context=edit&_fields=meta` — and assert every value you sent came back exactly as sent. A
+   rejected meta write does not fail the request, so an unverified meta save is an unsaved one;
+   report any value that did not stick rather than assuming it did.
    **An Elementor article is the exception:** `post_content` is silently ignored on a
    builder-backed page, so check with `bin/elementor_guard.py <post-id>` before you save. On a
    `BUILDER` verdict, edit the `_elementor_data` structure instead (preserving its JSON encoding
@@ -90,22 +102,24 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — the contract, with the exact
    markup for every block (reference article: https://pabau.com/templates/accutite/, post
    151170; fetch it with `context=edit` if you want to see the real thing). Then enforce all
-   twelve guarantees below, in order, against the block markup you hold: original visual →
-   featured image (blog) → Key takeaways (D1) → download box (D2, templates) → Pabau section
-   + CTA block → Conclusion → Continue your research → FAQ → provider cards (listicles) →
+   thirteen guarantees below, in order, against the block markup you hold: original visual →
+   featured image (blog) → code-page top area (D0c) → Key takeaways (D1) → download box (D2,
+   templates) → Pabau section + CTA block → Conclusion → Continue your research → FAQ →
+   provider cards (listicles) →
    listicle pricing → image captions → video placement. The checks run in this order, but on a
    template article the **final document position** is download box, then Key takeaways
    directly below it — D1 and D2 both enforce that positioning regardless of check order.
 
    D0 runs FIRST inside this pass, so the visual it adds is then covered by D9's caption and
-   spacer audit like any other image. D0b is the one step that touches no block markup at
-   all — it sets a field, not a block.
+   spacer audit like any other image. D0b and D0c are the two steps that touch no block markup
+   at all — D0b sets a field, D0c writes post meta. D0c still has to run **before** D1, because
+   the state it detects decides where Key takeaways belongs.
 
    In D1, D5, D6 and D10 you are only changing wrapper markup, letter case, placeholder items,
-   and block position — never the copy. D0, D0b, D2, D3, D4, D7, D8 and D9 may require writing
-   new content (a visualization, a featured-image card, a download box, a Pabau section, a
-   proper conclusion, a provider card's verdict and lists, a pricing segment, an image
-   caption); write it in the article's voice per `2-editorial.md` and the Pabau guides.
+   and block position — never the copy. D0, D0b, D0c, D2, D3, D4, D7, D8 and D9 may require writing
+   new content (a visualization, a featured-image card, a missing `pdc_*` field, a download box,
+   a Pabau section, a proper conclusion, a provider card's verdict and lists, a pricing segment,
+   an image caption); write it in the article's voice per `2-editorial.md` and the Pabau guides.
 
    **D0 — original visual (ALWAYS, runs first in this pass).** Contract:
    `~/.claude/factcheck-flow/guides/Visuals.md` — read it now; it is the single source of
@@ -156,6 +170,100 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
      entirely, record it under "Skipped", and never substitute a stock photo or an existing
      media item.
 
+   **D0c — code-page top area (CODE ARTICLES).** Contract: `WordPress-blocks.md` §13 — read it
+   before you touch a `pdc_*` field. On a templated code page the whole area between the H1 and
+   the first H2 is rendered by the page template out of post meta, so none of it is in
+   `post_content` and none of it is visible in the editor. Run this before D1: what you find
+   here decides where Key takeaways belongs.
+   - **Detect the state** from the `template` and `meta` you already fetched. There is exactly
+     one code template, **`template-diagnostic-code.php`**, and it serves `/diagnostic-codes/`
+     and `/procedure-codes/` pages alike — the name is awkward on a procedure page, but it is
+     the only one, so never "correct" it and never key any rule on the URL folder. Every code
+     page is in exactly ONE of these four states, on either route; read the rows in order and
+     stop at the first that matches:
+
+     | # | `template` | `pdc_*` meta | State | What you do |
+     |---|---|---|---|---|
+     | 1 | `template-diagnostic-code.php` | all eight required fields present | **Templated** | The new contract: no body intro, Key takeaways first, meta is yours to check and fix. |
+     | 2 | `template-diagnostic-code.php` | one or more of the eight required fields empty | **Broken** | Everything you do on a Templated page, plus fill the empty required fields. |
+     | 3 | empty | any `pdc_*` set | **Half-migrated** | Nothing structural. Treat the body as old shape and report `CODE_PAGE_HALF_MIGRATED`. |
+     | 4 | empty | none set | **Old shape** | Nothing. Old contract, body intro first. |
+
+     Most procedure-code pages you meet are still old shape; nearly every diagnostic-code page
+     is templated.
+
+   - **The eight ALWAYS-REQUIRED fields** are `pdc_code_type`, `pdc_code`, `pdc_descriptor`,
+     `pdc_h1_descriptor`, `pdc_definition`, `pdc_chapter`, `pdc_category`, `pdc_group`. An empty
+     one of those eight is what makes a page Broken.
+   - **Two fields are CONDITIONAL:** `pdc_billable` and `pdc_specific`. They are required,
+     `yes` or `no`, on an **ICD-10-CM** page. They are **left empty** where the code system has
+     no billable/specific distinction to report — the live HCPCS page J8650 has both empty, and
+     empty is correct there, not a gap. Empty values hide the "Billable Code • Specific Code"
+     flag line under the H1 **and** the "Billable" row in Related Information. Never write
+     `yes`/`no` into either one just to make a page look complete; if the authority states no
+     billable/specific status for that code system, they stay empty.
+   - **Five fields are OPTIONAL and never count toward completeness:** `pdc_h1_prefix` is always
+     left empty (the template supplies the prefix — "ICD code", "HCPCS code"); `pdc_also_known`
+     is written only when the authority names a genuine synonym for the code; and
+     `pdc_label_1`, `pdc_label_2`, `pdc_label_3` are written only to override a wrong default
+     label (below). An empty one of those five is the correct state, never a gap — never fill
+     one to satisfy a check, and never invent a synonym.
+   - **`pdc_label_1/2/3` relabel the three Related Information rows** that `pdc_chapter`,
+     `pdc_category` and `pdc_group` fill, in that order — 1 → chapter, 2 → category, 3 → group.
+     **Empty means "use the template's default label for this code type"**, and the defaults are
+     already right for the common cases: an ICD-10-CM page with all three empty renders
+     Chapter / Category / Group, and the HCPCS page renders **Level** for row 1 with
+     `pdc_label_1` empty. **Set one only to override a default that would be wrong for this
+     code** — J8650 sets `pdc_label_3` to `Status` because its `pdc_group` carries
+     "Deleted, effective 31 December 2025" rather than a code group. Never blank a label that is
+     already set, and never set one to the value the default would produce anyway. This also
+     means `pdc_chapter` / `pdc_category` / `pdc_group` are **generic slots**, not literally the
+     chapter, the category and the group: they carry the three most useful reference facts for
+     that code system, labelled accordingly.
+   - **A `template` that is set but is NOT the code template** (`elementor_canvas`,
+     `elementor_header_footer`, `elementor_theme`,
+     `wp-templates/p-medical-certificate-generator.php`) renders no code top area at all. It is
+     not one of the four rows: treat the body as **old shape**, report it as
+     `old shape (non-code template: <value>)` on the `Code page:` line, and do not try to fix
+     it.
+
+   - **1. Templated** → verify each of the **eight required fields** is present and non-blank,
+     and fill any that is empty from the article's own content. Verify `pdc_billable` and
+     `pdc_specific` too, but as conditional fields: on an ICD-10-CM page they must read `yes` or
+     `no`; on a code system with no such distinction they stay empty. **Leave `pdc_h1_prefix`,
+     `pdc_also_known` and any empty `pdc_label_1/2/3` alone**: an empty one is correct, not a
+     gap, and you never invent a synonym to fill `pdc_also_known` (write it only when a Stage 1
+     finding hands you one). A `pdc_label_*` is yours to set only where the template's default
+     label would be wrong for this code, and a label already set is never blanked.
+     Apply every `meta:<field>` finding handed down from Stage 1 as a meta write, not a body
+     edit. Hold `pdc_definition` and `pdc_h1_descriptor` to the Pass B prose rules (US English,
+     AI tells, paragraph length, the 25/30-word ceiling); `pdc_definition` stays plain text, no
+     HTML and no links, paragraphs separated by `\n\n`. Put the changed keys in the single PUT's
+     `meta` object (see "Fetch once, save once") and verify the read-back.
+   - **2. Broken** → the top area is rendering with blanks nobody can see in the editor. Handle
+     this page **exactly as Templated** — same body rules (no body intro, Key takeaways first),
+     same prose rules, same meta ownership, same read-back — with one addition: fill each empty
+     **required** field from the article's own content, following the field table in §13 for the
+     shape of each value (official descriptor verbatim, `<range> <chapter title>`,
+     `<code> <category title>`, and so on). An empty conditional field (`pdc_billable`,
+     `pdc_specific`) or optional field (`pdc_h1_prefix`, `pdc_also_known`, `pdc_label_1/2/3`) is
+     not what makes a page Broken and is not filled here. Nothing else about
+     the page is treated differently from a Templated one.
+   - **3. Half-migrated** → the meta is dead; the page renders the OLD layout. Change nothing
+     structural, treat the body as old shape for D1 and D10, and report
+     `CODE_PAGE_HALF_MIGRATED` on the `Code page:` line.
+   - **4. Old shape** → **do nothing at all.** Do not migrate it, do not invent `pdc_*` values, do
+     not set `template`, and do not strip the body intro. The body keeps the old contract: intro
+     first, then Key takeaways. Migration is a separate process and not this agent's job.
+   - **Never delete or blank a `pdc_*` field, and never send `template` on an edit** — this agent
+     only edits, so it never writes `template`, in any of the four states. A blanked field
+     silently empties a section of the live page that no one can see in the editor.
+   - The template's own "Automate coding with Pabau" CTA panel and "Why practices choose Pabau"
+     trust panel are **fixed boilerplate**. Never write copy for them, never copy them into the
+     body, and never count them toward the body's own Pabau-section/CTA requirements — D3 and D4
+     are unchanged on a code page, and the body keeps its own Pabau section, CTA block and
+     `Conclusion`.
+
    The required document order you are enforcing is `WordPress-blocks.md` §1. Never leave a
    heading above a block that renders its own heading (Key takeaways, Continue your research).
 
@@ -179,7 +287,12 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
      between the last intro paragraph and the block: no image, no spacer, no embed, no
      comparison table. **On a template article, the block belongs directly below the download
      box instead (D2)** — the download box sits in the intro/Key-takeaways seam, not Key
-     takeaways.
+     takeaways. **On a templated code page — state 1 Templated or state 2 Broken (D0c) — the block
+     is the FIRST block in the body**,
+     below only the optional schema `wp:html` and nothing else: the intro lives in
+     `pdc_definition`, so there is no body intro for it to sit under. If a body intro is present
+     on a templated page, that is the defect — fold its substance into the opening H2 section
+     and move the block to the top. Do not delete the prose.
    - **Listicle → the items ARE the ranked provider list** (§2a): one entry per provider
      reviewed, in the body's order, each written `#. [Provider] — Short reason why they're on
      the list.` with the number and period inside the item text. Pass B should have written
@@ -293,6 +406,9 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
    - Then repair the seam: rejoin any paragraph that was split around the video, and drop any
      "watch the video below" line left pointing at nothing.
    - A dead or private video is a broken block — remove it instead of moving it.
+   - **On a templated code page (D0c)** the same rule lands one slot earlier: the embed sits
+     directly beneath the Key takeaways block, which is itself the first block, and it is still
+     the last block before the first body heading. Second content block, not fourth.
    - No embed in the article → nothing to do. **Never add a video.**
 
 ## Pass E — sentence-length gate (MANDATORY, blocks the save)
@@ -329,6 +445,15 @@ Rules for clearing the gate:
   telegram has failed Pass B, and the style guide's "vary your sentence length" still holds.
 - The gate covers everything the checker sees: body paragraphs, list items, table cells, image
   captions, Key takeaways items, CTA and download-box copy, FAQ answers.
+- **Any Code Definition you are about to save is gated too.** If the `pdc_definition` value
+  going into your payload is non-empty, it goes through the gate — whatever state the page is in
+  (Templated or Broken) and whatever code route it sits on. It never reaches the checker
+  through the body, so hand it over as its own unit: write the exact `pdc_definition` text you
+  are about to save to a local plain-text file and pass it with `--defn` alongside the body in
+  the same run —
+  `python3 ~/.claude/factcheck-flow/bin/sentence_check.py --file /tmp/body.html --defn /tmp/defn.txt`.
+  The gate is cleared only when that combined run exits 0. Rewrite the definition in the value
+  you are going to PUT, not only in the file.
 - **If the checker is missing, stop. Do not download it, and do not save the article.** The
   gate cannot be cleared by eye, so an install without the checker cannot ship an article.
   Abort and report `SENTENCE_GATE_UNAVAILABLE — ~/.claude/factcheck-flow/bin/sentence_check.py
@@ -360,6 +485,11 @@ curl -sI -o /dev/null -w '%{http_code}\n' "<visual source_url>"   # uploaded vis
 curl -sI -o /dev/null -w '%{http_code}\n' "<card source_url>"     # featured card resolves (200)
 ```
 
+If the payload carried a `meta` object, also read it back per "Fetch once, save once" —
+`?context=edit&_fields=meta` — and check each `pdc_*` value you sent against what came back.
+A dropped meta write returns 2xx and changes nothing, so this one is an assertion, not a
+formality; report any mismatch on the `Code page:` line instead of re-sending blindly.
+
 Compare each count against what you expect to have written. Only when an assertion fails do
 you pull a small excerpt (`grep -o … -A2 -B2`) to see why. For D8 specifically, an empty
 `pricing-table` block means that provider isn't in the site's dataset — swap it for a
@@ -390,8 +520,9 @@ then these sections, one line each:
   in-body count against the budget (e.g. `4/5`), the pillar up-link, the subhub on a code
   article, the funnel link, disposition counts with reason codes, picks, both CTA placements,
   the gate's final line verbatim, external-link count, and anything skipped with its code
-- `Key takeaways block:` already correct / converted / title attribute added / casing fixed / moved below the intro / rewritten as the ranked provider list / added
-- `Intro:` main keyword in the first sentence (yes/rewritten) + whether the intro now answers the query completely
+- `Key takeaways block:` already correct / converted / title attribute added / casing fixed / moved below the intro / moved below the download box / moved to the top (templated code page) / rewritten as the ranked provider list / added
+- `Intro:` main keyword in the first sentence (yes/rewritten) + whether the intro now answers the query completely. On a templated code page this line reports `pdc_definition` — the Code Definition is the intro — plus whether the opening H2 section also answers the query; say "no body intro (templated code page)" so it is clear none was expected
+- `Code page:` which ONE of the four states it was in (templated / broken / half-migrated / old shape), which `pdc_*` fields you corrected or filled and from what (name any `pdc_label_*` override and why), `CODE_PAGE_HALF_MIGRATED` on a half-migrated page, and the meta read-back result. `not a code page` / `old shape — untouched` where that is the answer
 - `Download box:` already correct / added / URL fixed / not a template article
 - `Pabau section + CTA block:` already correct / CTA block added / section written / section moved
 - `Conclusion:` already correct / renamed from "<old heading>" / rewritten to conclude / written / CTA link added
@@ -406,7 +537,7 @@ then these sections, one line each:
 - `Featured image:` built and attached (media id + slug) / already had one / not a blog
   article / skipped + why. This line is mandatory; an empty one means D0b did not run
 - `Image captions:` N images, all captioned / N written / N rewritten / N asterisk fixes / no images
-- `Video:` already in the right slot / moved to end of intro from "<old location>" / dead video removed / no video
+- `Video:` already in the right slot / moved to end of intro from "<old location>" / moved beneath Key takeaways (templated code page) from "<old location>" / dead video removed / no video
 - `Sentence gate:` the checker's final summary line, pasted verbatim (e.g. `175 sentences |
   longest 24w | 0 over 25`), then `N rewritten`. If any sentence sits in the 26–30 band, list
   each one and why it can't be split. An empty or absent line means the gate was not run,

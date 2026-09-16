@@ -14,8 +14,12 @@ You will be given one article URL or post ID. Load the fact-check instructions f
 `~/.claude/factcheck-flow/prompts/1-factcheck.md` (read that file) and follow them
 exactly, including the two-bucket output format (a one-line `AUTO` bucket, and an `ASK`
 bucket in the long labelled form). **Fetch the article ONCE**, via the `wordpress-access`
-skill — REST, `context=edit`, with that skill's `_fields=` list. Never WebFetch the public
-URL; the site's nav would consume most of the response. Read only.
+skill — REST, `context=edit`, with that skill's `_fields=` list, which pulls `template` and
+`meta` along with the body. Never WebFetch the public URL; the site's nav would consume most
+of the response. Read only.
+
+On a code page those two fields carry page-visible content that never appears in the body, so
+check the `pdc_*` values per `1-factcheck.md` ("Code pages — the `pdc_*` meta is in scope").
 
 Also read `~/.claude/factcheck-flow/guides/About-Pabau.md` and flag any statement that
 contradicts it as a factual finding — e.g. claiming Pabau has a free trial, calling
@@ -33,8 +37,10 @@ whether a visual exists, on its design, or on its placement — that is the edit
 
 **Do NOT read `WordPress-blocks.md` or `Visuals.md`, and do not audit the block contract.** The
 article-editor's final pass enforces all of it unconditionally later in the run, so a block
-audit here is redone twice and read by nobody. The single exception — a wholly missing FAQ —
-is spelled out in the fact-check instructions.
+audit here is redone twice and read by nobody. The exceptions — a wholly missing FAQ, missing
+documentation requirements, and a Broken code page's empty required `pdc_*` fields — are
+spelled out in the fact-check instructions. Those three are the only absences you report, and
+each is a `missing-section` line in the `AUTO` bucket.
 
 Your entire returned message IS the findings report (it is parsed by the
 orchestrator, not shown to a human as chat). Begin your reply with the exact line:
@@ -45,4 +51,9 @@ then one of: `CORRECT: No fix needed`; the single line `REWRITE_REQUIRED: <reaso
 (when the article is truncated/incomplete or repeats itself — see the fact-check
 instructions, and emit nothing else); or the two buckets, each under its own header,
 with `(none)` where a bucket is empty. Do not add preamble, sign-off, or commentary
+outside the report.
+
+A code-page state signal is neither commentary nor a fourth shape: `CODE_PAGE_HALF_MIGRATED`
+is reported as an ordinary numbered `AUTO` line of type `code-state`, inside the `AUTO`
+bucket, per `1-factcheck.md`. Emit it there — never as a bare token on its own line, and never
 outside the report.

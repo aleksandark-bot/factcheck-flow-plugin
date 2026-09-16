@@ -67,7 +67,9 @@ pronoun) and needs nothing from you. Yours is what shapes the outline it receive
    reader without scrolling deep. The MAIN KEYWORD goes in the article's FIRST SENTENCE, and the
    intro answers the keyword's main query COMPLETELY — a listicle names the best pick and who
    it's for, an informational article defines the subject in the first paragraph. Key takeaways
-   sits directly below the intro and reflects that answer. For a LISTICLE specifically: Key
+   sits directly below the intro and reflects that answer. **On a TEMPLATED or BROKEN code page
+   the intro is `pdc_definition`, not a body paragraph** — the keyword and the complete answer
+   land there and in the opening H2, and Key takeaways is the FIRST body block (§13). For a LISTICLE specifically: Key
    takeaways IS the ranked shortlist — one item per provider, in body order, `#. [Provider] —
    Short reason why they're on the list.` (`WordPress-blocks.md` §2a) — then a comparison TABLE,
    then the provider/pick segments. Do not bury the list behind long "what to look for / why it matters"
@@ -182,6 +184,26 @@ ANSWER-FIRST & TOP-OF-ARTICLE PLACEMENT (Optimization stance #2 + #3 — bake in
 - Put the reader's core answer near the top. Plan the intro to state the direct answer, and plan
   Key takeaways to carry it. If the current article buries the payoff behind long preamble,
   reorder now so the answer surfaces early (this is a structural change you are authorized to make).
+- TEMPLATED or BROKEN CODE PAGE (code-page state = templated or broken, from part 1 S0 step 6b —
+  the state is exactly ONE of the four in §13: templated, broken, half-migrated,
+  old shape): the intro is NOT in the body. It is the `pdc_definition` meta field — invisible in the WordPress editor, absent
+  from `content.raw`, and rendered above the first H2 (`WordPress-blocks.md` §13). So plan NO
+  body intro node. Key takeaways is the FIRST body node, below only the optional JSON-LD
+  `wp:html` schema, and the video node sits directly beneath it. Plan the opening H2 section to
+  carry the full main keyword and a complete answer as well: that overlap with the definition is
+  by design, so do not plan it away. If the article currently HAS a body intro, plan to fold its
+  substance into the opening H2 section and move Key takeaways to the top — never plan to delete
+  the prose. Everything after the first H2 is unchanged.
+  · OLD SHAPE and HALF-MIGRATED: plan the old contract unchanged — body intro
+    first, then Key takeaways, then the video. /SEO never migrates a page: plan no `template`
+    (never sent on an edit, in any state) and no new `pdc_*` work, and do not strip an intro the
+    page still needs. HALF-MIGRATED is a defect and gets a `CODE_PAGE_HALF_MIGRATED` report, but
+    nothing structural changes and the ordinary optimization work is still planned in full.
+  · BROKEN: plan everything above for a templated page — no body intro, Key takeaways first,
+    video beneath it, the keyword swap reaching `pdc_definition` and `pdc_h1_descriptor` — and in
+    ADDITION plan to fill the empty REQUIRED `pdc_*` fields from the article's own content, per
+    §13's field table, because the top area is rendering blank on the live page right now. Broken
+    differs from Templated only by that extra filling step.
 - LISTICLE type: the outline MUST (a) name the actual picks/providers in Key takeaways;
   (b) place a comparison [TABLE] node immediately after the Key takeaways block that follows
   the intro, before the first pick; plan Key takeaways as the ranked `#. [Provider] — reason`
@@ -205,9 +227,11 @@ tag each [UNCHANGED]/[OPTIMIZED]/[NEW] like any other node, and note:
 - **Continue your research** (§7) — plan the block (max 5 under-linked targets, no wrapper H2).
 - **LISTICLE** (§9) — plan a `Pricing` node at the END of every provider review.
 - **Video** (§11) — if the article already carries a YouTube embed, its only slot is the last
-  block before the first body heading, after the intro and the Key takeaways block. Never plan
-  a video between paragraphs, above the intro, in the intro/takeaways seam, or inside a body
-  section. If it currently sits in one of
+  block before the first body heading: after the intro and the Key takeaways block on an ordinary
+  article, and — on a TEMPLATED or BROKEN code page, which has no body intro — directly beneath
+  Key takeaways, as the second content block. That matches the code-page plan above; there is no
+  contradiction to resolve. Never plan a video between paragraphs, above the intro, in the
+  intro/takeaways seam, or inside a body section. If it currently sits in one of
   those places, plan the move; never plan a new video.
 
 IMAGE PLANNING (Optimization stance #4): mark outline nodes that should carry an image with an
@@ -423,11 +447,15 @@ Write /tmp/seo-<slug>-brief.md with the Write tool. It must be self-contained: t
 starts with an empty context and cannot see this conversation. Include, in this order:
 
 1. ARTICLE — URL, post ID, slug, status, is_draft, article type (listicle / code article /
-   template article / standard guide).
+   template article / standard guide). On a code article, add the CODE-PAGE STATE carried from
+   part 1 — exactly ONE of the four §13 states: templated / broken /
+   half-migrated / old shape (section 14 below spells out what each means for the writer).
 2. MAIN KEYWORD — the current one, and the new one if the selection set a new_main_keyword
    (state "unchanged" if not). If it changed, say explicitly that the writer must land it in
    the SEO title, the H1, the FIRST SENTENCE of the body, and the meta description, as an exact
-   match reading naturally in each. Then the fifth spot, the SLUG: on a DRAFT give the
+   match reading naturally in each. On a TEMPLATED or BROKEN code page that third spot is
+   `pdc_definition`'s first sentence and `pdc_h1_descriptor`, not a body sentence — say so
+   explicitly in the brief so the swap is not left in the body alone. Then the fifth spot, the SLUG: on a DRAFT give the
    `proposed_slug` from the selection and tell the writer to set it; on a REFRESH write
    "SLUG: DO NOT TOUCH (published)" in those words. Never leave this line ambiguous.
 3. SEARCH INTENT — your one-paragraph Stage-1 note: the question the query actually asks, the
@@ -464,6 +492,41 @@ starts with an empty context and cannot see this conversation. Include, in this 
    section's body text.
 13. BLOCK NODES — which required blocks you planned as [NEW] vs [UNCHANGED], and the note that
    the writer owns their markup and final ordering per WordPress-blocks.md §1.
+14. CODE PAGE — code articles ONLY; omit this section entirely on any other type. Name the state
+   as exactly ONE of the four in §13, then give the one instruction that follows from it, and
+   point the writer at §13 rather than restating the contract. Note once that ONE template,
+   `template-diagnostic-code.php`, serves both `/diagnostic-codes/` and `/procedure-codes/`.
+   State the field split once, in
+   these words: "EIGHT ALWAYS-REQUIRED fields — `pdc_code_type`, `pdc_code`, `pdc_descriptor`,
+   `pdc_h1_descriptor`, `pdc_definition`, `pdc_chapter`, `pdc_category`, `pdc_group`. TWO
+   CONDITIONAL fields: `pdc_billable` and `pdc_specific` — `yes`/`no` on an ICD-10-CM page, left
+   EMPTY where the code system has no billable/specific distinction, which hides the flag line
+   and the Billable row and is correct rather than a gap; never invented. FIVE OPTIONAL fields
+   that are never filled to satisfy a
+   completeness check: `pdc_h1_prefix` (always empty), `pdc_also_known` (only a genuine
+   authority-named synonym; empty is normal) and `pdc_label_1/2/3` (they relabel the three
+   Related Information rows fed by `pdc_chapter`/`pdc_category`/`pdc_group`, in that order; empty
+   means the template's code-type default, and one is set only to override a default that would
+   be wrong for this code — never blank one that is already set)."
+   · TEMPLATED (state 1) — "The intro is `pdc_definition`, not the body. Write no body intro; Key
+     takeaways first, video beneath it." Paste the CURRENT `pdc_definition` and
+     `pdc_h1_descriptor` verbatim. If the main keyword changed, state that the swap MUST reach
+     `pdc_definition`'s first sentence and `pdc_h1_descriptor` as well as the body, H1, title
+     and meta description — a swap that stops at the body leaves the page's actual opening
+     paragraph pointed at the old keyword. Note whether a body intro exists to fold into the
+     opening H2 section.
+   · BROKEN (state 2) — "Treat this page exactly as TEMPLATED, including the keyword swap into
+     `pdc_definition` and `pdc_h1_descriptor`, PLUS fill the empty required fields." Name each
+     empty REQUIRED field and tell the writer to fill it from the article's own content per §13's
+     field table. Never list a conditional or optional field as a field to fill.
+   · HALF-MIGRATED (state 3) — "Change nothing structural, treat the body as old shape, but do
+     the ordinary optimization work in full: the keyword swap lands in the body intro as on any
+     old-shape article." Mark `CODE_PAGE_HALF_MIGRATED` for the S9 report.
+   · OLD SHAPE (state 4) — "Old contract, unchanged. Do not migrate: no `template`, no `pdc_*`."
+   In every state: never blank a `pdc_*` field, and never send `template` in the PUT — every /SEO
+   save is an edit, and `template` is never sent on an edit. And in every state, if the writer is
+   saving a non-empty `pdc_definition`, that text clears the sentence gate via `--defn` in the
+   same run as the body.
 
 Keep it dense and factual — it is instructions, not prose. Do NOT paste the article body into
 it; the writer fetches that itself. Do NOT restate block markup; the writer reads the contract.
@@ -506,7 +569,15 @@ Keep the returned change-log. It is the /SEO half of the S9 report.
 1. Confirm the writer reported a 2xx save, and that it preserved status. Draft stays draft; a
    post someone accidentally published is still handled as draft content — NEVER change publish
    status. SLUG: on a published post confirm the slug is unchanged; on a draft confirm it
-   matches the brief's `proposed_slug` if one was given.
+   matches the brief's `proposed_slug` if one was given. On a code article where the writer sent
+   `pdc_*` meta, also confirm it reported the post-save `?context=edit&_fields=meta` read-back as
+   matching what it sent — a rejected meta write does not fail the PUT, so silence is not proof.
+   Assert the field split while you are there: on a TEMPLATED or BROKEN page all eight
+   ALWAYS-REQUIRED fields come back non-empty, while an empty `pdc_h1_prefix`, `pdc_also_known`
+   or `pdc_label_*` is correct and is never a failure — and so is an empty `pdc_billable` /
+   `pdc_specific` on a code system with no billable/specific distinction. Confirm the writer did NOT send `template` in any state, and — if it saved
+   a non-empty `pdc_definition` — that the definition cleared the sentence gate via `--defn` in
+   the same run as the body, whatever the state.
 
 1b. WRITE THE RUN BASELINE (published articles only — a draft has nothing to measure yet).
    Google actively tests a changed page for roughly two weeks before its position settles, so
@@ -589,8 +660,8 @@ Keep the returned change-log. It is the /SEO half of the S9 report.
        ASK bucket as the normal case and surface any ASK findings in its report instead of
        deciding them itself.
 4. Produce ONE combined report: the writer's change-log + the /fact results (or the instruction
-   to run /fact next, if you took that route). Add these five lines, which are the /SEO half of
-   the value and exist nowhere else:
+   to run /fact next, if you took that route). Add these five lines — six on a code article —
+   which are the /SEO half of the value and exist nowhere else:
    - `Page diagnosis:` growing / flat / declining, and whether this run was a rescue, a push or
      a defence. Say plainly that a fresh position means nothing for about two weeks.
    - `Review date:` the date from step 1b, and the one thing to check on it (the striking-
@@ -600,6 +671,13 @@ Keep the returned change-log. It is the /SEO half of the S9 report.
    - `Corner-stone links:` the 3-5 source pages from step 2c with their proposed anchors, marked
      clearly as not-yet-done.
    - `Re-crawl:` submitted, or the skip reason.
+   - `Code page:` (code articles only) the state, named as exactly one of the four — templated /
+     broken / half-migrated / old shape — which of the eight ALWAYS-REQUIRED `pdc_*`
+     fields were rewritten or filled, and whether the main-keyword swap reached `pdc_definition`
+     and `pdc_h1_descriptor` or was not needed. Relay the writer's line verbatim. On a
+     half-migrated page state `CODE_PAGE_HALF_MIGRATED` plainly
+     and say the page needs the site migration process, not another /SEO pass — while confirming
+     the ordinary optimization work was still done.
    End with the reminder to purge the WP Rocket cache for the URL.
 ```
 

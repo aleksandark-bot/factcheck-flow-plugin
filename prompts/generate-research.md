@@ -450,7 +450,9 @@ and writes the payload. Raw API JSON never enters the conversation.
    next articles, and they go in the final report.
 
    THE FIVE-SPOT PLACEMENT, all five in scope because nothing is live yet: the SERP title, the
-   H1, the FIRST SENTENCE of the body, the meta description, and the URL SLUG. Restate the slug
+   H1, the FIRST SENTENCE of the body, the meta description, and the URL SLUG. On a
+   code article, on either code route, that third spot is `pdc_definition`'s first sentence plus
+   the opening H2 section — the body carries no intro (§13). Restate the slug
    now that the main keyword is fixed, per G0 step 5.
 
 4. Record the G3 SELECTION:
@@ -555,8 +557,66 @@ to structure. Give it:
     Return, each with the URL it came from: the exact official descriptor, the code's status
     and effective dates, its parent/child codes, any billing or documentation requirement
     stated by the authority, and anything the authority says that the ranking pages get wrong.
-    Under 500 words, written to /tmp/gen-<run>-authority.md. Return ONE line: DONE: authority |
-    <n> facts | <n> sources.
+
+    THEN HARVEST THE CODE-PAGE FIELD VALUES. A code page renders its whole top area — badge, H1,
+    flag line, Related Information card — out of post meta, not out of the body, so these values
+    have to be sourced HERE or they cannot be written at all (`WordPress-blocks.md` §13). Return
+    them as a labelled CODE FIELD RECORD, one per line, each with the URL it came from. The
+    record has three parts — required, conditional and optional — and they are treated
+    differently.
+
+    REQUIRED — six of the eight ALWAYS-REQUIRED `pdc_*` fields are sourced here, and each one
+    must carry a value or an explicit `NOT STATED`:
+      · code_type   — `ICD-10-CM Code` / `CPT Code` / `HCPCS Code`, as the authority names it
+      · code        — the code itself, dotted, exactly as the authority writes it
+      · descriptor  — the OFFICIAL descriptor, VERBATIM, including any 7th-character clause
+      · chapter     — the FIRST of three generic reference slots. `<range> <official chapter
+                      title>` for ICD; for another code system, whichever top-level reference
+                      fact is most useful (the live HCPCS page J8650 carries `Level II` here)
+      · category    — the SECOND slot. `<code> <official category title>` for ICD; same idea
+                      otherwise (J8650: `J — Drugs administered other than oral method`)
+      · group       — the THIRD slot. `<code> <official group title>` for ICD; same idea
+                      otherwise (J8650: `Deleted, effective 31 December 2025`)
+    (The remaining two required fields — `h1_descriptor` and `definition` — are prose the writer
+    composes from this record. Do NOT write them here.)
+
+    CONDITIONAL — two fields, sourced here ONLY where the code system has the distinction:
+      · billable    — yes / no, per the authority
+      · specific    — yes / no (a specific code, or an unspecified / NOS one?)
+                      Every ICD-10-CM code has both. Where the code system states no
+                      billable/specific status at all — HCPCS J8650 is the live example — write
+                      `NO SUCH DISTINCTION` on both lines. That leaves `pdc_billable` and
+                      `pdc_specific` EMPTY, which hides the flag line under the H1 and the
+                      Billable row in Related Information. It is correct, not a gap, and a
+                      yes/no is never invented to fill it.
+
+    OPTIONAL — never filled to make the record look complete:
+      · also_known  — a genuine official synonym the authority itself gives for the code, or
+                      `NOT STATED`. On this line `NOT STATED` means **leave `pdc_also_known`
+                      empty**: empty is the normal, correct state, the Related Information row
+                      hides when it is empty, and it is NOT a gap for anyone downstream to fill.
+                      Never coin a synonym, never paraphrase the descriptor into one.
+      · label_1/2/3 — the row LABELS for the three slots above, in that order (1 → chapter,
+                      2 → category, 3 → group). Leave all three `NOT STATED` unless the
+                      template's default label for this code type would be WRONG for the value
+                      you harvested — J8650 needs `label_3 = Status` because its third slot
+                      carries a deletion status rather than a code group. Never propose a label
+                      that matches the default anyway.
+    (`pdc_h1_prefix` is the remaining optional field. It is always left empty, so it is not part
+    of this record at all — do not harvest a value for it.)
+
+    Every value is the authority's own wording, not a paraphrase. Where the authority does not
+    state one, write `NOT STATED` — never a guess. On a REQUIRED line that is a gap the writer
+    reports under `Skipped`; on the `also_known`, `label_*`, `billable` and `specific` lines it
+    simply means the field stays empty.
+    These strings ship to the live page unedited, and an invented hierarchy label is invisible in
+    the WordPress editor.
+
+    Under 500 words plus the CODE FIELD RECORD, written to /tmp/gen-<run>-authority.md. Return
+    ONE line: DONE: authority | <n> facts | <n> sources | required=<n stated>/6 |
+    billable_specific=<stated|no-such-distinction> | also_known=<stated|empty>. Count only the
+    six REQUIRED lines in the required tally — an empty `also_known`, `label_*`, `billable` or
+    `specific` never counts as a miss.
 
 Then dispatch ONE `general-purpose` merge subagent, pinned to **`model: sonnet`** — merging
 already-structured reports into a fixed shape does not need a stronger model. Give it the file
@@ -596,7 +656,13 @@ PATHS, not the contents:
     - ANSWER SHAPE: how many pages open sections with a short self-contained answer, and how
       good the best example was. That sets the bar for our capsules.
 
-    Keep the whole reply under 1200 words. It is the only thing that survives this stage.
+    CODE FIELD RECORD — if /tmp/gen-<run>-authority.md carries one, reproduce it VERBATIM, line
+    for line, with each source URL and every `NOT STATED` intact. Do not summarize it, reword a
+    descriptor or "tidy" a hierarchy label: these lines are written into post meta and rendered
+    on the live page exactly as they arrive.
+
+    Keep the whole reply under 1200 words; the CODE FIELD RECORD does not count toward that. It
+    is the only thing that survives this stage.
 
 What that subagent returns IS the profile. Keep it — part 2 turns it into the outline and the
 writer receives it in the brief. Do NOT delete the /tmp/gen-<run>-src-*.md files yet: the
@@ -620,4 +686,11 @@ G5 → G10 from it. Carry forward, and nothing else:
   the CLUSTER + PILLAR from check 4
 - the G3 SELECTION JSON, including `deferred` and `vetoed`
 - the **SOURCE + STRUCTURE PROFILE** from G4, and the paths of the per-page source files
+- on a CODE ARTICLE, the **CODE FIELD RECORD** from G4, verbatim — it is what populates six of
+  the eight ALWAYS-REQUIRED `pdc_*` fields the code-page template renders
+  (`WordPress-blocks.md` §13), plus the two CONDITIONAL fields `pdc_billable` and `pdc_specific`
+  where the code system has them; the
+  writer composes the other two required fields, `pdc_h1_descriptor` and `pdc_definition`, and
+  leaves the five OPTIONAL fields (`pdc_h1_prefix`, `pdc_also_known`, `pdc_label_1/2/3`) empty
+  unless the record names a genuine synonym or a default row label would be wrong
 - the paths of every temp file, so G10 can clean up

@@ -93,12 +93,27 @@ clause of prose introducing it, so the reader meets the claim and then sees it. 
 a section whose point is a range, a comparison, a sequence, or a structure, note it as the
 natural home for the visual rather than padding the prose to do the same work.
 
-**A YouTube video never interrupts a run of prose.** Most articles carry a `wp:embed` block and about half have it misplaced — between intro paragraphs, above the intro, or mid body section. Its one slot is the last block before the first body heading: after every intro paragraph and after the Key takeaways block that follows them (the intro may be headless or sit under an opening H2; either way, after all of it). Move a misplaced embed, markup untouched, then repair what it left behind: rejoin any paragraph that was split around it, and delete any "watch the video below" line that no longer points at anything. Never add a video, and never add a spacer after one. Full rule: `WordPress-blocks.md` §11.
+**A YouTube video never interrupts a run of prose.** Most articles carry a `wp:embed` block and about half have it misplaced — between intro paragraphs, above the intro, or mid body section. Its one slot is the last block before the first body heading: after every intro paragraph and after the Key takeaways block that follows them (the intro may be headless or sit under an opening H2; either way, after all of it). Move a misplaced embed, markup untouched, then repair what it left behind: rejoin any paragraph that was split around it, and delete any "watch the video below" line that no longer points at anything. Never add a video, and never add a spacer after one. **On a templated code page the same slot lands one block earlier:** there is no body intro, so Key takeaways is the first block and the embed sits directly beneath it — still the last block before the first body heading, but the second content block rather than the fourth. Full rule: `WordPress-blocks.md` §11.
 
 ## The intro, the main keyword, and Key takeaways
 
 These four rules are checked on every article, and they are rewrites, not flags — fix them
 here and never ask about them.
+
+**First, decide whether this is a templated code page**, because it moves rules 1–3. The
+copy you hold carries the post's `template` and its `meta` object. It is a templated code
+page when `template` is the code template — there is exactly one,
+`template-diagnostic-code.php`, and it serves `/diagnostic-codes/` and `/procedure-codes/`
+pages alike, so never decide this from the URL folder; normally `meta.pdc_code` is populated
+too, and that confirms it. What moves rules 1–3 is the code template itself. On such a page the
+whole area between the H1 and the first H2 is rendered by the page template out of post
+meta, so **the intro is not in the body at all** — it is the `pdc_definition` field, which
+the WordPress editor cannot show you. A page carrying a code template whose required fields
+are partly empty (the **Broken** state) is still template-rendered: rules 1–3 move for it
+exactly as they do for a fully populated page, and the block pass (D0c) fills the empty
+fields. Only a page with an **empty** `template` keeps the ordinary rules below, body intro
+and all — whatever `pdc_*` values it carries. Never set `template` and never migrate a page
+yourself. Full contract: `WordPress-blocks.md` §13.
 
 **1. The main keyword goes in the first sentence of the article.** Not the first paragraph,
 the first *sentence*. Take the focus keyphrase from the article's Yoast field (or the brief
@@ -106,6 +121,12 @@ handed to you) and work it into that sentence naturally, as part of something a 
 write. If the exact phrase can't be made to read cleanly, use the closest natural form that
 still contains the head term — never a bolted-on prefix ("When it comes to best EHR for
 private practices, …") and never a keyword-stuffed opener.
+
+On a **templated code page** this rule applies to the first sentence of `pdc_definition`,
+not to anything in the body. The live formula — `<CODE> is the billable ICD-10-CM code for
+<official descriptor>.` — already satisfies it: the bare code is the head term. Leave that
+opening alone; do not force the full "ICD-10 Code S65.419A" phrasing into a sentence where
+it reads worse.
 
 **2. The intro must answer the keyword's main query completely.** Partially is a fail. A
 reader who stops at the end of the intro leaves with the answer, and so does an answer engine
@@ -126,12 +147,24 @@ Cut whatever preamble the old intro used to reach the point, then rebuild it: ke
 first sentence, the direct answer, then at most a couple of sentences of context. A windup
 that runs three paragraphs before the answer is not an intro.
 
+On a **templated code page** this rule has two homes, and that is deliberate.
+`pdc_definition` must answer the query completely on its own, and the **opening H2 section**
+must answer it too, in more depth and carrying the full main keyword. The overlap between
+the two is by design — do not "de-duplicate" it by thinning either one.
+
 **3. Key takeaways sits directly below the intro** — except on a **template article**, where
 the download box sits in that seam and Key takeaways follows the download box instead. The
 block is no longer the first body element. Move it down if it sits above the intro (or above
 the download box, on a template), and leave nothing else in the seam — no image, no spacer,
 no video, no comparison table. Document order is `WordPress-blocks.md` §1; the block markup is
 §2; the download box is §3.
+
+On a **templated code page** Key takeaways is the FIRST body block, with nothing above it but
+an optional schema `wp:html`. There is no body intro for it to sit below, so the
+intro/takeaways seam rule simply does not apply. **Never add an intro to the body of a
+templated code page** — the Code Definition already does that job, and a second one
+duplicates it. A body intro found on such a page is a defect: fold its substance into the
+opening H2 section and move Key takeaways to the top. Do not delete the prose.
 
 **4. On a listicle, Key takeaways IS the ranked list of the providers the article chose.**
 One `items` entry per provider, in the article's own order, written literally as:
@@ -147,6 +180,38 @@ thing it does best. One item per provider reviewed, none for a provider the arti
 review, and nothing else in the block — no methodology note, no "what to look for" takeaway.
 Rewrite an existing listicle's takeaways into this form; the full contract is §2a.
 
+### The Code Definition and the H1 descriptor (templated code pages)
+
+Two meta fields are prose, and this pass owns them like any other prose in the article.
+
+- **`pdc_definition` — the Code Definition, and the page's intro.** Everything in this file
+  and in `core-rules.md` applies to it: US English, the AI tells, no hedging windup, the
+  4-line / 60-word paragraph limit, and the 25-word sentence ceiling (30 only where a split
+  would break the meaning). It stays **plain text — no HTML and no links.** The template
+  renders it as paragraphs split on `\n\n`, so use a blank line between paragraphs and
+  nothing else. Keep it to 1–2 paragraphs, roughly 40–110 words. The "for codes, intro starts
+  with a definition" rule further down this file governs it.
+- **`pdc_h1_descriptor` — the plain-language descriptor after the dash in the H1.** Yours to
+  write: short, plain-language, readable ("Unspecified thumb blood vessel laceration"). It is
+  **not** the official descriptor — that is `pdc_descriptor`, which is verbatim official text
+  and not yours to reword.
+
+Never blank either field, and never touch the other `pdc_*` fields here — they are factual
+values, handed down as `meta:<field>` findings from Stage 1.
+
+**Eight `pdc_*` fields are always required** on a page whose template renders them:
+`pdc_code_type`, `pdc_code`, `pdc_descriptor`, `pdc_h1_descriptor`, `pdc_definition`,
+`pdc_chapter`, `pdc_category`, `pdc_group`. Filling an empty one belongs to the block pass
+(D0c), not to this pass. **Two fields are conditional:** `pdc_billable` and `pdc_specific` are
+required (`yes`/`no`) on an ICD-10-CM page and left empty where the code system has no
+billable/specific distinction — empty is correct there, never a gap. **Five fields are optional
+and stay empty unless there is a real reason:** `pdc_h1_prefix` is always left empty (the
+template supplies the prefix — "ICD code", "HCPCS code"), `pdc_also_known` is written only when
+the authority names a genuine synonym for the code, and `pdc_label_1`, `pdc_label_2`,
+`pdc_label_3` relabel the three Related Information rows only where the template's default label
+would be wrong. Never write any of them to satisfy a completeness check, and never invent a
+synonym.
+
 ## Structure and blocks
 
 **`WordPress-blocks.md` is the single source of truth for the required document order and for every block's markup.** Open it whenever you add, convert, or move a block, and copy the markup from there.
@@ -157,7 +222,7 @@ Your job in this pass is the *copy* inside that structure, and one structural du
 
 When you write those sections, the content rules are:
 
-- **Key takeaways** — sits directly below the intro, except on a template article where it sits directly below the download box instead. On a non-listicle, every takeaway is a full sentence in sentence case (capitalize only the first word and genuine proper nouns). On a **listicle** it is the ranked provider list in the `#. [Provider] — reason` form above. The block form, the mandatory `"title":"Key takeaways"` attribute, the casing rule and the listicle form are in §2 and §2a.
+- **Key takeaways** — sits directly below the intro, except on a template article where it sits directly below the download box instead, and on a **templated code page**, where it is the FIRST body block with nothing above it but an optional schema `wp:html` (there is no body intro — `pdc_definition` is the intro). On a non-listicle, every takeaway is a full sentence in sentence case (capitalize only the first word and genuine proper nouns). On a **listicle** it is the ranked provider list in the `#. [Provider] — reason` form above. The block form, the mandatory `"title":"Key takeaways"` attribute, the casing rule and the listicle form are in §2 and §2a.
 - **Download box** (template articles) — sits directly below the intro, before Key takeaways. The H2 reads "Download your free <template name>", grammatical rather than exact-match; the description names what is actually inside this file, in 1–2 sentences. Verify the download URL returns 200 before saving; if nothing resolves, keep the box and record the missing asset under "Skipped". Markup, the URL pattern, and the order are in §3.
 - **Pabau section** — 2–4 paragraphs on the actual workflow: what the practice does today, what Pabau does instead, the outcome. Topic-specific H2, never "Why choose Pabau". If a Pabau section already exists elsewhere in the body, move or rework it into this slot rather than writing a second one. Placement, heading rules, and the CTA block are in §4–§5.
 - **Conclusion** — it must genuinely conclude, not summarize: no restating the Key takeaways, no listing what the article covered. Land the judgment the article earned — what the reader should do now, what changes if they do, the trade-off worth remembering — in 2–4 short paragraphs, ending with the inline CTA link. Heading rule and CTA markup are in §6.
@@ -176,6 +241,8 @@ For codes, intro starts with a definition — delete all hedging language that s
 - BAD: Most heart transplant complications fall cleanly into a named category: rejection, failure, infection. When the complication doesn't fit any of those, ICD-10 Code T86.298 is the correct billable code. It covers every post-transplant cardiac complication not elsewhere classified within the T86.2x subcategory, and it's the code that coders most frequently reach for when documentation describes something atypical in a transplant recipient's clinical course.
 - GOOD: ICD-10 Code T86.298 is a billable code that covers every post-transplant cardiac complication not elsewhere classified within the T86.2x subcategory. It's the code that coders most frequently reach for when documentation describes something atypical in a transplant recipient's clinical course.
 
+On a **templated code page** this rule now governs `pdc_definition` — the Code Definition is the intro there, so the BAD/GOOD pair above applies to it word for word: open with the definition, cut the stakes-setting windup. On any other code page it still governs the body intro, unchanged.
+
 Fix outdated feature references, if any (e.g. Echo AI).
 
 Break up long paragraphs (no more than 4 lines or 60 words).
@@ -193,6 +260,14 @@ python3 ~/.claude/factcheck-flow/bin/sentence_check.py --file /tmp/body.html
 Run it on the body you hold, rewrite every sentence it lists, re-run, and repeat until it exits 0. **Nothing over 30 words ships, ever.** The 26–30 band is a per-sentence exception you have to justify, not a second budget — if you can't say why a split would break the meaning, split it. Splitting one long sentence into two is almost always the fix.
 
 The ceiling covers every piece of prose the checker sees: body paragraphs, list items, table cells, image captions, Key takeaways items, CTA and download-box copy, FAQ answers, meta description.
+
+**Any Code Definition you are about to save is gated too.** If the `pdc_definition` value going into the save is non-empty, it goes through the gate — whatever state the page is in and whatever code route it is on. It is prose you wrote, and it never reaches the checker through the body, so hand it over separately: write the exact `pdc_definition` text you are about to save to its own plain-text file and pass it with `--defn` in the same invocation as the body.
+
+```bash
+python3 ~/.claude/factcheck-flow/bin/sentence_check.py --file /tmp/body.html --defn /tmp/defn.txt
+```
+
+The gate is cleared only when that combined run exits 0.
 
 Short does not mean choppy, and the gate is not an excuse for damage. No dropped subjects, no telegraphic fragments, no clause welded on with a semicolon or em dash so one sentence can pass as two. Vary the length, per the style guide — a run of same-length sentences reads like a metronome. The script counts words; you still own the prose.
 
