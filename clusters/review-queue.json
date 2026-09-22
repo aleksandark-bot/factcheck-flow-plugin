@@ -1,0 +1,1014 @@
+{
+  "version": 1,
+  "built": "2026-09-22 13:18",
+  "rows": [
+    {
+      "url": "https://pabau.com/blog/7-best-ai-medical-scribe/",
+      "title": "7 Best AI medical scribe tools in 2026: Compared for practices",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "AI in Healthcare",
+      "rule": "R3 AI head",
+      "note": "Moved out of Forms & Documentation — R3 AI head-term fires before the industry/feature tests. Vertical kept as a tag."
+    },
+    {
+      "url": "https://pabau.com/blog/7-best-dermatology-ehr-software/",
+      "title": "7 Best dermatology EHR software options compared for 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/7-best-occupational-therapy-practice-management-software/",
+      "title": "7 Best occupational therapy practice management software (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Physical Therapy, Rehab & Allied Health",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/7-best-patient-communication-software/",
+      "title": "7 Best patient communication software for clinics (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Patient Experience & Retention",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/7-sports-medicine-software/",
+      "title": "7 Best sports medicine software platforms in [year]",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Physical Therapy, Rehab & Allied Health",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/9-best-healthcare-payroll-software/",
+      "title": "9 Best healthcare payroll software platforms for 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/9-medical-spa-accounting-software/",
+      "title": "9 Best medical spa accounting software options in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/9-patient-self-scheduling-software/",
+      "title": "9 Best patient self scheduling software options [year]",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Patient Experience & Retention",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/9-wellness-clinic-software/",
+      "title": "9 Best wellness clinic software platforms in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Spa & Wellness",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/aesthetic-emr-software/",
+      "title": "7 Best Aesthetic EMR Software in 2026: Compare Features, Pricing, and More",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/appointment-reminder-software/",
+      "title": "Best appointment reminder software for clinics in 2026: 7 top picks compared",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/beauty-salon-booking-software-in-the-us/",
+      "title": "Best Beauty Salon Booking Software US (2026)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Spa & Wellness",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/behavioral-health-practice-management-software/",
+      "title": "Best behavioral health practice management software: 7 platforms compared (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Mental Health & Therapy",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-aesthetic-clinic-software/",
+      "title": "7 Best Aesthetic Clinic Software Solutions (2026 Reviewed)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-ai-practice-management-tools/",
+      "title": "The 9 best AI practice management tools for med spas (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "AI in Healthcare",
+      "rule": "R3 AI head",
+      "note": "Moved out of Med Spa & Aesthetics — R3 AI head-term fires before the industry/feature tests. Vertical kept as a tag."
+    },
+    {
+      "url": "https://pabau.com/blog/best-booking-software/",
+      "title": "Streamlining appointments: The 12 best booking software options",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Patient Experience & Retention",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-chiropractic-ehr/",
+      "title": "8 Best Chiropractic EHR Software Systems in 2026 (Updated)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Physical Therapy, Rehab & Allied Health",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-clinic-management-software-for-multi-location-practices/",
+      "title": "Best Clinic Management Software for Multi-Location Practices (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-clinic-software-south-africa/",
+      "title": "Best Clinic Software in South Africa (2026)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-dermatology-practice-management-software/",
+      "title": "Best Dermatology Practice Management Software in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-e-prescribing-software/",
+      "title": "Best E-Prescribing Software for 2026: 7 Platforms Compared",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Clinical Tools",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-ehr-for-private-practice/",
+      "title": "11 Best EHR for Private Practice in 2026: Features, Pricing & More",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Primary & Preventive Care",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-ehr-for-solo-practice/",
+      "title": "Best EHR for solo practice: 7 options compared (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-ehr-for-therapists/",
+      "title": "Best EHR for Therapists: 7 Platforms Compared (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Mental Health & Therapy",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-ehr-software-for-mental-health/",
+      "title": "Best EHR for Mental Health: 7 Platforms Compared (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Mental Health & Therapy",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-ehr-systems-in-ireland/",
+      "title": "Top 5 EHR Systems in Ireland (2026 Guide)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-electronic-prescribing-software-in-the-us/",
+      "title": "Best Electronic Prescribing Software in the US (2026)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Clinical Tools",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-emr-for-iv-therapy/",
+      "title": "How to choose the best EMR for IV therapy practices",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Longevity, Functional & IV Therapy",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-emr-for-small-practice/",
+      "title": "Best EMR for small practice: 8 top systems compared (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-emr-software-for-med-spas/",
+      "title": "Best EMR Software for Med Spas: Top 6 Compared (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-emr-software/",
+      "title": "7 Best EMR Software for Medical & Aesthetic Practices in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-gynecology-ehr/",
+      "title": "6 Best Gynecology EHR Systems for OB-GYN Clinics in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Women's & Reproductive Health",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-hair-transplant-clinic-software-us/",
+      "title": "Best Hair Transplant Clinic Software in the US (2026 Guide)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-integrated-payment-processing-tools/",
+      "title": "9 best integrated payment processing tools for med spas",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-med-spa-inventory-management-software/",
+      "title": "9 Best Med Spa Inventory Management Software (2026 Reviewed)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-medical-practice-management-software/",
+      "title": "9 Best Medical Practice Management Tools & Software In 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-medical-software/",
+      "title": "6 Best medical software for clinics and private practices in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-medical-spa-scheduling-software/",
+      "title": "Best Medical Spa Scheduling Software Systems in 2026: Features, Pricing & Reviews",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-medical-spa-software/",
+      "title": "8 Best Medical Spa Software & Systems (2026 Reviewed)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-medical-transcription-software/",
+      "title": "9 Best medical transcription software tools for clinics in [year]",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Clinical Documentation & Templates",
+      "rule": "R5 feature",
+      "note": "No AI head term in the title, so R3 does not fire."
+    },
+    {
+      "url": "https://pabau.com/blog/best-patient-engagement-software/",
+      "title": "Best Patient Engagement Software: 7 Platforms Compared (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Patient Experience & Retention",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-physical-therapy-practice-management-software/",
+      "title": "Best Physical Therapy Practice Management Software 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Physical Therapy, Rehab & Allied Health",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-plastic-surgery-software/",
+      "title": "5 Best plastic surgery software solutions for aesthetic and surgical practices in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-practice-management-software-in-canada-2026/",
+      "title": "Best Practice Management Software in Canada (2026 Guide)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-primary-care-ehr/",
+      "title": "5 Best primary care EHR software solutions for 2026: Features, pricing, and reviews",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Primary & Preventive Care",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-psychology-practice-software-us/",
+      "title": "Best Psychology Practice Software in the US (2026)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Mental Health & Therapy",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-salon-software-uk/",
+      "title": "Best Salon Software UK: 7 Top Platforms Compared (2026)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Spa & Wellness",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-software-for-spas/",
+      "title": "The top 7 innovative software solutions for spas",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Spa & Wellness",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/best-therapy-practice-management-software/",
+      "title": "Best Therapy Practice Management Software: 7 Platforms Compared",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Mental Health & Therapy",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/boostez-reservations-en-ligne-promotion-site/",
+      "title": "",
+      "decision": "NON-ENGLISH — excluded from all English-only work",
+      "cluster_as_assigned": "",
+      "rule": "",
+      "note": "",
+      "sheet_row_shifted": true
+    },
+    {
+      "url": "https://pabau.com/blog/burnout-in-healthcare/",
+      "title": "The top 4 reasons for burnout in healthcare + solutions",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/chiropractic-practice-management-software/",
+      "title": "6 Best Chiropractic Practice Management Software (2026 Ranked)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Physical Therapy, Rehab & Allied Health",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/claim-md-clearinghouse/",
+      "title": "Claim.MD clearinghouse review: What it is and how it works",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Medical Billing, Coding & Claims",
+      "rule": "R1 billing wall",
+      "note": "Clearinghouse vendor review — R1 billing wall fires before R2."
+    },
+    {
+      "url": "https://pabau.com/blog/claim-md-pricing/",
+      "title": "Claim.MD pricing: Plans, add-ons, and what practices pay",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Medical Billing, Coding & Claims",
+      "rule": "R1 billing wall",
+      "note": "Clearinghouse vendor review — R1 billing wall fires before R2."
+    },
+    {
+      "url": "https://pabau.com/blog/claim-md-vs-office-ally/",
+      "title": "Claim.MD vs Office Ally: Which clearinghouse should your practice use?",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Medical Billing, Coding & Claims",
+      "rule": "R1 billing wall",
+      "note": "Reads like a comparison but trips the billing wall — same call as the Pabau vs. Waystar row."
+    },
+    {
+      "url": "https://pabau.com/blog/clinic-management-software/",
+      "title": "Top 5 Clinic Management Software Solutions for Increasing Revenue",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/clinical-documentation-software/",
+      "title": "Best clinical documentation software for practices in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Clinical Documentation & Templates",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/clinical-notes-software/",
+      "title": "Best clinical notes software in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Clinical Documentation & Templates",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/conseils-pour-motiver-vos-employes/",
+      "title": "",
+      "decision": "NON-ENGLISH — excluded from all English-only work",
+      "cluster_as_assigned": "",
+      "rule": "",
+      "note": "",
+      "sheet_row_shifted": true
+    },
+    {
+      "url": "https://pabau.com/blog/dermatology-emr-software-in-the-us/",
+      "title": "Best Dermatology EMR Software in the US (2026)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/dermatology-software-in-canada/",
+      "title": "Best Dermatology Software Canada 2026: Compare 7 Platforms",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/digital-patient-engagement/",
+      "title": "Digital patient engagement: strategies, tools, and best practices",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Patient Experience & Retention",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/direct-primary-care-ehr/",
+      "title": "Best Direct Primary Care EHR Software Solutions for 2026: Features, Pricing & Reviews",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Primary & Preventive Care",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/direct-primary-care-software/",
+      "title": "6 Best direct primary care software solutions in 2026: Features, pricing, and reviews",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Primary & Preventive Care",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/ehr-security/",
+      "title": "EHR security: Risks, HIPAA requirements and best practices for your practice",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Compliance & Security",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/ehr-systems-in-canada/",
+      "title": "Top 6 EHR Systems Canada (2026 Guide)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/emr-for-weight-loss-clinic/",
+      "title": "Best EMR for weight loss clinics: 7 Platforms compared in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Weight Loss & Metabolic Health",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/emr-software-australia/",
+      "title": "Top 10 EMR Software in Australia (2026 Guide)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/functional-medicine-emr/",
+      "title": "7 Best Functional Medicine EMR software for Clinics in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Longevity, Functional & IV Therapy",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/gp-clinic-software/",
+      "title": "6 Best GP Clinic Tools & Software in 2026: Features, Pricing & More",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Primary & Preventive Care",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/guide-des-taxes-pour-les-salons-et-spas/",
+      "title": "",
+      "decision": "NON-ENGLISH — excluded from all English-only work",
+      "cluster_as_assigned": "",
+      "rule": "",
+      "note": "",
+      "sheet_row_shifted": true
+    },
+    {
+      "url": "https://pabau.com/blog/healthcare-crm-software/",
+      "title": "6 Best Healthcare CRM Software for Growing Practices in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Patient Experience & Retention",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/healthcare-payroll-software/",
+      "title": "Best healthcare payroll software for clinics and practices (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/hearing-aid-evaluation/",
+      "title": "Hearing aid evaluation: What to expect at your appointment",
+      "decision": "Rule-6 fallback — must be logged for review",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R6 fallback — audiology, no silo; review",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/hipaa-compliance-software/",
+      "title": "7 Best HIPAA Compliance Software for Practice Owners in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Compliance & Security",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/hipaa-compliant-ai-tools/",
+      "title": "HIPAA compliant AI tools: top 8 picks for practices in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "AI in Healthcare",
+      "rule": "R3 AI head",
+      "note": "Moved out of Compliance & Security — R3 AI head-term fires before the industry/feature tests. Vertical kept as a tag."
+    },
+    {
+      "url": "https://pabau.com/blog/hipaa-compliant-scheduling-software/",
+      "title": "6 Best HIPAA Compliant Scheduling Software for Practice Owners",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/hipaa-compliant-telehealth-platforms/",
+      "title": "Best HIPAA compliant telehealth platforms in 2026: Top 7 compared",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/ivf-clinic-management-software-in-the-us/",
+      "title": "Best IVF Clinic Management Software in the US (2026)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Women's & Reproductive Health",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/laser-hair-removal-clinic-management-software/",
+      "title": "4 Best hair removal studio software platforms for laser clinics (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/logiciel-ajouter-touche-personnelle-medispas/",
+      "title": "",
+      "decision": "NON-ENGLISH — excluded from all English-only work",
+      "cluster_as_assigned": "",
+      "rule": "",
+      "note": "",
+      "sheet_row_shifted": true
+    },
+    {
+      "url": "https://pabau.com/blog/med-spa-marketing-software/",
+      "title": "7 Best Med Spa Marketing Software in 2026: Features, Pricing & Reviews",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/medical-practice-scheduling-software/",
+      "title": "5 Best Medical Practice Scheduling Software Solutions for 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/medical-spa-emr-software/",
+      "title": "8 Best Medical Spa EMR Software Solutions in 2026: Key Features, Reviews & Comparisons",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/medical-spa-inventory-software/",
+      "title": "8 Best Medical Spa Inventory Software Solutions for 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/medical-spa-software-uae/",
+      "title": "Top 7 Medical Spa Software in the UAE (2026)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/multi-location-scheduling-software/",
+      "title": "6 Best Multi-Location Scheduling Software in 2026 (Reviewed)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/nouvelles-restrictions-en-matiere-doctroi-de-licences-au-royaume-uni/",
+      "title": "",
+      "decision": "NON-ENGLISH — excluded from all English-only work",
+      "cluster_as_assigned": "",
+      "rule": "",
+      "note": "",
+      "sheet_row_shifted": true
+    },
+    {
+      "url": "https://pabau.com/blog/osteopathy-practice-management-software/",
+      "title": "9 Best Osteopathy Practice Management Tools & Software",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Physical Therapy, Rehab & Allied Health",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/outpatient-emr/",
+      "title": "8 Best Outpatient EMR Software for Clinics & Practices (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/pabau-surete-securite-cliniques/",
+      "title": "",
+      "decision": "NON-ENGLISH — excluded from all English-only work",
+      "cluster_as_assigned": "",
+      "rule": "",
+      "note": "",
+      "sheet_row_shifted": true
+    },
+    {
+      "url": "https://pabau.com/blog/patient-experience-software/",
+      "title": "Best patient experience software in 2026: 7 platforms compared",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Patient Experience & Retention",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/patient-intake-software/",
+      "title": "Best patient intake software for private practices in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Clinical Documentation & Templates",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/patient-management-software/",
+      "title": "9 Best Patient Management Software Systems (2026 Reviewed)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Patient Experience & Retention",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/patient-portal-software/",
+      "title": "9 Best Patient Portals &  Software for Medical Practices in 2026: Features, Pricing & Reviews",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Patient Experience & Retention",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/patient-reactivation-software/",
+      "title": "Best patient reactivation software for clinics in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Patient Experience & Retention",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/patient-recall-software/",
+      "title": "Best patient recall software: 7 platforms compared for 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Patient Experience & Retention",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/patient-retention-software/",
+      "title": "Best Patient Retention Software for Clinics",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Patient Experience & Retention",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/patient-satisfaction-survey-software/",
+      "title": "7 Best patient satisfaction survey software for practices (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Patient Experience & Retention",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/patient-scheduling-software/",
+      "title": "7 Best Patient Scheduling Software for Medical Practices: Pros, Cons, Pricing and More",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/physical-therapy-emr-software/",
+      "title": "Best Physical Therapy EMR Software in 2026: 7 Platforms Compared",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Physical Therapy, Rehab & Allied Health",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/physiotherapy-clinic-management-software/",
+      "title": "5 Best physiotherapy practice management software tools (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Physical Therapy, Rehab & Allied Health",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/plastic-surgery-ehr-software/",
+      "title": "7 Best Plastic Surgery EHR Software Providers (2026)",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/plastic-surgery-practice-emr-software/",
+      "title": "6 Best Plastic Surgery Practice EMR Software for 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Med Spa & Aesthetics",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/practice-management-software-features/",
+      "title": "Top 10 Essential Practice Management Software Features in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/practice-management-software-podiatry/",
+      "title": "7 Best practice management software platforms podiatry clinics rely on in [year]",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Physical Therapy, Rehab & Allied Health",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/prior-authorization-software/",
+      "title": "Prior authorization software: Pabau vs CoverMyMeds [year]",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Medical Billing, Coding & Claims",
+      "rule": "R1 billing wall",
+      "note": "Reads like a comparison but trips the billing wall — same call as the Pabau vs. Waystar row."
+    },
+    {
+      "url": "https://pabau.com/blog/psychiatry-ehr/",
+      "title": "Best EHR for psychiatry: 6 platforms compared",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Mental Health & Therapy",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/saas-ehr/",
+      "title": "Best SaaS EHR software in 2026: 6 platforms compared",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/speech-therapy-practice-management-software/",
+      "title": "6 Best speech therapy practice management software: 2026 guide",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Mental Health & Therapy",
+      "rule": "§3.2 speech therapy sits in Mental Health & Therapy",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/telehealth-platforms-uk/",
+      "title": "Top 7 Telehealth Platforms in the UK (2026 Guide)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/telemedicine-software/",
+      "title": "6 Best telemedicine software platforms for clinics in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/the-best-apps-to-use-in-your-clinic/",
+      "title": "The best apps to use in your clinic",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/the-best-medical-software/",
+      "title": "6 Best medical software for clinics and private practices in 2026",
+      "decision": "Rule-2 candidate — vendor roundup",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R5 feature",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/top-7-coaching-management-software-in-the-uk-2026-guide/",
+      "title": "Top 7 Coaching Management Software UK (2026 Guide)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Mental Health & Therapy",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/top-7-mental-health-software-in-the-us-2026-guide/",
+      "title": "Top 7 Mental Health Software in the US (2026 Guide)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Mental Health & Therapy",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/top-7-weight-loss-clinic-software-in-the-us-2026-guide/",
+      "title": "Top 7 Weight Loss Clinic Software in the US (2026 Guide)",
+      "decision": "Rule-2 candidate — vendor roundup (country list)",
+      "cluster_as_assigned": "Weight Loss & Metabolic Health",
+      "rule": "R4 industry",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/blog/utiliser-donnees-meilleures-decisions-commerciales/",
+      "title": "",
+      "decision": "NON-ENGLISH — excluded from all English-only work",
+      "cluster_as_assigned": "",
+      "rule": "",
+      "note": "",
+      "sheet_row_shifted": true
+    },
+    {
+      "url": "https://pabau.com/blog/videoconferences-sures-consultations-patients/",
+      "title": "",
+      "decision": "NON-ENGLISH — excluded from all English-only work",
+      "cluster_as_assigned": "",
+      "rule": "",
+      "note": "",
+      "sheet_row_shifted": true
+    },
+    {
+      "url": "https://pabau.com/templates/character-traits-worksheet/",
+      "title": "Character traits worksheet: Free printable for K-6 teachers",
+      "decision": "Retire / reassign — see §5.5",
+      "cluster_as_assigned": "Retirement / reassign bucket",
+      "rule": "§5.5 retire — K-6 education, off-ICP",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/templates/leadership-style-quiz/",
+      "title": "Leadership Style Quiz",
+      "decision": "Rule-6 fallback — must be logged for review",
+      "cluster_as_assigned": "Practice Management & Operations",
+      "rule": "R6 fallback — staff/leadership, no silo; review",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/templates/lecture-notes/",
+      "title": "Lecture notes template: How to capture and review class content",
+      "decision": "Retire / reassign — see §5.5",
+      "cluster_as_assigned": "Retirement / reassign bucket",
+      "rule": "§5.5 retire — student/teacher intent, off-ICP",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/templates/tattoo-pain-chart/",
+      "title": "Tattoo pain chart: Body map guide",
+      "decision": "Retire / reassign — see §5.5",
+      "cluster_as_assigned": "Retirement / reassign bucket",
+      "rule": "§5.5 retire — consumer tattoo intent, off-ICP",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/templates/veterinary-new-client-form-template/",
+      "title": "Veterinary New Client Form Template",
+      "decision": "Retire / reassign — see §5.5",
+      "cluster_as_assigned": "Retirement / reassign bucket",
+      "rule": "§5.5 retire — veterinary, off-ICP",
+      "note": ""
+    },
+    {
+      "url": "https://pabau.com/templates/will-preparation-worksheet/",
+      "title": "Will preparation worksheet: What to gather before you see an attorney",
+      "decision": "Retire / reassign — see §5.5",
+      "cluster_as_assigned": "Retirement / reassign bucket",
+      "rule": "§5.5 retire — legal/consumer intent, off-ICP",
+      "note": ""
+    }
+  ]
+}

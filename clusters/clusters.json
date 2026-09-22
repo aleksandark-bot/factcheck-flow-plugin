@@ -1,0 +1,498 @@
+{
+  "version": 1,
+  "built": "2026-09-22 13:18",
+  "clusters": [
+    {
+      "n": 1,
+      "id": "med-spa-aesthetics",
+      "name": "Med Spa & Aesthetics",
+      "tier": "Tier 1 — Industry",
+      "pillar_name": "Medical Spa Software",
+      "pillar_url": "https://pabau.com/industry/medical-spa-software/",
+      "pillar_status": "Live — strongest /industry/ page",
+      "supporting": [
+        "/industry/medspa-software/",
+        "/industry/skin-clinic-software/",
+        "/industry/dermatology-emr-software/",
+        "/industry/laser-clinic-software/",
+        "/industry/plastic-surgery-emr/"
+      ],
+      "subclusters": [
+        "med spa",
+        "skin clinic",
+        "dermatology",
+        "laser",
+        "plastic & cosmetic surgery",
+        "hair clinic & transplant"
+      ],
+      "posts": 312,
+      "md_count": "~308"
+    },
+    {
+      "n": 2,
+      "id": "mental-health-therapy",
+      "name": "Mental Health & Therapy",
+      "tier": "Tier 1 — Industry",
+      "pillar_name": "Therapy Practice Management Software",
+      "pillar_url": "https://pabau.com/industry/therapy-practice-management/",
+      "pillar_status": "Live",
+      "supporting": [
+        "/industry/mental-health-emr/",
+        "/industry/psychology-practice-software/",
+        "/industry/psychiatry-emr-software/",
+        "/industry/adhd-clinic-software/",
+        "/industry/coaching-client-management-system/",
+        "/industry/speech-therapy-software/"
+      ],
+      "subclusters": [
+        "therapy & counseling",
+        "psychology",
+        "psychiatry",
+        "ADHD",
+        "coaching",
+        "speech therapy"
+      ],
+      "posts": 567,
+      "md_count": "~525"
+    },
+    {
+      "n": 3,
+      "id": "physical-therapy-rehab",
+      "name": "Physical Therapy, Rehab & Allied Health",
+      "tier": "Tier 1 — Industry",
+      "pillar_name": "Physical Therapy EMR",
+      "pillar_url": "https://pabau.com/industry/physical-therapy-emr/",
+      "pillar_status": "Live",
+      "supporting": [
+        "/industry/physio-software/",
+        "/industry/chiropractic-software/",
+        "/industry/osteopathy-practice-software/",
+        "/industry/sports-medicine-software/",
+        "/industry/occupational-therapy-software/"
+      ],
+      "subclusters": [
+        "physical therapy",
+        "chiropractic",
+        "osteopathy",
+        "sports medicine",
+        "occupational therapy",
+        "acupuncture",
+        "podiatry"
+      ],
+      "posts": 273,
+      "md_count": "~270"
+    },
+    {
+      "n": 4,
+      "id": "primary-preventive-care",
+      "name": "Primary & Preventive Care",
+      "tier": "Tier 1 — Industry",
+      "pillar_name": "GP Clinic Software",
+      "pillar_url": "https://pabau.com/industry/gp-clinic-software/",
+      "pillar_status": "Live",
+      "supporting": [
+        "/industry/gp-software/",
+        "/industry/travel-clinic-software/",
+        "/features/vaccination-management-software/"
+      ],
+      "subclusters": [
+        "private GP",
+        "direct primary care",
+        "travel clinics & vaccinations"
+      ],
+      "posts": 145,
+      "md_count": "~125"
+    },
+    {
+      "n": 5,
+      "id": "weight-loss-metabolic",
+      "name": "Weight Loss & Metabolic Health",
+      "tier": "Tier 1 — Industry",
+      "pillar_name": "Weight Loss Clinic Software",
+      "pillar_url": "https://pabau.com/industry/weight-loss-clinic-software/",
+      "pillar_status": "Live — sprint target",
+      "supporting": [
+        "/industry/metabolic-health-emr/"
+      ],
+      "subclusters": [
+        "weight loss",
+        "GLP-1",
+        "metabolic health"
+      ],
+      "posts": 119,
+      "md_count": "~114"
+    },
+    {
+      "n": 6,
+      "id": "longevity-iv-therapy",
+      "name": "Longevity, Functional & IV Therapy",
+      "tier": "Tier 1 — Industry",
+      "pillar_name": "Longevity Clinic Software",
+      "pillar_url": "https://pabau.com/industry/longevity-clinic-software/",
+      "pillar_status": "Live — sprint target",
+      "supporting": [
+        "/industry/functional-medicine-software/",
+        "/industry/regenerative-medicine-emr/",
+        "/industry/iv-therapy-emr-software/"
+      ],
+      "subclusters": [
+        "longevity",
+        "functional & integrative medicine",
+        "regenerative medicine",
+        "IV therapy & infusion"
+      ],
+      "posts": 37,
+      "md_count": "~37"
+    },
+    {
+      "n": 7,
+      "id": "womens-reproductive-health",
+      "name": "Women's & Reproductive Health",
+      "tier": "Tier 1 — Industry",
+      "pillar_name": "Fertility Clinic Software",
+      "pillar_url": "https://pabau.com/industry/fertility-clinic-software/",
+      "pillar_status": "Live",
+      "supporting": [
+        "/industry/obgyn-emr-software/",
+        "/industry/pelvic-health-software/"
+      ],
+      "subclusters": [
+        "fertility & IVF",
+        "OBGYN",
+        "pelvic health"
+      ],
+      "posts": 31,
+      "md_count": "~30"
+    },
+    {
+      "n": 8,
+      "id": "mens-sexual-health",
+      "name": "Men's, Hormone & Sexual Health",
+      "tier": "Tier 1 — Industry",
+      "pillar_name": "Men's Health Clinic Software",
+      "pillar_url": "https://pabau.com/industry/mens-health-clinic-software/",
+      "pillar_status": "Live",
+      "supporting": [
+        "/industry/hrt-clinic-software/",
+        "/industry/sexual-health-clinic-software/"
+      ],
+      "subclusters": [
+        "men's health",
+        "HRT & hormone clinics",
+        "sexual health"
+      ],
+      "posts": 14,
+      "md_count": "~14"
+    },
+    {
+      "n": 9,
+      "id": "spa-wellness",
+      "name": "Spa & Wellness",
+      "tier": "Tier 1 — Industry",
+      "pillar_name": "Spa Software",
+      "pillar_url": "https://pabau.com/industry/spa-software/",
+      "pillar_status": "Live",
+      "supporting": [
+        "/industry/wellness-clinic-software/"
+      ],
+      "subclusters": [
+        "day spa",
+        "wellness centre",
+        "salon-adjacent"
+      ],
+      "posts": 39,
+      "md_count": "~38"
+    },
+    {
+      "n": 10,
+      "id": "optometry-eye-care",
+      "name": "Optometry & Eye Care",
+      "tier": "Tier 1 — Industry",
+      "pillar_name": "Optometry Software (no pillar yet)",
+      "pillar_url": "— (none; /lp/ pages excluded)",
+      "pillar_status": "ACTION — no eligible pillar; needs a full /industry/optometry-software/ page. Watch-list silo (<15 posts)",
+      "supporting": [],
+      "subclusters": [
+        "optometry",
+        "optical",
+        "eye care"
+      ],
+      "posts": 11,
+      "md_count": "~10"
+    },
+    {
+      "n": 11,
+      "id": "ai-in-healthcare",
+      "name": "AI in Healthcare",
+      "tier": "Tier 2 — Cross-industry",
+      "pillar_name": "Pabau Scribe (interim pillar)",
+      "pillar_url": "https://pabau.com/features/ai-medical-scribe/",
+      "pillar_status": "ACTION — recommend creating /features/ai/ as the true pillar; current page is narrower than the silo",
+      "supporting": [
+        "/features/automation/",
+        "/features/automated-workflows-software/",
+        "/features/ai-medical-scribe/",
+        "/features/ai-studio/",
+        "/features/ai-photo-manager/",
+        "/features/ai-agent-for-healthcare/"
+      ],
+      "subclusters": [
+        "AI scribes",
+        "AI documentation & SOAP notes",
+        "AI scheduling & receptionist",
+        "AI intake & engagement",
+        "HIPAA-safe AI",
+        "clinic automations",
+        "AI tool comparisons"
+      ],
+      "posts": 24,
+      "md_count": "~23"
+    },
+    {
+      "n": 12,
+      "id": "practice-management-operations",
+      "name": "Practice Management & Operations",
+      "tier": "Tier 2 — Cross-industry",
+      "pillar_name": "Practice Management App",
+      "pillar_url": "https://pabau.com/features/practice-management-app/",
+      "pillar_status": "Live — also the rule-6 fallback bucket",
+      "supporting": [
+        "/features/",
+        "/features/appointments/",
+        "/features/medical-scheduling-software/",
+        "/features/waitlist-software/",
+        "/features/class-booking-software/",
+        "/features/no-show-policy-software/",
+        "/features/payment-processing/",
+        "/features/clinic-pos-terminal/",
+        "/features/team-management-software/",
+        "/features/inventory-management-software/",
+        "/features/multi-location/",
+        "/features/reports-software/",
+        "/features/telehealth-software/"
+      ],
+      "subclusters": [
+        "scheduling & appointments",
+        "no-shows & waitlists",
+        "payments & POS",
+        "staff & rotas",
+        "inventory",
+        "multi-location",
+        "reporting",
+        "telehealth"
+      ],
+      "posts": 115,
+      "md_count": "~116"
+    },
+    {
+      "n": 13,
+      "id": "patient-experience-retention",
+      "name": "Patient Experience & Retention",
+      "tier": "Tier 2 — Cross-industry",
+      "pillar_name": "Online Booking Software",
+      "pillar_url": "https://pabau.com/features/online-booking-software/",
+      "pillar_status": "Live — never say \"Pabau Connect\" externally",
+      "supporting": [
+        "/features/patient-portal-software/",
+        "/features/client-management/",
+        "/features/online-reputation-management-software/",
+        "/features/loyalty-program-software/",
+        "/features/memberships/",
+        "/features/gift-card-system-software/"
+      ],
+      "subclusters": [
+        "online booking",
+        "patient portal",
+        "client records & CRM",
+        "reviews & reputation",
+        "loyalty",
+        "memberships & gift cards"
+      ],
+      "posts": 48,
+      "md_count": "~47"
+    },
+    {
+      "n": 14,
+      "id": "marketing-growth",
+      "name": "Marketing & Growth",
+      "tier": "Tier 2 — Cross-industry",
+      "pillar_name": "Marketing",
+      "pillar_url": "https://pabau.com/features/marketing/",
+      "pillar_status": "Live",
+      "supporting": [
+        "/features/email-sms-campaigns/",
+        "/features/healthcare-promotions/",
+        "/features/referral-marketing-software/",
+        "/features/lead-management/",
+        "/features/marketing-plus/"
+      ],
+      "subclusters": [
+        "campaigns",
+        "email & SMS",
+        "promotions",
+        "referrals",
+        "lead gen & conversion"
+      ],
+      "posts": 14,
+      "md_count": "~15"
+    },
+    {
+      "n": 15,
+      "id": "clinical-documentation-templates",
+      "name": "Clinical Documentation & Templates",
+      "tier": "Tier 2 — Cross-industry",
+      "pillar_name": "Digital Forms / Patient Intake Software",
+      "pillar_url": "https://pabau.com/features/patient-intake-software/",
+      "pillar_status": "Live",
+      "supporting": [
+        "/features/capture-forms-software/",
+        "/features/letters-and-dictation-software/",
+        "/features/pre-and-post-care-software/",
+        "/features/medical-records-management/"
+      ],
+      "subclusters": [
+        "intake forms",
+        "consent forms",
+        "SOAP & clinical notes",
+        "letters & dictation",
+        "aftercare",
+        "the template library"
+      ],
+      "posts": 152,
+      "md_count": "~143"
+    },
+    {
+      "n": 16,
+      "id": "compliance-security",
+      "name": "Compliance & Security",
+      "tier": "Tier 2 — Cross-industry",
+      "pillar_name": "Compliance Management Software",
+      "pillar_url": "https://pabau.com/features/compliance-management-software/",
+      "pillar_status": "Live",
+      "supporting": [
+        "— (single page)"
+      ],
+      "subclusters": [
+        "HIPAA",
+        "GDPR",
+        "CQC",
+        "data security",
+        "audits",
+        "retention & records law"
+      ],
+      "posts": 35,
+      "md_count": "~31"
+    },
+    {
+      "n": 17,
+      "id": "clinical-tools",
+      "name": "Clinical Tools",
+      "tier": "Tier 2 — Cross-industry",
+      "pillar_name": "Before & After Photo Software",
+      "pillar_url": "https://pabau.com/features/before-and-after-photo-software/",
+      "pillar_status": "Live",
+      "supporting": [
+        "/features/injection-plotting-tool/",
+        "/features/prescription-management-software/",
+        "/features/medical-lab-software/",
+        "/features/measurements-tracking-software/"
+      ],
+      "subclusters": [
+        "before-and-after photography",
+        "injection plotting",
+        "e-prescribing",
+        "lab orders & results",
+        "measurements & outcome tracking"
+      ],
+      "posts": 24,
+      "md_count": "~23"
+    },
+    {
+      "n": 18,
+      "id": "billing-coding-claims",
+      "name": "Medical Billing, Coding & Claims",
+      "tier": "Tier 3 — Standalone",
+      "pillar_name": "Claims Management Software",
+      "pillar_url": "https://pabau.com/features/claims-management-software/",
+      "pillar_status": "Live — hard-walled corpus",
+      "supporting": [
+        "cpt-codes",
+        "icd-10-cm",
+        "hcpcs",
+        "ccsd-codes",
+        "diagnostic-codes",
+        "denial codes",
+        "Medicare/MBS"
+      ],
+      "subclusters": [
+        "CPT",
+        "ICD-10",
+        "HCPCS",
+        "CCSD",
+        "denial codes",
+        "Medicare/MBS",
+        "fee schedules"
+      ],
+      "posts": 3053,
+      "md_count": "~2,806"
+    },
+    {
+      "n": 19,
+      "id": "comparisons-alternatives",
+      "name": "Comparisons & Alternatives",
+      "tier": "Tier 3 — Standalone",
+      "pillar_name": "— (no hub page yet)",
+      "pillar_url": "— (none; /lp/ pages excluded)",
+      "pillar_status": "ACTION — no eligible pillar; recommend a /compare/ index page as the pillar",
+      "supporting": [
+        "/compare/",
+        "/compare/country/ (US",
+        "UK",
+        "Australia)"
+      ],
+      "subclusters": [
+        "competitor comparisons",
+        "\"X alternative\"",
+        "country vendor lists"
+      ],
+      "posts": 103,
+      "md_count": "~103"
+    },
+    {
+      "n": 20,
+      "id": "pabau-product-updates",
+      "name": "Pabau Product & Updates",
+      "tier": "House (not an SEO silo)",
+      "pillar_name": "EHR Features & Updates (category hub)",
+      "pillar_url": "https://pabau.com/category/pabau/ehr-features-updates/",
+      "pillar_status": "House category — excluded from topical-authority reporting",
+      "supporting": [],
+      "subclusters": [
+        "release notes",
+        "feature announcements",
+        "company news"
+      ],
+      "posts": 10,
+      "md_count": "house"
+    },
+    {
+      "n": 21,
+      "id": "retire-review",
+      "name": "Retirement / reassign bucket",
+      "tier": "Retire",
+      "pillar_name": "—",
+      "pillar_url": "—",
+      "pillar_status": "No pillar — retire, merge or 301 per §5.5",
+      "supporting": [],
+      "subclusters": [
+        "veterinary",
+        "dental",
+        "education",
+        "legal",
+        "consumer — off-ICP or duplicate"
+      ],
+      "posts": 5,
+      "md_count": "~50"
+    }
+  ]
+}
