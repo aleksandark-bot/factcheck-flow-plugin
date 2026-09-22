@@ -65,8 +65,12 @@ thing, not the article.
 - `~/.claude/factcheck-flow/prompts/3-links.md` — at Pass C. It is the single source of truth
   for internal linking: the cluster wall, the link budget, the pillar and subhub pattern, the
   funnel and CTA contract, and the mechanical gate that must pass before you save. Cluster
-  assignment comes from `~/Desktop/pabau-content-clusters.xlsx` via
-  `bin/cluster_lookup.py` — never from your own sense of what is related.
+  assignment comes from the cluster store, read through `bin/cluster_lookup.py` — the
+  `clusters-data` copy the updater pulls onto every machine, merged with
+  `~/Desktop/pabau-content-clusters.xlsx` where the machine has one — never from your own
+  sense of what is related. The store is live, not a snapshot, so an article too new to be in
+  it gets reasoned from `suggest` and written straight back with `submit`; §0 walks through
+  both. A machine with no workbook is the normal case and blocks nothing.
 - `~/.claude/factcheck-flow/guides/Visuals.md` — at Pass D0, before you build anything
   visual. It owns the visual contract: what earns a visual, the brand tokens and font, the
   render/upload commands, the block markup, and two verified templates.
@@ -95,7 +99,8 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
 2. **Pass B — editorial.** Read `~/.claude/factcheck-flow/prompts/2-editorial.md` and follow
    it in full.
 3. **Pass C — link pass.** Read `~/.claude/factcheck-flow/prompts/3-links.md` and follow it in
-   full. It opens by resolving the article's content cluster from the spreadsheet, and ends with
+   full. It opens by resolving the article's content cluster from the cluster store — reasoning
+   it from `suggest` and submitting it back when the article is too new to be in there — and ends with
    a mechanical gate (`cluster_lookup.py verify`) that must exit 0 — the link plan is not
    finished while it fails, exactly like the sentence gate in Pass E.
 4. **Pass D — block guarantees (ALWAYS run this LAST).** Read
@@ -516,7 +521,8 @@ then these sections, one line each:
 - `Fact-check applied:` — count plus anything notable
 - `Editorial:` — the highlights, not an inventory
 - `Links:` — the full line `3-links.md` §13 specifies: cluster + subcluster + tier (and whether
-  it came from the spreadsheet or your reasoning), funnel stage, RANKING/INERT, engine, final
+  it came from the store or your reasoning, and what `submit` said when you reasoned it),
+  funnel stage, RANKING/INERT, engine, final
   in-body count against the budget (e.g. `4/5`), the pillar up-link, the subhub on a code
   article, the funnel link, disposition counts with reason codes, picks, both CTA placements,
   the gate's final line verbatim, external-link count, and anything skipped with its code

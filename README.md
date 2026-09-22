@@ -270,8 +270,9 @@ store nor a workbook; the rest of `/fact` runs normally.
 
 #### Reasoned assignments are written back
 
-An article published after the last consolidation is in no source yet. The link pass reasons
-its cluster from `cluster_lookup.py suggest`, then **submits that assignment back to the
+The store is live, not a fixed snapshot, but an article published this morning is still in
+no source yet. The link pass reasons its cluster from `cluster_lookup.py suggest`, then
+**submits that assignment back to the
 store** with the evidence behind it — the shortlist, the tally, the top score, who decided and
 when. The next person to run `/fact` on that URL inherits the answer instead of reasoning their
 own, which is what stops one URL sitting in two clusters on two machines.
@@ -318,6 +319,52 @@ per person, so two people adopting at the same moment can't collide. Nothing in 
 changes anyone's assignment on its own: consolidation diffs it against the canonical store and
 surfaces the differences for David to accept or reject. Your local workbook keeps working
 exactly as before, and keeps outranking the network on your machine.
+
+#### Consolidation and publishing (David only)
+
+Everything above is a one-way street until somebody folds it back in. `additions.jsonl` grows
+with every reasoned assignment, teammate snapshots pile up in `clusters/snapshots/`, and
+David's workbook keeps moving. **Consolidation** merges all of it into one new `base.jsonl`;
+**publishing** puts that base back on the branch so everyone actually gets it.
+
+This is David's job, and the natural cadence is **monthly, or after any large batch of `/fact`
+runs** — whenever `cluster_sync.py status` shows the additions file getting long, or somebody
+has run `adopt`.
+
+    # 1. see what would change, decide nothing yet
+    python3 bin/cluster_consolidate.py --dry-run
+
+    # 2. really merge: writes a new base.jsonl, a conflict report, and a regenerated workbook
+    python3 bin/cluster_consolidate.py
+
+    # 3. read the conflict report and settle anything marked UNRESOLVED
+    open clusters/conflict-report.md
+
+    # 4. push the result to the data branch
+    python3 bin/cluster_consolidate.py publish --dry-run
+    python3 bin/cluster_consolidate.py publish
+
+Step 2 exits 1 when a url needs a human decision, so a cron run can be noticed. It never
+resolves an equal-authority disagreement on its own and it never deletes a row — a url that
+has vanished from every source is marked `absent_since` and kept.
+
+**What `publish` does**, in this order, and the order is the safety property:
+
+1. pushes `base.jsonl`, `clusters.json` and `review-queue.json`;
+2. pushes `MANIFEST.json` last — it is the seal every reader verifies against;
+3. re-reads the published `base.jsonl` and checks its sha256;
+4. only then rewrites `additions.jsonl`, dropping the rows this consolidation folded in and
+   **keeping** any row whose url is not in the new base (somebody pushed it after the merge
+   ran, so it belongs to the next consolidation).
+
+If it fails part-way, nothing is lost: until the manifest lands, every teammate's `pull` sees
+a digest mismatch and leaves their local files untouched, and `additions.jsonl` is not touched
+at all. Re-running `publish` closes the gap. It refuses outright if the local manifest does not
+match the local files, if the new base is more than 10% smaller than the upstream one, or if
+there is no write token, and it asks you to type `PUBLISH` unless you pass `--yes`.
+
+Teammates need to do nothing: `update.sh` runs `cluster_sync.py pull` at the start of every
+session, so the new base arrives on its own.
 
 ### GSC access (required for published articles)
 

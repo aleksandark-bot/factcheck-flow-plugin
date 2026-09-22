@@ -17,6 +17,37 @@ PROMPTS="$FF/prompts"
 GUIDES="$FF/guides"
 CREDS="$FF/wp-credentials"
 
+# --- interactive prompts, safe on a pipe ----------------------------------
+# Every prompt below is optional ("blank to skip"). Under `set -e` a bare `read` that hits
+# EOF — a piped install, CI, `bash <(curl ...) < /dev/null` — returns non-zero and kills the
+# installer at the FIRST prompt, so the cluster-store token and, worse, the first
+# `cluster_sync.py pull` never run and the machine ends up with no cluster data at all.
+# These two helpers answer "" on a non-interactive run instead, so the install takes every
+# skip branch and still reaches the steps that need no input.
+INTERACTIVE=1
+[ -t 0 ] || INTERACTIVE=0
+
+ask() {          # ask VAR "prompt text"
+  local __var="$1" __prompt="$2" __ans=""
+  if [ "$INTERACTIVE" = 1 ]; then
+    read -r -p "$__prompt" __ans || __ans=""
+  else
+    printf '%s(no terminal — skipped)\n' "$__prompt"
+  fi
+  printf -v "$__var" '%s' "$__ans"
+}
+
+ask_secret() {   # ask_secret VAR "prompt text"  — never echoes what is typed
+  local __var="$1" __prompt="$2" __ans=""
+  if [ "$INTERACTIVE" = 1 ]; then
+    read -r -s -p "$__prompt" __ans || __ans=""
+    echo ""
+  else
+    printf '%s(no terminal — skipped)\n' "$__prompt"
+  fi
+  printf -v "$__var" '%s' "$__ans"
+}
+
 echo ""
 echo "  Installing factcheck-flow into $CLAUDE ..."
 echo ""
@@ -645,8 +676,12 @@ thing, not the article.
 - `~/.claude/factcheck-flow/prompts/3-links.md` — at Pass C. It is the single source of truth
   for internal linking: the cluster wall, the link budget, the pillar and subhub pattern, the
   funnel and CTA contract, and the mechanical gate that must pass before you save. Cluster
-  assignment comes from `~/Desktop/pabau-content-clusters.xlsx` via
-  `bin/cluster_lookup.py` — never from your own sense of what is related.
+  assignment comes from the cluster store, read through `bin/cluster_lookup.py` — the
+  `clusters-data` copy the updater pulls onto every machine, merged with
+  `~/Desktop/pabau-content-clusters.xlsx` where the machine has one — never from your own
+  sense of what is related. The store is live, not a snapshot, so an article too new to be in
+  it gets reasoned from `suggest` and written straight back with `submit`; §0 walks through
+  both. A machine with no workbook is the normal case and blocks nothing.
 - `~/.claude/factcheck-flow/guides/Visuals.md` — at Pass D0, before you build anything
   visual. It owns the visual contract: what earns a visual, the brand tokens and font, the
   render/upload commands, the block markup, and two verified templates.
@@ -675,7 +710,8 @@ Otherwise (the normal case), perform four passes in this exact order, on the cop
 2. **Pass B — editorial.** Read `~/.claude/factcheck-flow/prompts/2-editorial.md` and follow
    it in full.
 3. **Pass C — link pass.** Read `~/.claude/factcheck-flow/prompts/3-links.md` and follow it in
-   full. It opens by resolving the article's content cluster from the spreadsheet, and ends with
+   full. It opens by resolving the article's content cluster from the cluster store — reasoning
+   it from `suggest` and submitting it back when the article is too new to be in there — and ends with
    a mechanical gate (`cluster_lookup.py verify`) that must exit 0 — the link plan is not
    finished while it fails, exactly like the sentence gate in Pass E.
 4. **Pass D — block guarantees (ALWAYS run this LAST).** Read
@@ -1096,7 +1132,8 @@ then these sections, one line each:
 - `Fact-check applied:` — count plus anything notable
 - `Editorial:` — the highlights, not an inventory
 - `Links:` — the full line `3-links.md` §13 specifies: cluster + subcluster + tier (and whether
-  it came from the spreadsheet or your reasoning), funnel stage, RANKING/INERT, engine, final
+  it came from the store or your reasoning, and what `submit` said when you reasoned it),
+  funnel stage, RANKING/INERT, engine, final
   in-body count against the budget (e.g. `4/5`), the pillar up-link, the subhub on a code
   article, the funnel link, disposition counts with reason codes, picks, both CTA placements,
   the gate's final line verbatim, external-link count, and anything skipped with its code
@@ -1427,7 +1464,7 @@ else
   echo "  /SEO on PUBLISHED articles needs a Google Search Console service-account"
   echo "  key (JSON). Ask your admin for it. Leave blank to set up later (draft-only"
   echo "  /SEO still works without it)."
-  read -r -p "  Path to your GSC service-account JSON (blank to skip): " GSC_SRC
+  ask GSC_SRC "  Path to your GSC service-account JSON (blank to skip): "
   if [ -n "${GSC_SRC:-}" ] && [ -f "$GSC_SRC" ]; then
     umask 077; cp "$GSC_SRC" "$GSC_KEY_DEST"; chmod 600 "$GSC_KEY_DEST"
     echo "  - GSC key saved (readable only by you) to $GSC_KEY_DEST"
@@ -1449,7 +1486,7 @@ else
   echo "  OPTIONAL: /SEO can ask Google to re-crawl a refreshed article. That needs a"
   echo "  service-account key whose account is an OWNER of the Search Console property"
   echo "  (not the read-only GSC key above). Blank to skip — /SEO just skips the step."
-  read -r -p "  Path to your Indexing API service-account JSON (blank to skip): " IDX_SRC
+  ask IDX_SRC "  Path to your Indexing API service-account JSON (blank to skip): "
   if [ -n "${IDX_SRC:-}" ] && [ -f "$IDX_SRC" ]; then
     umask 077; cp "$IDX_SRC" "$INDEX_KEY_DEST"; chmod 600 "$INDEX_KEY_DEST"
     echo "  - indexing key saved (readable only by you) to $INDEX_KEY_DEST"
@@ -1475,7 +1512,7 @@ else
   echo "  and any assignment you reason is queued locally and goes up automatically on the"
   echo "  first run that has one. Nothing is ever lost by skipping this."
   echo "  Ask David for a fine-grained PAT (this repo, contents:write) when you want one."
-  read -r -s -p "  Cluster store write token (blank to skip): " CLUSTERS_TOKEN; echo ""
+  ask_secret CLUSTERS_TOKEN "  Cluster store write token (blank to skip): "
   if [ -n "${CLUSTERS_TOKEN:-}" ]; then
     umask 077
     printf '%s\n' "$CLUSTERS_TOKEN" > "$CLUSTERS_TOKEN_DEST"
@@ -1501,6 +1538,18 @@ if command -v python3 >/dev/null 2>&1 && [ -f "$FF/bin/cluster_sync.py" ]; then
     echo "  NOTE: could not sync the cluster store now — the updater retries every session."
   fi
   python3 "$FF/bin/cluster_sync.py" adopt >/dev/null 2>&1 || true
+
+  # A local workbook outranks the synced store, but only if it can actually be READ.
+  # openpyxl is what reads it, and nothing here installs it. Without openpyxl the store
+  # still works (that path degrades with a warning rather than blocking a run), so this is
+  # not fatal — but the machine would silently ignore its own spreadsheet, which is worse
+  # than being told. Only worth saying to someone who actually has a workbook.
+  if [ -f "$HOME/Desktop/pabau-content-clusters.xlsx" ] \
+     && ! python3 -c "import openpyxl" >/dev/null 2>&1; then
+    echo "  NOTE: you have pabau-content-clusters.xlsx but openpyxl is not installed, so it"
+    echo "        cannot be read and the synced store will be used instead. To use your own"
+    echo "        workbook:  python3 -m pip install --user openpyxl"
+  fi
 fi
 
 # --- 5. WordPress credentials (interactive) -------------------------------
@@ -1512,13 +1561,20 @@ else
   echo "  Tip: the Application Password comes from WordPress → your Profile →"
   echo "       Application Passwords (it is NOT your normal login password)."
   echo ""
-  read -r -p "  Site URL (e.g. https://pabau.com): " WP_URL
-  read -r -p "  WordPress username: " WP_USR
-  read -r -s -p "  Application password: " WP_PW; echo ""
-  umask 077
-  printf 'WP_BASE_URL=%s\nWP_USER=%s\nWP_APP_PASSWORD=%s\n' "$WP_URL" "$WP_USR" "$WP_PW" > "$CREDS"
-  chmod 600 "$CREDS"
-  echo "  - credentials saved (readable only by you) to $CREDS"
+  ask WP_URL "  Site URL (e.g. https://pabau.com): "
+  ask WP_USR "  WordPress username: "
+  ask_secret WP_PW "  Application password: "
+  if [ -n "${WP_URL:-}" ] && [ -n "${WP_USR:-}" ] && [ -n "${WP_PW:-}" ]; then
+    umask 077
+    printf 'WP_BASE_URL=%s\nWP_USER=%s\nWP_APP_PASSWORD=%s\n' "$WP_URL" "$WP_USR" "$WP_PW" > "$CREDS"
+    chmod 600 "$CREDS"
+    echo "  - credentials saved (readable only by you) to $CREDS"
+  else
+    # An empty credentials file looks configured and fails at the first REST call, so write
+    # nothing. Everything else — prompts, guides, bin, the cluster store — is installed.
+    echo "  - no WordPress credentials entered. Re-run this installer from a terminal, or"
+    echo "    write $CREDS yourself with WP_BASE_URL / WP_USER / WP_APP_PASSWORD."
+  fi
 fi
 
 echo ""

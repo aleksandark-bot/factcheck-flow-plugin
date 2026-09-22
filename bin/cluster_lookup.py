@@ -13,11 +13,11 @@ assignment the store already holds.
 
 Every command below answers a question the internal-linking rulebook asks
 (`~/.claude/factcheck-flow/prompts/3-links.md`), so the link pass never has to load
-5,000 spreadsheet rows into context.
+7,600 store rows into context.
 
 Commands
   resolve   --url URL [--title T]      cluster, tier, pillar, budget, code family, directives
-  suggest   --title T [--terms "..."]  nearest posts + cluster tally (for URLs not in the sheet)
+  suggest   --title T [--terms "..."]  nearest posts + cluster tally (for URLs not in the store)
   targets   --cluster ID [filters]     candidate in-cluster link targets, with inbound counts
   classify  --urls U [U ...]           per-URL cluster/folder verdict (the disposition sweep)
   clusters                             all clusters: tier, pillar, supporting hubs
@@ -269,6 +269,11 @@ def load_sheet():
 
     store = CS.load_store(xlsx_path=XLSX)
     sheet = CS.legacy_sheet(store)
+    # Which input each row actually won from. The legacy shape drops it, and without it
+    # `resolve` cannot tell a human assignment from a machine one — which is the whole
+    # point of the distinction.
+    for u, p in sheet["posts"].items():
+        p["source_stream"] = (store["posts"].get(u) or {}).get("_source_stream", "")
 
     meta = store.get("meta") or {}
     xlsx_rows = (meta.get("counts") or {}).get("xlsx") or 0
@@ -353,6 +358,23 @@ def graph_note(gi):
 
 # ------------------------------------------------------------------------ resolve
 
+# Which input a row actually came from. `resolve`'s output is read as instructions, so it
+# has to name the real source: a row that a human wrote in the workbook and a row an agent
+# reasoned last Tuesday are not the same claim, and "In spreadsheet: yes" said both.
+SOURCE_LABELS = {
+    "xlsx": "yes — the local workbook (human)",
+    "base": "yes — base.jsonl, the synced store",
+    "additions": "yes — additions.jsonl, reasoned by a previous run",
+    "snapshot": "yes — a teammate snapshot",
+    "local-queue (unpushed)": "yes — this machine's submit queue, not pushed yet",
+}
+
+
+def source_label(stream):
+    stream = stream or ""
+    return SOURCE_LABELS.get(stream, "yes%s" % (" — %s" % stream if stream else ""))
+
+
 def resolve_record(sheet, url, title=""):
     u = norm(url)
     post = sheet["posts"].get(u)
@@ -363,7 +385,7 @@ def resolve_record(sheet, url, title=""):
     if review and not cl:
         cl = cluster_by_name(sheet, review["cluster_as_assigned"])
     if not cl and folder_of(u) in CODE_FOLDERS:
-        # The sheet is a fixed snapshot; a code page published after it was built is still
+        # The store grows as articles are assigned; a code page not in it yet is still
         # billing — "essentially all of /procedure-codes/ and /diagnostic-codes/" (rule A).
         cl = cluster_by_key(sheet, BILLING_CLUSTER_ID)
     return u, post, review, cl
@@ -379,7 +401,8 @@ def print_resolve(a):
     print("URL              : %s" % u)
     print("Folder           : %s%s" % (fold, "" if fold in IN_SCOPE_FOLDERS
                                        else "   << OUTSIDE the four editable folders"))
-    print("In spreadsheet   : %s" % ("yes" if post else "NO — published after the snapshot; infer the cluster"))
+    print("In store         : %s" % (source_label(post.get("source_stream")) if post
+                                     else "NO — not in the store yet; infer the cluster"))
     if post:
         print("Title            : %s" % post["title"])
         print("Cluster          : %s" % post["cluster_name"])
@@ -504,7 +527,7 @@ def print_suggest(a):
         }, ensure_ascii=False))
         return
 
-    print("Nearest posts in the spreadsheet (semantic shortlist — YOU make the call):")
+    print("Nearest posts in the store (semantic shortlist — YOU make the call):")
     for sc, inter, u, p in top:
         print("  %.3f  %-42s | %-26s | %s" % (sc, p["cluster_name"][:42],
                                               p["subcluster"][:26], u))
@@ -654,7 +677,7 @@ def judge_target(sheet, from_cl, url):
     if fold not in IN_SCOPE_FOLDERS:
         return ("CROSS_CLUSTER", "not a pillar, listed hub or in-cluster post — A allows no "
                                  "such target; default REMOVE")
-    return ("UNRESOLVED", "published after the sheet snapshot — resolve its cluster with "
+    return ("UNRESOLVED", "not in the cluster store yet — resolve its cluster with "
                           "`suggest` before keeping")
 
 
@@ -759,11 +782,11 @@ def print_verify(a):
     def bad(msg):
         fails.append(msg)
 
-    # An article published after the snapshot has no sheet row — the link pass resolves its
-    # cluster by reasoning (§0) and declares it here. The sheet always wins where it has a row.
+    # An article too new for the store has no row — the link pass resolves its cluster by
+    # reasoning (§0) and declares it here. The store always wins where it has a row.
     declared = cluster_by_key(sheet, plan.get("cluster", "")) if plan.get("cluster") else None
     if declared and post and cl and declared["name"] != cl["name"]:
-        bad("plan declares cluster %s but the spreadsheet assigns %s — the sheet is the source "
+        bad("plan declares cluster %s but the store assigns %s — the store is the source "
             "of truth; do not re-litigate it" % (declared["id"], cl["id"]))
     if declared and not cl:
         cl = declared
@@ -811,8 +834,8 @@ def print_verify(a):
         if code in LEGAL:
             continue
         if code == "UNRESOLVED" and l.get("cluster_confirmed"):
-            # Target is newer than the snapshot and the pass resolved its cluster by hand.
-            warns.append("target newer than the snapshot, cluster confirmed by the pass: %s"
+            # Target is not in the store yet and the pass resolved its cluster by hand.
+            warns.append("target not in the store yet, cluster confirmed by the pass: %s"
                          % l.get("target"))
             continue
         bad("%s: %s (%s)" % (code, l.get("target"), why))
@@ -855,7 +878,7 @@ def print_verify(a):
         if is_lp(p):
             bad("pick is an /lp/ URL: %s" % p)
         elif not pp:
-            warns.append("pick not in the sheet, confirm its cluster by hand: %s" % p)
+            warns.append("pick not in the store, confirm its cluster by hand: %s" % p)
         elif cl and pp["cluster_name"] != cl["name"]:
             bad("pick outside the cluster (%s): %s" % (pp["cluster_name"], p))
     if len(picks) > 5:
@@ -943,7 +966,7 @@ def main():
     p.add_argument("--title", default="")
     p.set_defaults(fn=print_resolve)
 
-    p = sub.add_parser("suggest", help="nearest posts for a URL that is not in the sheet")
+    p = sub.add_parser("suggest", help="nearest posts for a URL that is not in the store")
     p.add_argument("--title", required=True)
     p.add_argument("--terms", default="")
     p.add_argument("--limit", type=int, default=12)

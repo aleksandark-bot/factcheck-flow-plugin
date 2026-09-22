@@ -316,20 +316,31 @@ def raw_get(commit, repo_path, timeout=TIMEOUT):
 
     Pinning matters twice: raw.githubusercontent caches branch refs for minutes, and a
     multi-file pull must see one consistent snapshot, not a moving branch.
+
+    NEVER AUTHENTICATED. The repo is public, so raw needs no token — and sending one only
+    adds a failure mode: raw.githubusercontent answers 404, not 401, when it rejects a
+    bearer (measured: no auth 200, bogus bearer 404). A 404 that really meant "your token
+    was refused" used to read as "the file is empty" one caller up, which silently
+    replaced additions.jsonl with the pusher's rows alone. The token stays on the API.
     """
     url = "%s/%s/%s/%s" % (RAW_BASE, REPO, commit, repo_path)
-    return http(url, auth=bool(read_token()), timeout=timeout)
+    return http(url, auth=False, timeout=timeout)
 
 
-def dir_listing(repo_dir):
-    """{name: {"sha":..., "size":...}} for a directory on the data branch, or None.
+def dir_listing(repo_dir, ref=None):
+    """{name: {"sha":..., "size":...}} for a directory, or None.
 
     Deliberately a DIRECTORY listing, not a file GET: the Contents API refuses to return
     content for files over 1 MB, but a listing still carries every blob sha — and the blob
     sha is the only thing a PUT actually needs.
+
+    `ref` is a commit sha or a branch name. A caller that also READS the file must pass
+    the SAME commit sha it read at: a listing pinned to the branch can hand back a blob
+    sha from a newer commit than the content came from, and the PUT then overwrites the
+    rows in between with no 409 to warn anyone.
     """
     url = "%s/repos/%s/contents/%s?ref=%s" % (API_BASE, REPO, repo_dir,
-                                              urllib.parse.quote(BRANCH))
+                                              urllib.parse.quote(ref or BRANCH))
     code, obj, err = http_json(url)
     if code == 404:
         return {}          # directory doesn't exist yet — same as empty
@@ -693,7 +704,10 @@ def cmd_submit(a):
             "`cluster_lookup.py resolve --url %s` and follow it. Nothing was queued."
             % (url, prior.get("silo_source") or "?",
                prior.get("cluster") or prior.get("cluster_id") or "—", url))
-    if prior:
+    # A prior row that came from THIS machine's own queue is not "somebody else already
+    # assigned this" — it is the row we queued a moment ago, and the duplicate warning
+    # below says so far more usefully.
+    if prior and "queue" not in str(prior.get("_source_stream") or ""):
         warn("%s already has a %s row (%s, authority %d). A reasoned row never outranks it "
              "— queuing anyway so consolidation sees both, but the link pass is only "
              "supposed to submit urls with NO row."
@@ -792,7 +806,12 @@ def do_push(quiet=False, dry_run=False):
         if not sha:
             say("push: could not reach the data branch — %d row(s) stay queued." % len(rows))
             return 0
-        listing = dir_listing("clusters")
+        # The listing is pinned to the SAME commit the content is read from. If the branch
+        # has moved on, the blob sha we PUT with is then stale and GitHub answers 409 —
+        # which is exactly what we want, because the retry below re-reads and re-merges.
+        # Listing the branch instead would hand us a CURRENT sha for content we read at an
+        # OLDER commit, and the PUT would quietly delete whatever landed in between.
+        listing = dir_listing("clusters", ref=sha)
         if listing is None:
             say("push: could not list the data branch — %d row(s) stay queued." % len(rows))
             return 0
@@ -802,19 +821,22 @@ def do_push(quiet=False, dry_run=False):
         existing_text = ""
         if entry:
             code, body, err = raw_get(sha, ADDITIONS_PATH)
-            if code == 404:
-                existing_text = ""
-            elif code != 200 or err:
-                say("push: could not read additions.jsonl (%s) — %d row(s) stay queued."
-                    % (err or code, len(rows)))
+            if code != 200 or err:
+                # The listing PROVED this file exists at this commit. A read that does not
+                # return it is a failure, never evidence of emptiness — treating a 404 as
+                # "" here is what let one push replace eight teammates' rows with one.
+                # Emptiness is never INFERRED from a failed read; it is only ever read.
+                say("push: %s exists on %s at %s but could not be read (%s) — refusing to "
+                    "rewrite it from here. %d row(s) stay queued and go up next run; "
+                    "nothing was lost."
+                    % (ADDITIONS_PATH, BRANCH, sha[:7], err or code, len(rows)))
                 return 0
-            else:
-                try:
-                    existing_text = body.decode("utf-8")
-                except Exception:
-                    say("push: additions.jsonl did not decode as UTF-8 — %d row(s) stay "
-                        "queued." % len(rows))
-                    return 0
+            try:
+                existing_text = body.decode("utf-8")
+            except Exception:
+                say("push: additions.jsonl did not decode as UTF-8 — %d row(s) stay "
+                    "queued." % len(rows))
+                return 0
         existing_rows, perr = parse_jsonl_text(existing_text)
         if perr is not None:
             say("push: additions.jsonl upstream is malformed (%s) — refusing to rewrite it. "
@@ -854,6 +876,13 @@ def do_push(quiet=False, dry_run=False):
             len(new_rows), "" if len(new_rows) == 1 else "s", who_am_i())
         ok, code, err = put_file(ADDITIONS_PATH, text, blob_sha, msg)
         if ok:
+            # The queue row is about to be pruned, so the LOCAL copy of additions.jsonl
+            # has to carry it or the assignment disappears from this machine's read path
+            # until the next `pull` — which would break the link pass for the very article
+            # that just got an assignment. `text` is exactly what the branch now holds, so
+            # this leaves the local file identical to upstream, and the next pull is a
+            # no-op rather than a correction.
+            atomic_write(local("additions.jsonl"), text)
             cleared = prune_queue(new_keys | dup_keys)
             say("push: %d assignment(s) added to %s; %d queue row(s) cleared.%s"
                 % (len(new_rows), ADDITIONS_PATH, cleared,
@@ -924,6 +953,10 @@ def workbook_rows():
     except SystemExit:
         return None, "openpyxl is not installed: python3 -m pip install --user openpyxl"
     except Exception as e:
+        # cluster_store.WorkbookUnavailable already names the file and the fix; anything
+        # else needs the context added.
+        if type(e).__name__ == "WorkbookUnavailable":
+            return None, str(e)
         return None, "could not read %s: %s" % (XLSX, e)
     if not wb or not wb.get("posts"):
         return None, "no Posts rows with a URL in %s" % XLSX

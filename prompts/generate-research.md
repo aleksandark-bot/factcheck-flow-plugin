@@ -311,9 +311,12 @@ CHECK 4 — IS THIS TOPIC ACTUALLY OURS? Google's topical relevance is linear an
   the cluster for the link budget.
   The page is new, so the cluster store holds nothing for it and the cluster you just reasoned
   is the only assignment it has. Write it back once G3 locks the slug and the URL is real —
-  that makes it canonical for everyone and stops /fact reasoning the same page again later:
+  that makes it canonical for everyone and stops /fact reasoning the same page again later.
+  Re-run `suggest` with THE SAME FLAGS plus `--json`: `--limit` changes both the shortlist and
+  the tally, so a bare `--json` run records evidence for a shortlist you never saw, and the
+  audit trail then justifies a different decision from the one you made.
       python3 "$HOME/.claude/factcheck-flow/bin/cluster_lookup.py" suggest \
-              --title "<the working title>" --json > /tmp/ev.json
+              --title "<the working title>" --limit 8 --json > /tmp/ev.json
       python3 "$HOME/.claude/factcheck-flow/bin/cluster_lookup.py" submit \
               --url "https://pabau.com/<prefix>/<slug>/" --title "<the working title>" \
               --cluster-id <cluster-id> --subcluster "<subcluster>" \

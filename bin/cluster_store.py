@@ -12,7 +12,8 @@ else parses the workbook or the JSONL files by hand.
 `normalize_url()` is THE url normalizer for the whole system. `cluster_lookup.py` keeps
 its own `norm()` as a thin wrapper over it, so the two can never drift.
 
-`load_store()` merges base.jsonl + additions.jsonl + the local workbook, and NOTHING else.
+`load_store()` merges base.jsonl + additions.jsonl + the local workbook + this machine's
+own unpushed submit queue, and NOTHING else.
 `clusters/snapshots/*.jsonl` are consolidation input only — `load_snapshots()` is their one
 entry point and only `cluster_consolidate.py` calls it (CONTRACT.md, "SNAPSHOTS").
 
@@ -25,8 +26,11 @@ Commands
 
 Data (override with env vars):
   $PABAU_CLUSTERS_XLSX   else ~/Desktop/pabau-content-clusters.xlsx   (local workbook)
-  $PABAU_CLUSTERS_DIR    else ~/.claude/factcheck-flow/clusters,
+  $PABAU_FACTCHECK_DIR   else ~/.claude/factcheck-flow    (local install root: cache,
+                         synced files and the submit queue all hang off it)
+  $PABAU_CLUSTERS_DIR    else <$PABAU_FACTCHECK_DIR>/clusters,
                          else <repo>/clusters                          (synced data files)
+  $PABAU_CLUSTER_QUEUE   else <$PABAU_FACTCHECK_DIR>/cluster-queue.jsonl  (submit queue)
 
 Exit codes: 0 ok; 2 setup/data error; 1 only from `verify` when the comparison fails.
 """
@@ -39,13 +43,26 @@ import sys
 import time
 
 HOME = os.path.expanduser("~")
+# $PABAU_FACTCHECK_DIR moves the WHOLE local install — cache, synced files and the write
+# queue together. cluster_sync.py honours it; so does this module, or a sandboxed or
+# relocated install reads one place and writes another.
+FF_DIR = os.environ.get("PABAU_FACTCHECK_DIR") or os.path.join(
+    HOME, ".claude", "factcheck-flow")
 XLSX = os.environ.get("PABAU_CLUSTERS_XLSX") or os.path.join(
     HOME, "Desktop", "pabau-content-clusters.xlsx")
-CACHE_DIR = os.path.join(HOME, ".claude", "factcheck-flow", "cache")
+CACHE_DIR = os.path.join(FF_DIR, "cache")
+
+# cluster_sync.py `submit` appends here BEFORE it touches the network, and rows sit here
+# until a run with a working token drains them (CONTRACT.md "Write path" step 3). It is a
+# read-path input for exactly that reason: on a token-less machine — the default teammate
+# state — this is the only place the assignment exists, and the run that reasoned it must
+# be able to see it. Merged at `reasoned` authority, below everything in the store.
+QUEUE_PATH = os.environ.get("PABAU_CLUSTER_QUEUE") or os.path.join(
+    FF_DIR, "cluster-queue.jsonl")
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _REPO_CLUSTERS = os.path.join(os.path.dirname(_HERE), "clusters")
-_INSTALLED_CLUSTERS = os.path.join(HOME, ".claude", "factcheck-flow", "clusters")
+_INSTALLED_CLUSTERS = os.path.join(FF_DIR, "clusters")
 
 CODE_FOLDERS = ("/procedure-codes/", "/diagnostic-codes/")
 BILLING_CLUSTER_ID = "billing-coding-claims"
@@ -59,6 +76,18 @@ try:  # this output gets piped to head a lot; die quietly when it does
     signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 except (ImportError, AttributeError, ValueError):
     pass
+
+
+class WorkbookUnavailable(Exception):
+    """The local workbook exists but cannot be parsed — no openpyxl, corrupt file, bad
+    permissions, anything.
+
+    It is an exception and NOT a die(): on the read path an unreadable workbook degrades
+    to the synced store, which is a complete copy of it. Killing every cluster command
+    because one optional input is unreadable breaks the contract's non-negotiable —
+    "Fail-silent on the read path ... must never block a /fact run". Only `export`, whose
+    whole job IS the workbook, turns this back into a fatal error.
+    """
 
 
 def die(msg):
@@ -125,8 +154,10 @@ UNKNOWN_AUTHORITY = 2
 
 # Tie-break at equal authority: which input stream the row came from. Lower wins. The
 # contract's read path puts the local workbook above everything, and base above the
-# append-only streams.
-STREAM_RANK = {"xlsx": 0, "base": 1, "additions": 2, "snapshot": 3}
+# append-only streams. The local queue ranks last: it is this machine's own unpushed
+# scratch, so at equal authority anything already in the store beats it.
+QUEUE_STREAM = "local-queue (unpushed)"
+STREAM_RANK = {"xlsx": 0, "base": 1, "additions": 2, "snapshot": 3, QUEUE_STREAM: 4}
 
 
 def authority_of(row):
@@ -331,9 +362,15 @@ def read_workbook(xlsx_path=None):
     def build():
         try:
             import openpyxl
-        except ImportError:
-            die("openpyxl is not installed. Run: python3 -m pip install --user openpyxl")
-        wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+        except Exception as e:
+            raise WorkbookUnavailable(
+                "openpyxl is not installed (%s), so %s cannot be read. Install it with "
+                "`python3 -m pip install --user openpyxl` to edit assignments in the "
+                "workbook; the synced store is used until then." % (e, path))
+        try:
+            wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+        except Exception as e:
+            raise WorkbookUnavailable("could not open %s (%s)" % (path, e))
         warnings = []
 
         clusters = []
@@ -555,7 +592,29 @@ def _merge_rows(streams, meta):
     return posts
 
 
-def load_store(xlsx_path=None, data_dir=None):
+def read_queue(path, warnings):
+    """The local, not-yet-pushed submit queue as `reasoned` rows. Never raises.
+
+    Every row is forced to `reasoned` authority whatever its silo_source says. The queue
+    is a local file an agent appends to during a run; it must never be able to outrank a
+    human assignment just because somebody edited a line in it.
+    """
+    rows = []
+    for r in read_jsonl(path, warnings, "cluster-queue.jsonl"):
+        if not (r.get("cluster") or r.get("cluster_id")):
+            warnings.append("cluster-queue.jsonl row for %s has no cluster — skipped"
+                            % r.get("url"))
+            continue
+        if authority_of(r) != AUTHORITY["reasoned"]:
+            warnings.append("cluster-queue.jsonl row for %s claims silo_source %r — a "
+                            "queued row is always read as `reasoned`"
+                            % (r.get("url"), r.get("silo_source")))
+            r["silo_source"] = "reasoned"
+        rows.append(r)
+    return rows
+
+
+def load_store(xlsx_path=None, data_dir=None, queue_path=None):
     """The merged index every consumer reads.
 
     Returns {"posts": {url: row}, "clusters": {...}, "review": {...}, "meta": {...}}.
@@ -565,16 +624,24 @@ def load_store(xlsx_path=None, data_dir=None):
       review    url -> the review-queue entry
       meta      inputs, counts, warnings, collisions, built
 
-    Never raises. A missing or corrupt input degrades to whatever else is available and
-    says so in meta["warnings"] — the read path must never block a /fact run.
+    Inputs: base.jsonl, additions.jsonl, the local workbook, and this machine's own
+    unpushed submit queue (`reasoned` authority, ranked last, labelled
+    `_source_stream: local-queue (unpushed)`).
+
+    Never raises. A missing or corrupt input — including a workbook this machine cannot
+    parse — degrades to whatever else is available and says so in meta["warnings"]. The
+    read path must never block a /fact run; the only hard stop is nothing being readable
+    at all, and that one belongs to the caller (`cluster_lookup.load_sheet`).
     """
     data_dir = data_dir or default_data_dir()
     xlsx_path = xlsx_path or XLSX
+    queue_path = queue_path or QUEUE_PATH
     files = data_files(data_dir)
     # Snapshots are deliberately NOT here. They are not read, so they must not invalidate
     # the cache either — a teammate dropping a snapshot in must not rebuild every index.
+    # The queue IS here: a `submit` during a run has to be visible to the rest of it.
     inputs = [files["base"], files["additions"], files["clusters"], files["review"],
-              files["manifest"], xlsx_path]
+              files["manifest"], xlsx_path, queue_path]
 
     def build():
         meta = {
@@ -591,6 +658,7 @@ def load_store(xlsx_path=None, data_dir=None):
 
         base_rows = read_jsonl(files["base"], warnings, "base.jsonl")
         add_rows = read_jsonl(files["additions"], warnings, "additions.jsonl")
+        queue_rows = read_queue(queue_path, warnings)
         # clusters/snapshots/*.jsonl are NOT read here. See load_snapshots() below and
         # CONTRACT.md "SNAPSHOTS — consolidation input only, never a read-path source".
 
@@ -601,9 +669,12 @@ def load_store(xlsx_path=None, data_dir=None):
         sheet = None
         try:
             sheet = read_workbook(xlsx_path)
-        except SystemExit:
-            raise
-        except Exception as e:
+        except (WorkbookUnavailable, SystemExit, Exception) as e:
+            # An unreadable workbook is a DEGRADATION, never a stop. base.jsonl is an
+            # export of that same workbook, so the run keeps every assignment it had —
+            # it just cannot see edits made in the sheet since the last export. Dying
+            # here (which is what a missing openpyxl used to do) blocked every cluster
+            # command on a machine holding the whole store, and reported LINKPLAN_BLOCKED.
             warnings.append("could not read the workbook %s (%s) — continuing on the "
                             "synced files alone" % (xlsx_path, e))
         xlsx_rows = []
@@ -645,15 +716,21 @@ def load_store(xlsx_path=None, data_dir=None):
         # No "snapshot" stream: a snapshot is one teammate's possibly-stale local workbook,
         # and merging it here would let their drift win at equal authority and propagate to
         # everyone. Snapshots reach base.jsonl only through cluster_consolidate.py.
+        # The queue is merged LAST and ranks last: a locally queued row fills a gap, it
+        # never displaces a row the store already holds. It is `reasoned`, so it cannot
+        # reach a human or spreadsheet assignment at all, and a url that also arrives from
+        # the branch is deduped by url like any other — the branch copy wins the tie.
         posts = _merge_rows([
             ("base", base_rows),
             ("additions", add_rows),
+            (QUEUE_STREAM, queue_rows),
             ("xlsx", xlsx_rows),
         ], meta)
 
         for label, path in (("base", files["base"]), ("additions", files["additions"]),
                             ("clusters", files["clusters"]), ("review", files["review"]),
-                            ("manifest", files["manifest"]), ("xlsx", xlsx_path)):
+                            ("manifest", files["manifest"]), ("xlsx", xlsx_path),
+                            ("queue", queue_path)):
             try:
                 st = os.stat(path)
                 meta["inputs"][label] = {"path": path, "present": True,
@@ -667,6 +744,7 @@ def load_store(xlsx_path=None, data_dir=None):
             "posts": len(posts),
             "base": len(base_rows),
             "additions": len(add_rows),
+            "queue": len(queue_rows),
             "snapshots": 0,
             "xlsx": len(xlsx_rows),
             "clusters": len(clusters),
@@ -689,9 +767,7 @@ def load_store(xlsx_path=None, data_dir=None):
 
     try:
         return _load_cached(inputs, "cluster-store-index", build)
-    except SystemExit:
-        raise
-    except Exception as e:  # last-ditch: never raise on the read path
+    except (SystemExit, Exception) as e:  # last-ditch: never raise on the read path
         return {"posts": {}, "clusters": {"list": [], "by_id": {}, "by_name": {}},
                 "review": {},
                 "meta": {"version": STORE_VERSION, "counts": {}, "collisions": [],
@@ -784,7 +860,13 @@ def legacy_sheet(store):
             "rule": r.get("rule", ""),
             "note": r.get("note", ""),
         }
-    clusters = [{k: c.get(k) for k in LEGACY_CLUSTER_KEYS if k in c}
+    # Every legacy key is always present: `cluster_lookup.py` subscripts these records
+    # directly (c["pillar_name"]), so a cluster definition that happens to omit a key —
+    # a hand-written or older clusters.json — would crash the link pass rather than
+    # degrade. The list-valued keys default to [], the rest to "".
+    clusters = [dict({k: ([] if k in ("supporting", "subclusters") else "")
+                      for k in LEGACY_CLUSTER_KEYS},
+                     **{k: c[k] for k in LEGACY_CLUSTER_KEYS if k in c})
                 for c in store["clusters"]["list"]]
     return {"clusters": clusters, "posts": posts, "review": review,
             "built": store["meta"].get("built", "")}
@@ -809,8 +891,14 @@ def _write(path, text):
 
 def export(xlsx_path, out_dir):
     """Workbook -> the four canonical files. Deterministic: base.jsonl sorted by url with
-    the contract's key order, so two exports of the same workbook diff to nothing."""
-    sheet = read_workbook(xlsx_path)
+    the contract's key order, so two exports of the same workbook diff to nothing.
+
+    This is the one place an unreadable workbook is still fatal: export IS the workbook.
+    """
+    try:
+        sheet = read_workbook(xlsx_path)
+    except WorkbookUnavailable as e:
+        die(str(e))
     if sheet is None:
         die("workbook not found at %s (set $PABAU_CLUSTERS_XLSX)" % xlsx_path)
     if sheet.get("unmapped_columns"):
@@ -847,17 +935,23 @@ def export(xlsx_path, out_dir):
     for r in rows:
         k = r.get("silo_source") or ""
         by_silo[k] = by_silo.get(k, 0) + 1
+    # CONTRACT.md "MANIFEST.json — pinned shape". Readers verify downloads against this,
+    # so the shape is part of the contract: counts is {posts, clusters, review,
+    # unassigned}, and `sha256` is the authoritative MAP. It is recomputed here in full,
+    # from the files this call just wrote — a manifest that names base.jsonl with the
+    # PREVIOUS digest makes every teammate's `pull` refuse the snapshot, silently, forever.
+    # additions.jsonl is deliberately NOT in the map: `push` rewrites it without touching
+    # the manifest, so a digest for it would go stale on the first assignment and freeze
+    # the store exactly the same way.
     manifest = {
         "version": STORE_VERSION,
         "built": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "source": os.path.basename(xlsx_path),
         "source_sha256": sha256_of(xlsx_path),
         "counts": {
-            "base": len(rows),
+            "posts": len(rows),
             "clusters": len(sheet["clusters"]),
-            "review_queue": len(sheet["review"]),
-            "additions": sum(1 for l in open(additions_path, encoding="utf-8")
-                             if l.strip()),
+            "review": len(sheet["review"]),
             "unassigned": unassigned,
         },
         "by_silo_source": dict(sorted(by_silo.items())),

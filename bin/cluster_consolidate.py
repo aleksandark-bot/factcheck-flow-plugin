@@ -48,9 +48,15 @@ Hard rules this file enforces:
   * an empty `cluster` is legal (the regional /ae/, /au/ … pages, rule R0b). Those rows are
     kept, counted in MANIFEST.counts.unassigned, and never guessed at.
 
+Then `publish` closes the loop: it pushes the consolidated base.jsonl, clusters.json,
+review-queue.json and MANIFEST.json to the data branch and consumes the upstream
+additions.jsonl, so the better base actually reaches the team instead of sitting on
+David's disk while additions grow forever.
+
 Usage
     python3 bin/cluster_consolidate.py [--dry-run] [--out DIR] [--skip-workbook]
                                        [--only-snapshots] [--clusters-dir DIR]
+    python3 bin/cluster_consolidate.py publish [--dry-run] [--yes]
 
 Data (override with env vars):
     $PABAU_CLUSTERS_DIR    else the installed/repo clusters dir
@@ -1146,6 +1152,105 @@ def regenerate_workbook(res, args, report_path):
 
 # ------------------------------------------------------------------------------ main
 
+# ------------------------------------------------------------------------- MANIFEST
+
+# CONTRACT.md pins the MANIFEST shape, and the `sha256` MAP is the authoritative part of
+# it: a reader verifies every file the map names and refuses the whole snapshot when one
+# disagrees. So the map is rebuilt FROM SCRATCH here, from the files this run just wrote —
+# never merged into whatever the previous manifest held. Merging is what froze the store
+# once: consolidation wrote a new base.jsonl, set `base_sha256`, and left the map holding
+# the PREVIOUS digest, so every teammate's `pull` refused the new base forever and, because
+# update.sh runs pull backgrounded with its output discarded, nobody ever saw why.
+#
+# additions.jsonl is deliberately NOT in the map. It is append-only between consolidations,
+# so pinning its digest here would make every pull refuse the moment anybody pushed the
+# first assignment after a consolidation. base.jsonl, clusters.json and review-queue.json
+# only change when a writer rewrites the manifest with them.
+MANIFEST_VERSION = 1
+MANIFEST_DIGESTED = ("base.jsonl", "clusters.json", "review-queue.json")
+
+
+def _review_count(out_dir, res):
+    """Review-queue rows: from the workbook when we read one, else off the synced file."""
+    if res.get("review"):
+        return len(res["review"])
+    try:
+        obj = json.load(open(os.path.join(out_dir, "review-queue.json"), encoding="utf-8"))
+        rows = obj.get("rows") if isinstance(obj, dict) else obj
+        return len(rows or [])
+    except Exception:
+        return 0
+
+
+def write_manifest(out_dir, res, args, added):
+    """Write MANIFEST.json in the contract's pinned shape. Returns the path.
+
+    Both manifest writers (`cluster_store.py export` and this one) emit the same shape, on
+    purpose — they diverged once and that divergence is what produced the frozen store
+    described above.
+    """
+    man_path = os.path.join(out_dir, "MANIFEST.json")
+    try:
+        prev = json.load(open(man_path, encoding="utf-8"))
+        if not isinstance(prev, dict):
+            prev = {}
+    except Exception:
+        prev = {}
+
+    # The workbook is what the store ultimately descends from. When this run read one, it
+    # is the source; when it did not, the previous manifest's provenance still holds and is
+    # carried through rather than blanked.
+    if res.get("wb_present") and os.path.exists(args.xlsx):
+        source = os.path.basename(args.xlsx)
+        source_sha = sha256_of(args.xlsx)
+    else:
+        source = _s(prev.get("source"))
+        source_sha = _s(prev.get("source_sha256"))
+
+    by_silo = collections.Counter()
+    for row in res["merged"].values():
+        by_silo[_s(row.get("silo_source"))] += 1
+
+    digests = {}
+    for name in MANIFEST_DIGESTED:
+        path = os.path.join(out_dir, name)
+        if os.path.exists(path):
+            digests[name] = sha256_of(path)
+
+    man = {
+        "version": MANIFEST_VERSION,
+        "built": utcnow(),
+        "source": source,
+        "source_sha256": source_sha,
+        "counts": {
+            "posts": len(res["merged"]),
+            "clusters": len(res.get("clusters") or []),
+            "review": _review_count(out_dir, res),
+            "unassigned": res["stats"]["unassigned"],
+        },
+        "by_silo_source": dict(sorted(by_silo.items())),
+        "base_sha256": digests.get("base.jsonl", ""),
+        "sha256": digests,
+        # --- extra keys, ignored by readers; they record what THIS run did.
+        "built_by": TOOL,
+        "tool_version": TOOL_VERSION,
+        "generation": (_as_int(prev.get("generation")) or 0) + 1,
+        "consolidation": {
+            "urls_added": added,
+            "absent": res["stats"]["absent"],
+            "absent_cleared": res["stats"]["absent_cleared"],
+            "conflicts": len(res["conflicts"]),
+            "conflicts_needing_human": sum(1 for c in res["conflicts"] if c["needs_human"]),
+        },
+    }
+    tmp = man_path + ".tmp%d" % os.getpid()
+    with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(man, fh, indent=2, ensure_ascii=False)
+        fh.write("\n")
+    os.replace(tmp, man_path)
+    return man_path
+
+
 def archive_previous(path):
     if not os.path.exists(path):
         return
@@ -1160,10 +1265,276 @@ def archive_previous(path):
     shutil.move(path, os.path.join(d, "%s.%s%s" % (stem, ts, ext)))
 
 
+# -------------------------------------------------------------------------- publish
+#
+# Consolidation produces a better base. Until it reaches `clusters-data`, nobody else has
+# it, and the upstream additions.jsonl keeps growing forever. `publish` closes that loop.
+#
+# There is no way to make four Contents-API PUTs one commit, so the order is chosen so that
+# every intermediate state is SAFE rather than wrong:
+#
+#   1. base.jsonl, clusters.json, review-queue.json   the content
+#   2. MANIFEST.json                                  the seal — always last
+#   3. additions.jsonl                                consumed — always after (2) verified
+#
+# Between (1) and (2) the upstream MANIFEST still names the OLD base digest, so every
+# teammate's `pull` sees a mismatch and refuses the snapshot, leaving their local files
+# untouched (cluster_sync.cmd_pull). That is a no-op, not damage, and re-running `publish`
+# closes it. Truncating additions before the new base is confirmed upstream is the one
+# ordering that could actually LOSE an assignment, so it happens last and only after the
+# published base has been read back and its digest checked.
+#
+# Rows in the upstream additions.jsonl whose url is NOT in the new base were pushed after
+# David ran consolidation: this run never saw them, so they are KEPT upstream and consumed
+# by the next consolidation instead of being dropped.
+
+PUBLISH_FILES = ["base.jsonl", "clusters.json", "review-queue.json", "MANIFEST.json"]
+
+
+def _sync():
+    """cluster_sync, imported lazily: consolidation itself must work without it."""
+    try:
+        import cluster_sync
+        return cluster_sync
+    except Exception as e:
+        die("bin/cluster_sync.py is not importable (%s), so there is no way to reach the "
+            "data branch. Fix that first." % e)
+
+
+def _confirm(prompt):
+    """True when the human typed the word. Never assumes yes on a pipe."""
+    if not sys.stdin.isatty():
+        sys.stderr.write(
+            "publish: stdin is not a terminal, so there is nobody to confirm with. "
+            "Re-run with --yes if you really mean to overwrite the shared store.\n")
+        return False
+    try:
+        return input(prompt).strip() == "PUBLISH"
+    except (EOFError, KeyboardInterrupt):
+        sys.stderr.write("\npublish: cancelled.\n")
+        return False
+
+
+def _publish_put(sy, repo_path, text, message, label):
+    """PUT one file with the same never-force retry loop `push` uses. (ok, note)."""
+    for attempt in range(sy.MAX_RETRIES):
+        listing = sy.dir_listing("clusters")
+        if listing is None:
+            return False, "could not list the data branch"
+        entry = listing.get(os.path.basename(repo_path))
+        ok, code, err = sy.put_file(repo_path, text, entry.get("sha") if entry else None,
+                                    message)
+        if ok:
+            return True, ""
+        if code in (409, 422) and attempt < sy.MAX_RETRIES - 1:
+            sy.backoff(attempt)
+            continue
+        return False, err or ("HTTP %s" % code)
+    return False, "the branch moved under us %d times" % sy.MAX_RETRIES
+
+
+def cmd_publish(args):
+    """Push the consolidated store to the data branch and consume upstream additions."""
+    sy = _sync()
+    cdir = os.path.abspath(os.path.expanduser(args.clusters_dir))
+    if not os.path.isdir(cdir):
+        die("clusters dir not found: %s" % cdir)
+
+    # ---------------------------------------------------------------- local preflight
+    texts, digests = {}, {}
+    missing = []
+    for name in PUBLISH_FILES:
+        path = os.path.join(cdir, name)
+        if not os.path.exists(path):
+            missing.append(name)
+            continue
+        with open(path, encoding="utf-8") as fh:
+            texts[name] = fh.read()
+        digests[name] = sha256_of(path)
+    if missing:
+        die("publish: %s missing from %s. Run the consolidation first."
+            % (", ".join(missing), cdir))
+
+    # The local store must be self-consistent BEFORE it goes anywhere. Publishing a base
+    # its own MANIFEST contradicts is exactly what freezes every teammate's pull.
+    bad = sy.manifest_mismatch(dict(texts))
+    if bad:
+        die("publish: the local MANIFEST.json does not match %s. Re-run the consolidation "
+            "— publishing this would make every teammate's pull refuse the store."
+            % ", ".join(bad))
+
+    base_rows = [l for l in texts["base.jsonl"].splitlines() if l.strip()]
+    base_urls = set()
+    for line in base_rows:
+        try:
+            base_urls.add(normalize_url(json.loads(line).get("url")))
+        except Exception:
+            pass
+    if not base_urls:
+        die("publish: base.jsonl holds no readable rows. Refusing.")
+
+    # ---------------------------------------------------------------- upstream state
+    if not sy.read_token():
+        die("publish: no token, so there is nothing to publish with. Set "
+            "$PABAU_CLUSTERS_TOKEN or write %s (a fine-grained PAT with contents:write)."
+            % sy.TOKEN_FILE)
+
+    head = sy.head_sha()
+    if not head:
+        die("publish: could not reach %s on %s." % (sy.BRANCH, sy.REPO))
+    listing = sy.dir_listing("clusters")
+    if listing is None:
+        die("publish: could not list clusters/ on %s." % sy.BRANCH)
+
+    up_base_rows = None
+    if listing.get("base.jsonl"):
+        code, body, err = sy.raw_get(head, "clusters/base.jsonl")
+        if code == 200 and not err:
+            up_base_rows = len([l for l in body.decode("utf-8", "replace").splitlines()
+                                if l.strip()])
+    add_text = ""
+    if listing.get("additions.jsonl"):
+        code, body, err = sy.raw_get(head, sy.ADDITIONS_PATH)
+        if code != 200 or err:
+            die("publish: clusters/additions.jsonl exists upstream but could not be read "
+                "(%s). Refusing — truncating a file we cannot read is how assignments get "
+                "lost." % (err or code))
+        add_text = body.decode("utf-8", "replace")
+    add_rows, perr = sy.parse_jsonl_text(add_text)
+    if perr is not None:
+        die("publish: upstream additions.jsonl is malformed (%s). Refusing to rewrite it."
+            % perr)
+    keep = [r for r in add_rows if normalize_url(r.get("url")) not in base_urls]
+
+    shrink = (up_base_rows is not None and up_base_rows
+              and len(base_rows) < up_base_rows * 0.9 and not args.allow_shrink)
+
+    # ---------------------------------------------------------------- the plan
+    P = print
+    P("")
+    P("publish — %s" % utcnow())
+    P("=" * 72)
+    P("  repo        %s" % sy.REPO)
+    P("  branch      %s   (head %s)" % (sy.BRANCH, head[:10]))
+    P("  from        %s" % cdir)
+    P("")
+    P("  FILE                 LOCAL ROWS   BYTES      sha256")
+    for name in PUBLISH_FILES:
+        n = len([l for l in texts[name].splitlines() if l.strip()]) \
+            if name.endswith(".jsonl") else "-"
+        P("  %-20s %10s   %-10d %s" % (name, n, len(texts[name].encode("utf-8")),
+                                       digests[name][:16]))
+    P("")
+    P("  upstream base rows        %s" % (up_base_rows if up_base_rows is not None
+                                          else "(none yet)"))
+    P("  upstream additions rows   %d" % len(add_rows))
+    P("  ... already folded into this base (will be consumed)  %d"
+      % (len(add_rows) - len(keep)))
+    P("  ... pushed after this consolidation (will be KEPT)    %d" % len(keep))
+    P("")
+    if shrink:
+        die("publish: the new base has %d rows and the upstream one has %d. Rows are never "
+            "deleted, so something was read badly. Nothing was pushed. Re-run with "
+            "--allow-shrink if you really mean it." % (len(base_rows), up_base_rows))
+    if args.dry_run:
+        P("--dry-run: nothing was pushed.")
+        P("")
+        return 0
+    if not args.yes and not _confirm(
+            "This OVERWRITES the shared store on %s for everyone. Type PUBLISH to go "
+            "ahead: " % sy.BRANCH):
+        P("publish: cancelled, nothing was pushed.")
+        return 1
+
+    # ---------------------------------------------------------------- 1. content
+    who = sy.who_am_i()
+    for name in ("base.jsonl", "clusters.json", "review-queue.json"):
+        ok, note = _publish_put(sy, "clusters/" + name, texts[name],
+                                "clusters: consolidated %s (%s)" % (name, who), name)
+        if not ok:
+            sys.stderr.write(
+                "publish: %s failed (%s). NOTHING has been truncated and the upstream "
+                "MANIFEST still seals the old store, so every pull is a safe no-op until "
+                "you re-run publish.\n" % (name, note))
+            return 2
+        P("  pushed  clusters/%s" % name)
+
+    # ---------------------------------------------------------------- 2. the seal
+    ok, note = _publish_put(sy, "clusters/MANIFEST.json", texts["MANIFEST.json"],
+                            "clusters: consolidated MANIFEST (%s)" % who, "MANIFEST.json")
+    if not ok:
+        sys.stderr.write(
+            "publish: MANIFEST.json failed (%s). The new base IS upstream but nothing "
+            "seals it, so every pull refuses it and leaves local files untouched. "
+            "Re-run publish. additions.jsonl was NOT touched.\n" % note)
+        return 2
+    P("  pushed  clusters/MANIFEST.json")
+
+    # ------------------------------------------------- 3. confirm, THEN consume additions
+    head2 = sy.head_sha()
+    code, body, err = sy.raw_get(head2, "clusters/base.jsonl") if head2 else (0, b"", "no head")
+    live = hashlib.sha256(body).hexdigest() if code == 200 and not err else ""
+    if live != digests["base.jsonl"]:
+        sys.stderr.write(
+            "publish: could not confirm the published base.jsonl (%s). additions.jsonl was "
+            "NOT truncated — no assignment can be lost. Re-run publish once the branch "
+            "reads back correctly.\n"
+            % (err or ("digest %s != %s" % (live[:12] or "?", digests["base.jsonl"][:12]))))
+        return 2
+    P("  confirmed upstream base.jsonl sha256 %s" % live[:16])
+
+    if add_rows:
+        text = "".join(sy.dumps_row(r) + "\n" for r in keep)
+        ok, note = _publish_put(sy, sy.ADDITIONS_PATH, text,
+                                "clusters: additions consumed by consolidation (%s)" % who,
+                                "additions.jsonl")
+        if not ok:
+            sys.stderr.write(
+                "publish: the new base is live and sealed, but additions.jsonl could not "
+                "be rewritten (%s). Nothing is lost — those rows are already in base and "
+                "the next publish will clear them.\n" % note)
+            return 2
+        P("  pushed  clusters/additions.jsonl  (%d row(s) consumed, %d kept)"
+          % (len(add_rows) - len(keep), len(keep)))
+    else:
+        P("  clusters/additions.jsonl already empty — nothing to consume")
+
+    P("")
+    P("Published. Teammates pick it up on their next session (update.sh runs "
+      "cluster_sync.py pull).")
+    P("")
+    return 0
+
+
+def main_publish(argv):
+    ap = argparse.ArgumentParser(
+        prog="cluster_consolidate.py publish",
+        description="Push the consolidated store to the clusters-data branch and consume "
+                    "the upstream additions.jsonl. This overwrites shared state.")
+    ap.add_argument("--yes", action="store_true",
+                    help="skip the typed confirmation (for a scripted run)")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="show exactly what would be pushed and consumed, push nothing")
+    ap.add_argument("--clusters-dir", metavar="DIR", default=CLUSTERS_DIR,
+                    help="the consolidated store to publish (default %s)" % CLUSTERS_DIR)
+    ap.add_argument("--allow-shrink", action="store_true",
+                    help="permit publishing a base smaller than the upstream one by more "
+                         "than 10%%")
+    return cmd_publish(ap.parse_args(argv))
+
+
 def main(argv=None):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    # `publish` is the only subcommand. Everything else keeps the flat CLI it has always
+    # had, so no existing invocation (or cron line) changes meaning.
+    if argv and argv[0] == "publish":
+        return main_publish(argv[1:])
+
     ap = argparse.ArgumentParser(
         description="Fold base + additions + snapshots + the local workbook into one "
-                    "canonical base, and report every conflict.")
+                    "canonical base, and report every conflict. Then "
+                    "`cluster_consolidate.py publish` pushes the result to the data "
+                    "branch.")
     ap.add_argument("--dry-run", action="store_true",
                     help="read-only: compute everything, write nothing, print the summary")
     ap.add_argument("--out", metavar="DIR",
@@ -1246,31 +1617,7 @@ def main(argv=None):
             with open(ap_path, "w", encoding="utf-8"):
                 pass
 
-        man_path = os.path.join(out_dir, "MANIFEST.json")
-        try:
-            man = json.load(open(man_path, encoding="utf-8"))
-            if not isinstance(man, dict):
-                man = {}
-        except Exception:
-            man = {}
-        man.update({
-            "version": (_as_int(man.get("version")) or 0) + 1,
-            "built": utcnow(),
-            "built_by": TOOL,
-            "rows": len(res["merged"]),
-            "base_sha256": sha256_of(base_out),
-            "counts": {
-                "posts": len(res["merged"]),
-                "unassigned": res["stats"]["unassigned"],
-                "absent": res["stats"]["absent"],
-                "conflicts": len(res["conflicts"]),
-                "conflicts_needing_human": sum(1 for c in res["conflicts"]
-                                               if c["needs_human"]),
-            },
-        })
-        with open(man_path, "w", encoding="utf-8", newline="\n") as fh:
-            json.dump(man, fh, indent=2, ensure_ascii=False)
-            fh.write("\n")
+        man_path = write_manifest(out_dir, res, args, added)
         wrote.append(man_path)
 
     wbinfo = None

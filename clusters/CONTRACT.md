@@ -143,7 +143,15 @@ implementation detail:
 
 MANIFEST.json is written by `cluster_store.py export` and by `cluster_consolidate.py`, and is
 READ-ONLY to `cluster_sync.py` — sync verifies downloads against it and never rewrites it.
-One writer per file, always.
+
+BOTH writers emit the SHAPE ABOVE, exactly. They diverged once — the exporter wrote
+`counts{base,clusters,review_queue}` while consolidation wrote `counts{posts,absent,conflicts}`
+and omitted the `sha256` map entirely, leaving it holding the PREVIOUS base's digest. Every
+reader then refused the new base forever, silently, because the updater runs `pull` with its
+output discarded. A manifest writer that updates `base.jsonl` and does not update
+`sha256["base.jsonl"]` in the same write is a bug that freezes the store for the whole team.
+Any writer MUST recompute the entire `sha256` map from the files it just wrote. Extra keys are
+allowed; a missing or stale `sha256` entry is not.
 
 `sha256` is a MAP of filename to digest, and it is the authoritative one. A reader verifies
 every file the map names and refuses a torn download. `built` changes on every export, so an
@@ -219,6 +227,34 @@ and writes it to that path; `.gitignore` covers it.
 
 Conflicts are reported, never silently resolved, whenever two rows of EQUAL authority disagree.
 Unequal authority resolves by precedence and is reported as informational only.
+
+## Publish — how a consolidated base reaches the branch
+
+`bin/cluster_consolidate.py publish` is the other half of consolidation, and without it the
+loop is open: a better base sits on David's disk while the upstream `additions.jsonl` grows
+forever. It writes, in this order, and the order IS the safety property:
+
+    1. base.jsonl, clusters.json, review-queue.json   the content
+    2. MANIFEST.json                                  the seal, always last
+    3. additions.jsonl                                consumed, always after 2 is verified
+
+There is no way to make four Contents-API PUTs one commit, so every intermediate state must be
+SAFE rather than wrong. Between 1 and 2 the upstream MANIFEST still names the OLD base digest,
+so every reader's `pull` sees a mismatch, refuses the snapshot and leaves local files
+untouched — a no-op, not damage, and re-running publish closes it. Truncating additions before
+the new base is confirmed upstream is the one ordering that could actually LOSE an assignment,
+so it happens last and only after the published base has been read back and its sha256
+checked against the local one.
+
+Rows in the upstream `additions.jsonl` whose url is NOT in the new base were pushed after
+consolidation ran. That consolidation never saw them, so they are KEPT and consumed by the
+next one. Everything else is dropped: consolidation either folded it in or recorded in the
+conflict report why it did not.
+
+`publish` refuses, before touching the network, when the local MANIFEST does not match the
+local files (publishing that is exactly what freezes the store), when the new base is more
+than 10% smaller than the upstream one, or when there is no write token. It overwrites shared
+state, so it requires a typed confirmation or an explicit `--yes`.
 
 ## SNAPSHOTS — consolidation input only, never a read-path source
 
