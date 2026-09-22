@@ -58,10 +58,12 @@ These hold in every edit, with no exceptions.
 - **Never link to a competitor's pricing page.** Read it for the figures, but link their
   homepage instead — never `/pricing`, `/plans`, or a pricing anchor. Details in
   `3-links.md`.
-- **Links stay inside the article's content cluster.** The cluster comes from
-  `~/Desktop/pabau-content-clusters.xlsx` (source of truth, never re-derived) via
-  `bin/cluster_lookup.py`. At most 5 in-body editorial links per article — 3 on a code page —
-  exactly one of them the cluster's pillar. Cross-cluster links only via a pillar or a Tier-2
+- **Links stay inside the article's content cluster.** The cluster comes from the central
+  cluster store — the `clusters-data` branch the updater pulls, merged with
+  `~/Desktop/pabau-content-clusters.xlsx` where there is one — via `bin/cluster_lookup.py`. It
+  is the source of truth and is never re-derived; a cluster reasoned for an article the store
+  does not hold is submitted back to it. At most 5 in-body editorial links per article — 3 on
+  a code page — exactly one of them the cluster's pillar. Cross-cluster links only via a pillar or a Tier-2
   hub, never post to post. Code pages link only inside billing: pillar + one subhub + at most
   one next-step. Full rulebook in `3-links.md`.
 - **No URL containing `/lp/` is ever a link target** — not in the body, not in a Continue your

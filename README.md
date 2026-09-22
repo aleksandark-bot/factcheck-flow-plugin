@@ -239,23 +239,85 @@ and the deferred keywords — which is what stops a later run from writing the s
 Every run ends by handing off to `/fact`, which is the human-reviewed pass that verifies the
 finished prose against its sources.
 
-### Cluster spreadsheet (required for the link pass)
+### Cluster data (the link pass)
 
-`/fact`'s link pass resolves every article's content cluster from a spreadsheet, and refuses to
-guess when it can't reach it. Each user needs:
+`/fact`'s link pass resolves every article's content cluster before it touches a link, and
+refuses to guess when it can't. That assignment comes from the **central cluster store**, which
+the installer and `update.sh` pull for you — nothing to download by hand:
 
-1. **`~/Desktop/pabau-content-clusters.xlsx`** — the cluster assignment workbook (`Posts`,
-   `Clusters` and `Review queue` sheets), or the same file pointed to via
-   `$PABAU_CLUSTERS_XLSX`. It is the source of truth for which cluster a page belongs to and is
-   never re-derived.
-2. **openpyxl** (`python3 -m pip install --user openpyxl`) — `bin/cluster_lookup.py` reads the
-   workbook with it.
-3. Optional but recommended: **`~/Desktop/linkmap/graph.json`** (or `$PABAU_LINKMAP_GRAPH`) —
-   the current internal-link graph, which supplies inbound counts for the anti-orphan and
-   equity-spreading rules. Without it the pass still runs; inbound counts show as `?`.
+    clusters/base.jsonl         every assigned page, one JSON row each
+    clusters/clusters.json      the cluster definitions (pillar, hubs, subclusters, tier)
+    clusters/review-queue.json  the retirement / reassign bucket
+    clusters/additions.jsonl    assignments made since the last consolidation
 
-Without the spreadsheet the link pass reports `LINKPLAN_BLOCKED` and changes no links; the rest
-of `/fact` runs normally.
+The store lives on the **`clusters-data` branch** of this repo, not on `main`. The two are
+fetched independently: an assignment pushed to the data branch must never make the updater
+re-fetch `main` and overwrite someone's local prompt edits. `clusters/CONTRACT.md` on that
+branch is the binding description of the format and the precedence rules.
+
+Where a machine also has the **`~/Desktop/pabau-content-clusters.xlsx` workbook** (or
+`$PABAU_CLUSTERS_XLSX`), it is read as well and it outranks the network, so editing the
+workbook still beats anything the branch says. Most machines have no workbook, and that is a
+normal setup, not a broken one — reading `openpyxl` (`python3 -m pip install --user openpyxl`)
+matters only where the workbook exists.
+
+Optional but recommended: **`~/Desktop/linkmap/graph.json`** (or `$PABAU_LINKMAP_GRAPH`) — the
+current internal-link graph, which supplies inbound counts for the anti-orphan and
+equity-spreading rules. Without it the pass still runs; inbound counts show as `?`.
+
+The link pass reports `LINKPLAN_BLOCKED` and changes no links only when it has neither the
+store nor a workbook; the rest of `/fact` runs normally.
+
+#### Reasoned assignments are written back
+
+An article published after the last consolidation is in no source yet. The link pass reasons
+its cluster from `cluster_lookup.py suggest`, then **submits that assignment back to the
+store** with the evidence behind it — the shortlist, the tally, the top score, who decided and
+when. The next person to run `/fact` on that URL inherits the answer instead of reasoning their
+own, which is what stops one URL sitting in two clusters on two machines.
+
+A machine assignment never overwrites a human one, and among competing reasoned rows the
+earliest wins, so the store stays stable no matter who runs what.
+
+#### The write token (optional)
+
+Writing to the data branch needs a fine-grained GitHub token with `contents:write` on this
+repo. It is never embedded here — the repo is public. The installer asks for it and stores it
+at `~/.claude/factcheck-flow/.clusters-token` (chmod 600); `$PABAU_CLUSTERS_TOKEN` overrides.
+
+**Skipping it costs you nothing you'll notice.** Reads work: the store is public and pulls
+without any token. Writes queue instead — every submitted assignment is appended to
+`~/.claude/factcheck-flow/cluster-queue.jsonl` *before* the network is touched, and the whole
+queue goes up on the first run that has a token. A missing token is a no-op, never an error,
+and never blocks a `/fact` run.
+
+#### The sync commands
+
+`bin/cluster_sync.py` is the one entry point; run it from
+`~/.claude/factcheck-flow/bin/cluster_sync.py`.
+
+    pull     fetch the store from the data branch (gated on the branch SHA, so a no-op is cheap)
+    submit   queue ONE reasoned assignment, with its evidence, then try to push it
+    push     drain the local queue into clusters/additions.jsonl
+    adopt    export this machine's workbook to clusters/snapshots/<user>.jsonl and push it once
+    status   token present or not, local vs remote SHA, queue depth, row counts
+
+`status` is the one to run when something looks wrong: it says in five lines whether you have a
+token, whether your copy is current, and how many assignments are waiting to go up.
+
+#### If you already have a cluster workbook
+
+Before the central store existed, the workbook was copied from machine to machine by hand, so
+every copy has drifted a little from every other one. Run **`adopt` once** and your copy stops
+drifting:
+
+    python3 ~/.claude/factcheck-flow/bin/cluster_sync.py adopt
+
+It writes your workbook to `clusters/snapshots/<your-user>.jsonl` on the data branch — one file
+per person, so two people adopting at the same moment can't collide. Nothing in your snapshot
+changes anyone's assignment on its own: consolidation diffs it against the canonical store and
+surfaces the differences for David to accept or reject. Your local workbook keeps working
+exactly as before, and keeps outranking the network on your machine.
 
 ### GSC access (required for published articles)
 

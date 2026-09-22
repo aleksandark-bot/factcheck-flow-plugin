@@ -14,3 +14,34 @@ __pycache__/
 # WordPress credentials written by install.sh
 wp-credentials
 wp-credentials.*
+
+# --- the central cluster store (clusters/CONTRACT.md) ---------------------
+# The write token. The repo is PUBLIC: this must never be committed, and it is never
+# embedded in install.sh either — install.sh prompts for it and writes it here.
+.clusters-token
+*.clusters-token
+
+# The local submit queue. Per-machine state, not shared data: it holds rows that have not
+# reached the branch yet, and committing one would replay another person's pending writes.
+cluster-queue.jsonl
+
+# Teammate snapshots are per-user consolidation input and live on the `clusters-data`
+# branch, one file per user. A local copy on main is a 5 MB accident waiting to happen.
+clusters/snapshots/*.jsonl
+
+# The data files themselves live on the `clusters-data` branch, never on main. On main
+# this directory holds CONTRACT.md and nothing else.
+clusters/base.jsonl
+clusters/additions.jsonl
+clusters/clusters.json
+clusters/review-queue.json
+clusters/MANIFEST.json
+clusters/conflict-report.json
+clusters/conflict-report.md
+clusters/reports/
+
+# The workbook. 700 KB of binary that changes on every edit, and the store exports it
+# anyway — the exported JSONL is the shareable form, not this.
+*.xlsx
+*.xlsm
+pabau-content-clusters.xlsx

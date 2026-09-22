@@ -14,7 +14,7 @@
 Links are an expense, not free authority. This article gets **at most five in-body editorial
 links** (three if it is a code page), every one of them inside its own content cluster, exactly
 one of them pointing up at the cluster's pillar, each one the reader's genuine next step. The
-cluster comes from the spreadsheet, never from your judgment about what feels related. Every
+cluster comes from the cluster store, never from your judgment about what feels related. Every
 existing link gets a disposition. Then a script checks the plan before you save.
 
 Work from the copy of the article you already hold — this pass runs inside the article-editor,
@@ -25,14 +25,21 @@ single save at the end of the run.
 
 ## §0 — Resolve the cluster first (nothing else happens before this)
 
-**`~/Desktop/pabau-content-clusters.xlsx` is the source of truth for cluster assignment. Use it
-as-is. Never re-derive it, never re-litigate an assignment** — including the conflict
-resolutions and the Rule-2 flags. It is a fixed snapshot, so it does not contain articles
-published after it was built; for those you infer the cluster by reasoning and semantic
-similarity to the posts it does contain.
+**The cluster store is the source of truth for cluster assignment. Use it as-is. Never
+re-derive it, never re-litigate an assignment** — including the conflict resolutions and the
+Rule-2 flags. The store is `clusters/base.jsonl` on the repo's `clusters-data` branch, which
+the updater pulls onto every machine, merged with `~/Desktop/pabau-content-clusters.xlsx`
+where the machine has one — the local workbook outranks the network, so David's edits still
+win. An assignment either one already carries is settled, and re-reasoning it is how a URL
+quietly changes cluster and drags its links across a wall with it.
 
-You never read the spreadsheet by hand. `~/.claude/factcheck-flow/bin/cluster_lookup.py` reads
-it at runtime and answers exactly the questions this pass asks:
+The store is live, not a snapshot, so it grows as articles are assigned; an article published
+this morning still will not be in it. For those, and only those, you reason the cluster from
+`suggest` — and then you write that reasoning back, so the next run inherits it instead of
+guessing at it again.
+
+You never read the store by hand. `~/.claude/factcheck-flow/bin/cluster_lookup.py` reads it at
+runtime and answers exactly the questions this pass asks:
 
 ```bash
 CL=~/.claude/factcheck-flow/bin/cluster_lookup.py
@@ -40,8 +47,16 @@ CL=~/.claude/factcheck-flow/bin/cluster_lookup.py
 # 1. The article: cluster, tier, subcluster, pillar, supporting hubs, budget, directives
 python3 $CL resolve --url "<article URL>"
 
-# 2. Only if it is NOT in the sheet — the nearest posts, so you can reason to a cluster
+# 2. Only if it is NOT in the store — the nearest posts, so you can reason to a cluster
 python3 $CL suggest --title "<the article's H1>" --terms "<3-6 topic words>"
+
+# 2b. Then always — write that reasoning back, so this URL is never reasoned twice.
+#     Re-run suggest with --json and hand the file straight to submit: the evidence object is
+#     the shortlist you actually decided from, not a retyping of it.
+python3 $CL suggest --title "<the article's H1>" --terms "<3-6 topic words>" --json > /tmp/ev.json
+python3 $CL submit --url "<article URL>" --title "<the article's H1>" \
+    --cluster-id <cluster-id> --subcluster "<subcluster>" --intent <TOFU|MOFU|BOFU|JTBD> \
+    --evidence-file /tmp/ev.json
 
 # 3. Candidate targets inside that cluster (lowest inbound first = most equity-hungry)
 python3 $CL targets --cluster <cluster-id> --subcluster "<subcluster>" --limit 20
@@ -59,11 +74,22 @@ the funnel stage, an anchor-rotation seed, and any directive that applies (pilla
 the billing wall, the house category, the retirement bucket). Read its output as instructions,
 not as suggestions.
 
-If the article is **not** in the sheet, run `suggest`, decide the cluster from the shortlist and
+If the article is **not** in the store, run `suggest`, decide the cluster from the shortlist and
 the cluster/subcluster tally, and record the id you chose — it goes in the plan you verify at
-the end. If the spreadsheet is missing, **stop the link pass**, change no links, and report
-`LINKPLAN_BLOCKED — cluster spreadsheet not found`. Guessing a cluster is worse than doing
-nothing.
+the end. Then `submit` it, carrying the shortlist, the tally and the top score you decided on —
+`suggest --json` emits that object in exactly the shape `submit` wants, so pass the file rather
+than retyping its contents. **That step is not optional.** An assignment you keep to yourself is one
+the next person reasons from scratch, and two people reasoning separately is how one URL ends
+up in two clusters; the evidence is what lets David confirm or overturn your call months later
+without re-running anything. `submit` writes the row to a local queue before it touches the
+network, so it costs nothing on a machine with no write token — the row goes up on the next run
+that has one. If it refuses because the URL already carries a human assignment, you were
+re-litigating the sheet: run `resolve` again and follow what it says.
+
+If **neither** the local workbook nor the pulled store is readable, **stop the link pass**,
+change no links, and report `LINKPLAN_BLOCKED — no cluster store`. A missing workbook on its
+own is not that case and blocks nothing: most machines never have one and read the branch copy
+instead. Guessing a cluster is worse than doing nothing.
 
 Three §0 outcomes end the pass immediately:
 
@@ -401,7 +427,7 @@ python3 ~/.claude/factcheck-flow/bin/cluster_lookup.py verify \
 ```
 
 Every existing link needs a row, every added link needs a row. `cluster` is required only when
-the article is not in the spreadsheet. On a target published after the snapshot, add
+the article is not in the store. On a target the store does not hold, add
 `"cluster_confirmed": true` to that row once you have resolved its cluster yourself.
 
 `total_outbound` is every outbound link the saved page will carry, CTA links excluded — the
@@ -464,7 +490,9 @@ External links count toward nothing in §4 — that budget is internal editorial
 
 The `Links:` line in your change-log carries, in this order:
 
-- cluster + subcluster + tier, and whether it came from the spreadsheet or from your reasoning;
+- cluster + subcluster + tier, and whether it came from the store or from your reasoning — and
+  when you reasoned it, what `submit` said: pushed, queued for the next run with a token, or
+  refused (with the reason it gave);
 - the funnel stage, and RANKING or INERT from §9;
 - the engine (`gutenberg` / `classic` / `elementor`);
 - final in-body editorial link count against the budget (e.g. `4/5`);

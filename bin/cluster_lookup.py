@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
 """Resolve a Pabau URL to its content cluster and its legal link targets.
 
-The cluster spreadsheet is the SOURCE OF TRUTH for cluster assignment — this script
-reads it at runtime and never re-derives, re-litigates or caches an opinion about it.
+Cluster assignment comes from the CENTRAL STORE (`clusters/CONTRACT.md`), loaded through
+`cluster_store.load_store()`: the `clusters-data` branch files that `update.sh` syncs to
+every machine (`base.jsonl` + `additions.jsonl`), merged with the local workbook where one
+exists. The workbook is no longer the sole source of truth — it is ONE input, and still the
+highest-authority one, so David's authoring workflow is unchanged and a sheet row always
+beats anything reasoned. What changed is that a machine without the workbook now reads the
+branch copy instead of blocking, and a cluster reasoned during a run is written back
+(`submit`) rather than thrown away. This script still never re-derives or re-litigates an
+assignment the store already holds.
+
 Every command below answers a question the internal-linking rulebook asks
 (`~/.claude/factcheck-flow/prompts/3-links.md`), so the link pass never has to load
 5,000 spreadsheet rows into context.
@@ -15,9 +23,12 @@ Commands
   clusters                             all clusters: tier, pillar, supporting hubs
   subhubs   [--verify]                 the billing ADD_SUBHUB target set
   verify    --url URL --plan plan.json mechanical gate over a finished link plan
+  submit    --url URL --cluster-id ID  write a reasoned assignment back to the store
+                                       (a thin alias — the implementation is cluster_sync.py)
 
 Data (override with env vars):
-  $PABAU_CLUSTERS_XLSX   else ~/Desktop/pabau-content-clusters.xlsx   (source of truth)
+  $PABAU_CLUSTERS_XLSX   else ~/Desktop/pabau-content-clusters.xlsx   (local workbook)
+  $PABAU_CLUSTERS_DIR    else ~/.claude/factcheck-flow/clusters       (the synced store)
   $PABAU_LINKMAP_GRAPH   else ~/Desktop/linkmap/graph.json            (current link graph)
 
 Exit codes: 0 ok; 2 setup/data error; 1 only from `verify` when the plan fails a check.
@@ -30,6 +41,17 @@ import subprocess
 import sys
 import time
 import unicodedata
+
+BIN_DIR = os.path.dirname(os.path.abspath(__file__))
+if BIN_DIR not in sys.path:
+    sys.path.insert(0, BIN_DIR)
+
+# The data layer. A checkout that predates it still runs: every command falls back to the
+# local workbook alone, which is exactly the behaviour this script had before the store.
+try:
+    import cluster_store as CS
+except Exception:  # pragma: no cover - only on a partial install
+    CS = None
 
 HOME = os.path.expanduser("~")
 XLSX = os.environ.get("PABAU_CLUSTERS_XLSX") or os.path.join(
@@ -119,7 +141,7 @@ def die(msg):
 
 # --------------------------------------------------------------------------- URLs
 
-def norm(u):
+def _norm_fallback(u):
     """Normalize a URL for matching: scheme/host lowercased, no query, one trailing slash."""
     if not u:
         return ""
@@ -129,6 +151,13 @@ def norm(u):
     u = re.sub(r"^www\.", "", u, flags=re.I)
     u = u.rstrip("/")
     return "https://" + u.lower() + "/" if u else ""
+
+
+# One normalizer for the whole system. `cluster_store.normalize_url` is byte-for-byte the
+# function above; binding the name to it means the two can never drift apart, and a url
+# cannot mean one thing to the store and another to this script. `_norm_fallback` only runs
+# on a checkout with no cluster_store.py.
+norm = CS.normalize_url if CS is not None else _norm_fallback
 
 
 def folder_of(u):
@@ -191,7 +220,7 @@ def stage_guess(url, title):
     return "TOFU"
 
 
-# --------------------------------------------------------------------- spreadsheet
+# ------------------------------------------------------------------- cluster store
 
 def _cache_path(src, tag):
     try:
@@ -221,99 +250,42 @@ def _load_cached(src, tag, build):
     return data
 
 
-def _split_pages(cell):
-    if not cell:
-        return []
-    s = str(cell)
-    s = re.sub(r"^\s*Existing children:\s*", "", s, flags=re.I)
-    out = []
-    for part in re.split(r"[·|,\n]", s):
-        p = part.strip()
-        if not p or p in ("—", "-", "— (none)", "(none)"):
-            continue
-        out.append(p)
-    return out
-
-
 def load_sheet():
-    """Build the whole index from the xlsx. Cached on (mtime, size) of the file itself, so a
-    refreshed spreadsheet invalidates the cache automatically."""
-    if not os.path.exists(XLSX):
-        die("cluster spreadsheet not found at %s (set $PABAU_CLUSTERS_XLSX). It is the source "
-            "of truth for cluster assignment — the link pass cannot run without it." % XLSX)
+    """The merged cluster index, in the shape every command below already consumes.
 
-    def build():
-        try:
-            import openpyxl
-        except ImportError:
-            die("openpyxl is not installed. Run: python3 -m pip install --user openpyxl")
-        wb = openpyxl.load_workbook(XLSX, read_only=True, data_only=True)
+    The store does the work (`cluster_store.load_store`): base.jsonl + additions.jsonl from
+    the synced `clusters-data` files, merged with the local workbook where one exists, under
+    the precedence in CONTRACT.md. The workbook still wins — it is the highest-authority
+    input — so a machine that has one behaves exactly as it always did, and a machine that
+    does not now reads the branch copy instead of blocking the link pass.
 
-        def sheet_rows(name):
-            if name not in wb.sheetnames:
-                return []
-            ws = wb[name]
-            it = ws.iter_rows(values_only=True)
-            try:
-                hdr = [str(h).strip() if h is not None else "" for h in next(it)]
-            except StopIteration:
-                return []
-            rows = []
-            for r in it:
-                if all(c is None for c in r):
-                    continue
-                rows.append(dict(zip(hdr, r)))
-            return rows
+    Caching is the store's, keyed on the (mtime, size) of every input, so a refreshed
+    workbook or a fresh `cluster_sync.py pull` invalidates it automatically.
+    """
+    if CS is None:
+        die("bin/cluster_store.py is missing, so the cluster store cannot be read. "
+            "Run the factcheck-flow updater (~/.claude/factcheck-flow/update.sh) or "
+            "reinstall — the link pass cannot run without it.")
 
-        clusters = []
-        for r in sheet_rows("Clusters"):
-            clusters.append({
-                "n": r.get("#"),
-                "id": (r.get("Cluster ID") or "").strip(),
-                "name": (r.get("Cluster name") or "").strip(),
-                "tier": (r.get("Tier") or "").strip(),
-                "pillar_name": (r.get("PILLAR PAGE (name)") or "").strip(),
-                "pillar_url": (r.get("Pillar page URL") or "").strip(),
-                "pillar_status": (r.get("Pillar status / action") or "").strip(),
-                "supporting": _split_pages(r.get("Supporting pages")),
-                "subclusters": _split_pages(r.get("Subclusters covered")),
-                "posts": r.get("Posts"),
-            })
+    store = CS.load_store(xlsx_path=XLSX)
+    sheet = CS.legacy_sheet(store)
 
-        posts = {}
-        for r in sheet_rows("Posts"):
-            u = norm(r.get("URL"))
-            if not u:
-                continue
-            posts[u] = {
-                "url": u,
-                "cluster_name": (r.get("Cluster") or "").strip(),
-                "tier": (r.get("Tier") or "").strip(),
-                "subcluster": (r.get("Subcluster") or "").strip(),
-                "title": (r.get("Post title") or "").strip(),
-                "published": str(r.get("Published") or "")[:10],
-                "rule": (r.get("Rule applied") or "").strip(),
-                "flag": (r.get("Flag / needs review") or "").strip(),
-                "note": (r.get("Note") or "").strip(),
-                "categories": (r.get("Current WP categories") or "").strip(),
-            }
+    meta = store.get("meta") or {}
+    xlsx_rows = (meta.get("counts") or {}).get("xlsx") or 0
+    if not sheet["posts"] and not sheet["clusters"]:
+        # Neither the workbook nor the synced files gave us anything. This is the only
+        # hard stop: guessing a cluster is worse than doing nothing (3-links.md §0).
+        die("no cluster store is readable — neither the local workbook (%s) nor the synced "
+            "files (%s). Run `cluster_sync.py pull`, or set $PABAU_CLUSTERS_XLSX. Report "
+            "LINKPLAN_BLOCKED and change no links." % (XLSX, meta.get("data_dir", "?")))
 
-        review = {}
-        for r in sheet_rows("Review queue"):
-            u = norm(r.get("URL"))
-            if not u:
-                continue
-            review[u] = {
-                "decision": (r.get("Decision needed") or "").strip(),
-                "cluster_as_assigned": (r.get("Cluster as assigned") or "").strip(),
-                "rule": (r.get("Rule applied") or "").strip(),
-                "note": (r.get("Note") or "").strip(),
-            }
-
-        return {"clusters": clusters, "posts": posts, "review": review,
-                "built": time.strftime("%Y-%m-%d %H:%M")}
-
-    return _load_cached(XLSX, "clusters-index", build)
+    # What `resolve` prints on its last line. The workbook, when present, is still the
+    # authority and still what David edits, so the label does not move for him.
+    sheet["source"] = XLSX if xlsx_rows else (meta.get("data_dir") or XLSX)
+    built = meta.get("built") or ""
+    sheet["built"] = built.replace("T", " ")[:16] if built else ""
+    sheet["store_warnings"] = meta.get("warnings") or []
+    return sheet
 
 
 def cluster_by_name(sheet, name):
@@ -479,7 +451,8 @@ def print_resolve(a):
     if warn:
         print("NOTE             : %s" % warn)
     print("")
-    print("Source of truth  : %s (built %s)" % (XLSX, sheet.get("built", "")))
+    print("Source of truth  : %s (built %s)"
+          % (sheet.get("source") or XLSX, sheet.get("built", "")))
 
 
 # ------------------------------------------------------------------------ suggest
@@ -514,6 +487,22 @@ def print_suggest(a):
     for _, _, _, p in scored[: max(a.limit * 4, 40)]:
         key = (p["cluster_name"], p["subcluster"])
         tally[key] = tally.get(key, 0) + 1
+
+    if getattr(a, "json", False):
+        # Exactly the `evidence` object CONTRACT.md specifies, ready to hand to
+        # `submit --evidence-json`. Hand-copying this out of the text below is how an
+        # audit trail quietly stops matching the assignment it is supposed to justify.
+        ranked = sorted(tally.items(), key=lambda kv: -kv[1])
+        print(json.dumps({
+            "top_matches": [{"url": u, "cluster": p["cluster_name"],
+                             "subcluster": p["subcluster"], "score": round(sc, 4)}
+                            for sc, _inter, u, p in top[:8]],
+            "tally": [{"cluster": c, "subcluster": s, "n": n} for (c, s), n in ranked[:5]],
+            "top_score": round(top[0][0], 4) if top else 0.0,
+            "title_used": a.title,
+            "terms_used": a.terms or "",
+        }, ensure_ascii=False))
+        return
 
     print("Nearest posts in the spreadsheet (semantic shortlist — YOU make the call):")
     for sc, inter, u, p in top:
@@ -559,6 +548,11 @@ def print_targets(a):
             "url": u, "title": p["title"], "sub": p["subcluster"], "stage": stage,
             "in": g.get("in", 0), "pr": g.get("pr", 0.0), "date": p["published"],
         })
+    # Deterministic tie-break. All three sorts below are stable, so without this the order
+    # of equally-ranked rows would follow the merge order of the store's inputs — which
+    # differs between a machine that has the workbook and one that reads the branch alone.
+    # Sorting by url first pins it: same cluster, same graph, same list, everywhere.
+    rows.sort(key=lambda r: r["url"])
     key = {"inbound": lambda r: (r["in"], -r["pr"]),
            "pr": lambda r: (-r["pr"], r["in"]),
            "recent": lambda r: (r["date"] < "0", ),
@@ -912,9 +906,35 @@ def print_verify(a):
     sys.exit(1 if fails else 0)
 
 
+# -------------------------------------------------------------------------- submit
+
+def delegate_submit(argv):
+    """`cluster_lookup.py submit ...` -> `cluster_sync.py submit ...`, unchanged.
+
+    The link pass reads and writes through one entry point, but the write path has exactly
+    one implementation (CONTRACT.md, "Write path" step 2). Every flag, every exit code and
+    every refusal is cluster_sync's — nothing is re-parsed or re-interpreted here, so the
+    alias cannot drift away from the thing it aliases.
+    """
+    try:
+        import cluster_sync
+    except Exception as e:
+        die("bin/cluster_sync.py is missing or unimportable (%s), so a reasoned assignment "
+            "cannot be written back. Run the factcheck-flow updater "
+            "(~/.claude/factcheck-flow/update.sh)." % e)
+    sys.argv = [os.path.join(BIN_DIR, "cluster_sync.py"), "submit"] + list(argv)
+    cluster_sync.main()
+
+
 # --------------------------------------------------------------------------- main
 
 def main():
+    # Delegated before argparse sees it: a thin alias must not re-declare, re-order or
+    # swallow a single one of cluster_sync's flags.
+    if len(sys.argv) > 1 and sys.argv[1] == "submit":
+        delegate_submit(sys.argv[2:])
+        return
+
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd")
 
@@ -927,6 +947,9 @@ def main():
     p.add_argument("--title", required=True)
     p.add_argument("--terms", default="")
     p.add_argument("--limit", type=int, default=12)
+    p.add_argument("--json", action="store_true",
+                   help="emit the CONTRACT.md `evidence` object instead of the text "
+                        "shortlist, ready for `submit --evidence-json`")
     p.set_defaults(fn=print_suggest)
 
     p = sub.add_parser("targets", help="candidate in-cluster link targets")
@@ -957,6 +980,11 @@ def main():
     p.add_argument("--url", required=True)
     p.add_argument("--plan", required=True, help="JSON: {engine, stage, links[], picks[]}")
     p.set_defaults(fn=print_verify)
+
+    # Registered so `-h` lists it; the real handling happens above, before argparse runs.
+    sub.add_parser("submit", add_help=False,
+                   help="write a reasoned assignment back to the store "
+                        "(alias for cluster_sync.py submit — see its --help)")
 
     a = ap.parse_args()
     if not getattr(a, "fn", None):

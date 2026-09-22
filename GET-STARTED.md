@@ -27,11 +27,13 @@ Open the Terminal and paste this **one line**, then press Enter:
 bash <(curl -fsSL https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/install.sh)
 ```
 
-It will set everything up and then ask you three questions:
+It will set everything up and then ask you a few questions:
 
 1. **Site URL** — your WordPress address, e.g. `https://pabau.com`
 2. **WordPress username** — your login name
 3. **Application password** — see the next step for where to get this
+4. **Cluster token** — optional. If whoever set this up gave you one, paste it. If not, press
+   Enter and carry on; see "Where the clusters come from" below for what you miss.
 
 ### Where the Application Password comes from
 
@@ -84,6 +86,37 @@ Your only jobs are handing it the articles and answering the yes/no questions.
 - **Published stays published, drafts stay drafts.** It never publishes for you.
 - **After it finishes**, clear your site cache so changes show up (WP Rocket →
   **Purge this URL**).
+
+## Where the clusters come from
+
+When it fixes an article's links, the tool needs to know which **content cluster** the article
+belongs to — links only ever point to pages in the same cluster. That list of clusters comes
+down with the install and refreshes itself every time the tool updates. You don't download
+anything, and you don't need the cluster spreadsheet on your computer.
+
+Now and then an article is too new to be on the list. The tool works its cluster out, uses it,
+and **sends it back to the shared list** so nobody has to work it out again. That's what the
+cluster token is for.
+
+- **You pasted a token in:** the assignment goes up straight away and everyone gets it.
+- **You didn't:** everything still works. Your assignments are saved on your computer and go up
+  automatically the first time you run with a token. Nothing is lost, and nothing stops.
+
+**Already have `pabau-content-clusters.xlsx` on your Desktop?** It keeps working and it still
+wins over the shared list on your machine. Run this line **once** so your copy gets folded into
+the shared one instead of quietly drifting away from everyone else's:
+
+```
+python3 ~/.claude/factcheck-flow/bin/cluster_sync.py adopt
+```
+
+Nothing changes for anyone else until David reviews the differences. If you want to see where
+you stand at any point — token or no token, up to date or not, anything waiting to be sent —
+run:
+
+```
+python3 ~/.claude/factcheck-flow/bin/cluster_sync.py status
+```
 
 ## If something goes wrong
 

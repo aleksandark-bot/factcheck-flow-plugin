@@ -309,6 +309,18 @@ CHECK 4 — IS THIS TOPIC ACTUALLY OURS? Google's topical relevance is linear an
     it — volume is exactly what makes topical overreach tempting.
   Record the cluster and its pillar; G10 needs them for the corner-stone links, and part 2 needs
   the cluster for the link budget.
+  The page is new, so the cluster store holds nothing for it and the cluster you just reasoned
+  is the only assignment it has. Write it back once G3 locks the slug and the URL is real —
+  that makes it canonical for everyone and stops /fact reasoning the same page again later:
+      python3 "$HOME/.claude/factcheck-flow/bin/cluster_lookup.py" suggest \
+              --title "<the working title>" --json > /tmp/ev.json
+      python3 "$HOME/.claude/factcheck-flow/bin/cluster_lookup.py" submit \
+              --url "https://pabau.com/<prefix>/<slug>/" --title "<the working title>" \
+              --cluster-id <cluster-id> --subcluster "<subcluster>" \
+              --evidence-file /tmp/ev.json
+  The evidence is required — an assignment nobody can audit is one David has to re-derive. With
+  no write token the row queues on disk and goes up on the next run that has one, which is not
+  a failure and never blocks this gate.
 
 ── THE VERDICT ──
 Combine the four into ONE of three:

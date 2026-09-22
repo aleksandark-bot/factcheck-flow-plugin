@@ -81,6 +81,17 @@ if curl -fsSL "$REPO_RAW/bin/cluster_lookup.py" -o "$FF/bin/cluster_lookup.py"; 
 else
   echo "  NOTE: could not download bin/cluster_lookup.py — /fact's link pass will be blocked." >&2
 fi
+# The central cluster store (clusters/CONTRACT.md). cluster_lookup.py IMPORTS
+# cluster_store.py, so without these three the link pass has no data layer at all: no
+# base.jsonl reader, no way to sync the branch, no way to write a reasoned assignment back.
+for b in cluster_store cluster_sync cluster_consolidate; do
+  if curl -fsSL "$REPO_RAW/bin/$b.py" -o "$FF/bin/$b.py"; then
+    chmod +x "$FF/bin/$b.py" 2>/dev/null || true
+  else
+    echo "  NOTE: could not download bin/$b.py — /fact's link pass will be blocked." >&2
+  fi
+done
+echo "  - cluster store installed"
 if curl -fsSL "$REPO_RAW/bin/elementor_guard.py" -o "$FF/bin/elementor_guard.py"; then
   chmod +x "$FF/bin/elementor_guard.py" 2>/dev/null || true
   echo "  - Elementor guard installed"
@@ -136,7 +147,34 @@ API="https://api.github.com/repos/$REPO/commits/$BRANCH"
 FF="$HOME/.claude/factcheck-flow"
 STATE="$FF/.last-sync-sha"
 
-mkdir -p "$FF/prompts" "$FF/guides" "$FF/bin" "$HOME/.claude/commands" "$HOME/.claude/agents" "$HOME/.claude/skills/wordpress-access" 2>/dev/null || true
+mkdir -p "$FF/prompts" "$FF/guides" "$FF/bin" "$FF/clusters" "$HOME/.claude/commands" "$HOME/.claude/agents" "$HOME/.claude/skills/wordpress-access" 2>/dev/null || true
+
+# 0. The central cluster store (clusters/CONTRACT.md). It lives on its OWN branch,
+#    `clusters-data`, and syncs on that branch's head sha — recorded by cluster_sync.py in
+#    $FF/.last-clusters-sha, deliberately separate from main's sha below. This runs BEFORE
+#    main's gate on purpose: that gate exits this script the moment nobody has pushed a
+#    prompt change, and a cluster assignment somebody submitted last week would then never
+#    reach anyone. Assignment data has to sync on its own schedule or it does not sync.
+#
+#    Backgrounded and silenced, because this fires on SessionStart: the session must never
+#    wait on GitHub. cluster_sync.py is fail-silent by contract — no network, a rate limit
+#    or a missing token leaves whatever is already on disk exactly as it was.
+#
+#    `push` drains assignments that earlier runs queued locally. Without a token it is a
+#    no-op that leaves the queue intact, so nothing is ever lost to a machine that has no
+#    write access yet.
+#    Skipped on the self-update re-exec below (FF_SELFUPDATED set), which is the one path
+#    that runs this script twice in a session: two concurrent pulls would race over the
+#    same 4.6 MB base.jsonl.
+if [ -z "${FF_SELFUPDATED:-}" ] && command -v python3 >/dev/null 2>&1 \
+   && [ -f "$FF/bin/cluster_sync.py" ]; then
+  (
+    python3 "$FF/bin/cluster_sync.py" pull --quiet
+    if [ -n "${PABAU_CLUSTERS_TOKEN:-}" ] || [ -s "$FF/.clusters-token" ]; then
+      python3 "$FF/bin/cluster_sync.py" push
+    fi
+  ) </dev/null >/dev/null 2>&1 &
+fi
 
 # 1. Latest commit on main. Bail quietly if we can't reach GitHub.
 remote_sha="$(curl -fsSL --max-time 8 -H 'Accept: application/vnd.github+json' "$API" 2>/dev/null \
@@ -223,7 +261,9 @@ fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
 # lives in these files and changes with the site, not with the model.
 fetch "commands/generate.md" "$HOME/.claude/commands/generate.md"
 fetch "agents/article-generator.md" "$HOME/.claude/agents/article-generator.md"
-for b in gsc_query gsc_cannibal keyword_picker serp_picker dfs_lists sentence_check serp_fetch index_ping render_visual cluster_lookup elementor_guard; do
+# cluster_store/cluster_sync/cluster_consolidate are the central store (CONTRACT.md).
+# cluster_lookup.py imports cluster_store, so the two must never be fetched apart.
+for b in gsc_query gsc_cannibal keyword_picker serp_picker dfs_lists sentence_check serp_fetch index_ping render_visual cluster_lookup cluster_store cluster_sync cluster_consolidate elementor_guard; do
   fetch "bin/$b.py" "$FF/bin/$b.py"; chmod +x "$FF/bin/$b.py" 2>/dev/null || true
 done
 
@@ -381,13 +421,15 @@ fact-check fixes → editorial → link pass → block guarantees) in memory, an
 everything back in a SINGLE save via the `wordpress-access` skill. They do not ask
 further questions.
 
-The link pass (`3-links.md`) resolves each article's content cluster from
-`~/Desktop/pabau-content-clusters.xlsx` — the source of truth, read at runtime by
-`bin/cluster_lookup.py` — and links only inside that cluster, at most five in-body editorial
-links (three on a code page). It ends in its own mechanical gate, so expect the gate's
-`PASS | 0 checks failed` line back on every `Links:` line, the same way Pass E reports the
-sentence gate. An editor that reports `LINKPLAN_BLOCKED` could not reach the spreadsheet: that
-is a setup problem to relay, not a reason to re-run the article with links improvised.
+The link pass (`3-links.md`) resolves each article's content cluster from the central
+cluster store — read at runtime by `bin/cluster_lookup.py`, which merges the synced
+`clusters-data` files with the local workbook where one exists — and links only inside that
+cluster, at most five in-body editorial links (three on a code page). It ends in its own
+mechanical gate, so expect the gate's `PASS | 0 checks failed` line back on every `Links:`
+line, the same way Pass E reports the sentence gate. An editor that reports
+`LINKPLAN_BLOCKED — no cluster store` could reach neither the synced files nor a local
+workbook: that is a setup problem to relay, not a reason to re-run the article with links
+improvised. A missing workbook on its own is normal and blocks nothing.
 
 The block-guarantee pass ALWAYS runs last and enforces the contract in
 `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — required document order plus the
@@ -1414,6 +1456,51 @@ else
   else
     echo "  - skipped — /SEO will report the re-crawl request as skipped"
   fi
+fi
+
+# --- 4f. Write access to the central cluster store (OPTIONAL) -------------
+# The store itself needs no credential: reads come off the public `clusters-data` branch
+# and work for everybody. The token only buys WRITE access, so a cluster you reason during
+# a run reaches the branch immediately instead of sitting in a local queue.
+#
+# The token is NEVER in this file — this repo is public. You paste it, it lands in
+# $FF/.clusters-token with mode 600, and .gitignore covers that path.
+CLUSTERS_TOKEN_DEST="$FF/.clusters-token"
+if [ -s "$CLUSTERS_TOKEN_DEST" ]; then
+  echo "  - cluster store token already present — keeping it"
+else
+  echo ""
+  echo "  OPTIONAL: a write token for the shared cluster store."
+  echo "  Skipping is fine and nothing breaks: reading cluster assignments needs no token,"
+  echo "  and any assignment you reason is queued locally and goes up automatically on the"
+  echo "  first run that has one. Nothing is ever lost by skipping this."
+  echo "  Ask David for a fine-grained PAT (this repo, contents:write) when you want one."
+  read -r -s -p "  Cluster store write token (blank to skip): " CLUSTERS_TOKEN; echo ""
+  if [ -n "${CLUSTERS_TOKEN:-}" ]; then
+    umask 077
+    printf '%s\n' "$CLUSTERS_TOKEN" > "$CLUSTERS_TOKEN_DEST"
+    chmod 600 "$CLUSTERS_TOKEN_DEST"
+    unset CLUSTERS_TOKEN
+    echo "  - cluster store token saved (readable only by you) to $CLUSTERS_TOKEN_DEST"
+  else
+    echo "  - skipped — reads work, writes queue locally until a token exists"
+  fi
+fi
+
+# --- 4g. First sync of the cluster store ----------------------------------
+# Pull the branch copy now, so the very first /fact run has cluster assignments even on a
+# machine that has never seen the workbook. Then `adopt`: if this machine DOES have a local
+# workbook that differs from the canonical store, export it once to
+# clusters/snapshots/<user>.jsonl so consolidation can reconcile the divergence. A snapshot
+# is consolidation input only — it never overwrites anything and is never read at runtime.
+# Both are fail-silent: no network, no token, no workbook are all fine.
+if command -v python3 >/dev/null 2>&1 && [ -f "$FF/bin/cluster_sync.py" ]; then
+  if python3 "$FF/bin/cluster_sync.py" pull >/dev/null 2>&1; then
+    echo "  - cluster store synced"
+  else
+    echo "  NOTE: could not sync the cluster store now — the updater retries every session."
+  fi
+  python3 "$FF/bin/cluster_sync.py" adopt >/dev/null 2>&1 || true
 fi
 
 # --- 5. WordPress credentials (interactive) -------------------------------

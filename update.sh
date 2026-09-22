@@ -18,7 +18,34 @@ API="https://api.github.com/repos/$REPO/commits/$BRANCH"
 FF="$HOME/.claude/factcheck-flow"
 STATE="$FF/.last-sync-sha"
 
-mkdir -p "$FF/prompts" "$FF/guides" "$FF/bin" "$HOME/.claude/commands" "$HOME/.claude/agents" "$HOME/.claude/skills/wordpress-access" 2>/dev/null || true
+mkdir -p "$FF/prompts" "$FF/guides" "$FF/bin" "$FF/clusters" "$HOME/.claude/commands" "$HOME/.claude/agents" "$HOME/.claude/skills/wordpress-access" 2>/dev/null || true
+
+# 0. The central cluster store (clusters/CONTRACT.md). It lives on its OWN branch,
+#    `clusters-data`, and syncs on that branch's head sha — recorded by cluster_sync.py in
+#    $FF/.last-clusters-sha, deliberately separate from main's sha below. This runs BEFORE
+#    main's gate on purpose: that gate exits this script the moment nobody has pushed a
+#    prompt change, and a cluster assignment somebody submitted last week would then never
+#    reach anyone. Assignment data has to sync on its own schedule or it does not sync.
+#
+#    Backgrounded and silenced, because this fires on SessionStart: the session must never
+#    wait on GitHub. cluster_sync.py is fail-silent by contract — no network, a rate limit
+#    or a missing token leaves whatever is already on disk exactly as it was.
+#
+#    `push` drains assignments that earlier runs queued locally. Without a token it is a
+#    no-op that leaves the queue intact, so nothing is ever lost to a machine that has no
+#    write access yet.
+#    Skipped on the self-update re-exec below (FF_SELFUPDATED set), which is the one path
+#    that runs this script twice in a session: two concurrent pulls would race over the
+#    same 4.6 MB base.jsonl.
+if [ -z "${FF_SELFUPDATED:-}" ] && command -v python3 >/dev/null 2>&1 \
+   && [ -f "$FF/bin/cluster_sync.py" ]; then
+  (
+    python3 "$FF/bin/cluster_sync.py" pull --quiet
+    if [ -n "${PABAU_CLUSTERS_TOKEN:-}" ] || [ -s "$FF/.clusters-token" ]; then
+      python3 "$FF/bin/cluster_sync.py" push
+    fi
+  ) </dev/null >/dev/null 2>&1 &
+fi
 
 # 1. Latest commit on main. Bail quietly if we can't reach GitHub.
 remote_sha="$(curl -fsSL --max-time 8 -H 'Accept: application/vnd.github+json' "$API" 2>/dev/null \
@@ -105,7 +132,9 @@ fetch "commands/SEO.md" "$HOME/.claude/commands/SEO.md"
 # lives in these files and changes with the site, not with the model.
 fetch "commands/generate.md" "$HOME/.claude/commands/generate.md"
 fetch "agents/article-generator.md" "$HOME/.claude/agents/article-generator.md"
-for b in gsc_query gsc_cannibal keyword_picker serp_picker dfs_lists sentence_check serp_fetch index_ping render_visual cluster_lookup elementor_guard; do
+# cluster_store/cluster_sync/cluster_consolidate are the central store (CONTRACT.md).
+# cluster_lookup.py imports cluster_store, so the two must never be fetched apart.
+for b in gsc_query gsc_cannibal keyword_picker serp_picker dfs_lists sentence_check serp_fetch index_ping render_visual cluster_lookup cluster_store cluster_sync cluster_consolidate elementor_guard; do
   fetch "bin/$b.py" "$FF/bin/$b.py"; chmod +x "$FF/bin/$b.py" 2>/dev/null || true
 done
 

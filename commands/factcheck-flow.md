@@ -141,13 +141,15 @@ fact-check fixes → editorial → link pass → block guarantees) in memory, an
 everything back in a SINGLE save via the `wordpress-access` skill. They do not ask
 further questions.
 
-The link pass (`3-links.md`) resolves each article's content cluster from
-`~/Desktop/pabau-content-clusters.xlsx` — the source of truth, read at runtime by
-`bin/cluster_lookup.py` — and links only inside that cluster, at most five in-body editorial
-links (three on a code page). It ends in its own mechanical gate, so expect the gate's
-`PASS | 0 checks failed` line back on every `Links:` line, the same way Pass E reports the
-sentence gate. An editor that reports `LINKPLAN_BLOCKED` could not reach the spreadsheet: that
-is a setup problem to relay, not a reason to re-run the article with links improvised.
+The link pass (`3-links.md`) resolves each article's content cluster from the central
+cluster store — read at runtime by `bin/cluster_lookup.py`, which merges the synced
+`clusters-data` files with the local workbook where one exists — and links only inside that
+cluster, at most five in-body editorial links (three on a code page). It ends in its own
+mechanical gate, so expect the gate's `PASS | 0 checks failed` line back on every `Links:`
+line, the same way Pass E reports the sentence gate. An editor that reports
+`LINKPLAN_BLOCKED — no cluster store` could reach neither the synced files nor a local
+workbook: that is a setup problem to relay, not a reason to re-run the article with links
+improvised. A missing workbook on its own is normal and blocks nothing.
 
 The block-guarantee pass ALWAYS runs last and enforces the contract in
 `~/.claude/factcheck-flow/guides/WordPress-blocks.md` — required document order plus the
