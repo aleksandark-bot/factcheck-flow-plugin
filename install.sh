@@ -6,7 +6,14 @@
 # where the plugin system is disabled.
 #
 # Run it with:
+# While the repo is public:
 #   bash <(curl -fsSL https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/install.sh)
+# Once it is private (token from David):
+#   export PABAU_REPO_TOKEN=<token>
+#   bash <(curl -fsSL -H "Authorization: Bearer $PABAU_REPO_TOKEN" https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/install.sh)
+#
+# It must stay `bash <(...)`, not `curl ... | bash`: the installer asks questions, and a
+# piped script has no terminal to ask them on.
 #
 set -euo pipefail
 
@@ -54,59 +61,103 @@ echo ""
 
 mkdir -p "$CLAUDE/commands" "$CLAUDE/agents" "$CLAUDE/skills/wordpress-access" "$PROMPTS" "$GUIDES" "$FF/bin"
 
+# --- 0. The repo token (read-only; optional while the repo is public) -----
+# Once the repo is private, every download below and every auto-update needs it. Looked up
+# in the same order the updater uses: $PABAU_REPO_TOKEN, then an existing $FF/.repo-token,
+# then the cluster write token in $FF/.clusters-token (contents:write can read too). A token
+# typed here or passed in the environment is saved to $FF/.repo-token (mode 600, covered by
+# .gitignore) so the auto-updater finds it. It is never echoed or printed.
+_tok() { printf '%s' "${1:-}" | tr -d '[:space:]'; }
+REPO_TOKEN="$(_tok "${PABAU_REPO_TOKEN:-}")"
+SAVE_REPO_TOKEN=0
+[ -n "$REPO_TOKEN" ] && SAVE_REPO_TOKEN=1
+[ -n "$REPO_TOKEN" ] || REPO_TOKEN="$(_tok "$(cat "$FF/.repo-token" 2>/dev/null || true)")"
+[ -n "$REPO_TOKEN" ] || REPO_TOKEN="$(_tok "$(cat "$FF/.clusters-token" 2>/dev/null || true)")"
+if [ -z "$REPO_TOKEN" ] && [ "$INTERACTIVE" = 1 ]; then
+  echo "  The repo token David sent lets this machine download the tool and its updates."
+  ask_secret REPO_TOKEN_IN "  Repo token (blank is fine while the repo is still public): "
+  REPO_TOKEN="$(_tok "${REPO_TOKEN_IN:-}")"
+  unset REPO_TOKEN_IN
+  [ -n "$REPO_TOKEN" ] && SAVE_REPO_TOKEN=1
+fi
+if [ "$SAVE_REPO_TOKEN" = 1 ]; then
+  # Subshell, so the umask never leaks into the rest of the installer.
+  ( umask 077; printf '%s\n' "$REPO_TOKEN" > "$FF/.repo-token" )
+  chmod 600 "$FF/.repo-token"
+  echo "  - repo token saved (readable only by you) to $FF/.repo-token"
+fi
+
+# Every download from the repo goes through this: curl -fsSL, plus the auth header only
+# when there is a token. No array, so it is safe under `set -u` on macOS's bash 3.2.
+gh_curl() {
+  if [ -n "$REPO_TOKEN" ]; then
+    curl -fsSL -H "Authorization: Bearer $REPO_TOKEN" "$@"
+  else
+    curl -fsSL "$@"
+  fi
+}
+
 # --- 1. Download the editable prompt files from the repo -------------------
 for p in 1-factcheck 2-editorial 3-links seo-research seo-write generate-research generate-write; do
-  if ! curl -fsSL "$REPO_RAW/prompts/$p.md" -o "$PROMPTS/$p.md"; then
-    echo "  ERROR: could not download prompts/$p.md — check your internet connection." >&2
+  if ! gh_curl "$REPO_RAW/prompts/$p.md" -o "$PROMPTS/$p.md"; then
+    if [ -z "$REPO_TOKEN" ]; then
+      echo "  ERROR: could not download prompts/$p.md. Check your internet connection. If the" >&2
+      echo "         repo is now private, rerun with the repo token David sent:" >&2
+      echo '           export PABAU_REPO_TOKEN=<token>' >&2
+      echo '           bash <(curl -fsSL -H "Authorization: Bearer $PABAU_REPO_TOKEN" https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/install.sh)' >&2
+    else
+      echo "  ERROR: could not download prompts/$p.md. Check your internet connection — or" >&2
+      echo "         GitHub refused the repo token (expired?); ask David for a new one." >&2
+    fi
     exit 1
   fi
 done
 echo "  - prompts installed"
 
 # --- 1a. The GSC query helper (used by /SEO on published articles) --------
-if curl -fsSL "$REPO_RAW/bin/gsc_query.py" -o "$FF/bin/gsc_query.py"; then
+if gh_curl "$REPO_RAW/bin/gsc_query.py" -o "$FF/bin/gsc_query.py"; then
   chmod +x "$FF/bin/gsc_query.py" 2>/dev/null || true
   echo "  - GSC helper installed"
 else
   echo "  NOTE: could not download bin/gsc_query.py — /SEO's GSC step will be unavailable." >&2
 fi
-if curl -fsSL "$REPO_RAW/bin/keyword_picker.py" -o "$FF/bin/keyword_picker.py"; then
+if gh_curl "$REPO_RAW/bin/keyword_picker.py" -o "$FF/bin/keyword_picker.py"; then
   chmod +x "$FF/bin/keyword_picker.py" 2>/dev/null || true
   echo "  - keyword picker installed"
 else
   echo "  NOTE: could not download bin/keyword_picker.py — /SEO will use the in-chat picker." >&2
 fi
-if curl -fsSL "$REPO_RAW/bin/serp_picker.py" -o "$FF/bin/serp_picker.py"; then
+if gh_curl "$REPO_RAW/bin/serp_picker.py" -o "$FF/bin/serp_picker.py"; then
   chmod +x "$FF/bin/serp_picker.py" 2>/dev/null || true
   echo "  - SERP picker installed"
 else
   echo "  NOTE: could not download bin/serp_picker.py — /SEO will use the in-chat SERP list." >&2
 fi
-if curl -fsSL "$REPO_RAW/bin/dfs_lists.py" -o "$FF/bin/dfs_lists.py"; then
+if gh_curl "$REPO_RAW/bin/dfs_lists.py" -o "$FF/bin/dfs_lists.py"; then
   chmod +x "$FF/bin/dfs_lists.py" 2>/dev/null || true
   echo "  - keyword-list builder installed"
 else
   echo "  NOTE: could not download bin/dfs_lists.py — /SEO Stage 2 will have no helper." >&2
 fi
-if curl -fsSL "$REPO_RAW/bin/sentence_check.py" -o "$FF/bin/sentence_check.py"; then
+if gh_curl "$REPO_RAW/bin/sentence_check.py" -o "$FF/bin/sentence_check.py"; then
   chmod +x "$FF/bin/sentence_check.py" 2>/dev/null || true
   echo "  - sentence checker installed"
 else
   echo "  NOTE: could not download bin/sentence_check.py — the /fact sentence gate will be unavailable." >&2
 fi
-if curl -fsSL "$REPO_RAW/bin/serp_fetch.py" -o "$FF/bin/serp_fetch.py"; then
+if gh_curl "$REPO_RAW/bin/serp_fetch.py" -o "$FF/bin/serp_fetch.py"; then
   chmod +x "$FF/bin/serp_fetch.py" 2>/dev/null || true
   echo "  - SERP fetcher installed"
 else
   echo "  NOTE: could not download bin/serp_fetch.py — /SEO Stage 1 will have no helper." >&2
 fi
-if curl -fsSL "$REPO_RAW/bin/render_visual.py" -o "$FF/bin/render_visual.py"; then
+if gh_curl "$REPO_RAW/bin/render_visual.py" -o "$FF/bin/render_visual.py"; then
   chmod +x "$FF/bin/render_visual.py" 2>/dev/null || true
   echo "  - visual renderer installed"
 else
   echo "  NOTE: could not download bin/render_visual.py — /fact cannot build article visuals." >&2
 fi
-if curl -fsSL "$REPO_RAW/bin/cluster_lookup.py" -o "$FF/bin/cluster_lookup.py"; then
+if gh_curl "$REPO_RAW/bin/cluster_lookup.py" -o "$FF/bin/cluster_lookup.py"; then
   chmod +x "$FF/bin/cluster_lookup.py" 2>/dev/null || true
   echo "  - cluster lookup installed"
 else
@@ -116,26 +167,26 @@ fi
 # cluster_store.py, so without these three the link pass has no data layer at all: no
 # base.jsonl reader, no way to sync the branch, no way to write a reasoned assignment back.
 for b in cluster_store cluster_sync cluster_consolidate; do
-  if curl -fsSL "$REPO_RAW/bin/$b.py" -o "$FF/bin/$b.py"; then
+  if gh_curl "$REPO_RAW/bin/$b.py" -o "$FF/bin/$b.py"; then
     chmod +x "$FF/bin/$b.py" 2>/dev/null || true
   else
     echo "  NOTE: could not download bin/$b.py — /fact's link pass will be blocked." >&2
   fi
 done
 echo "  - cluster store installed"
-if curl -fsSL "$REPO_RAW/bin/elementor_guard.py" -o "$FF/bin/elementor_guard.py"; then
+if gh_curl "$REPO_RAW/bin/elementor_guard.py" -o "$FF/bin/elementor_guard.py"; then
   chmod +x "$FF/bin/elementor_guard.py" 2>/dev/null || true
   echo "  - Elementor guard installed"
 else
   echo "  NOTE: could not download bin/elementor_guard.py — engine detection falls back to REST." >&2
 fi
-if curl -fsSL "$REPO_RAW/bin/gsc_cannibal.py" -o "$FF/bin/gsc_cannibal.py"; then
+if gh_curl "$REPO_RAW/bin/gsc_cannibal.py" -o "$FF/bin/gsc_cannibal.py"; then
   chmod +x "$FF/bin/gsc_cannibal.py" 2>/dev/null || true
   echo "  - Keyword-ownership pre-flight installed"
 else
   echo "  NOTE: could not download bin/gsc_cannibal.py — /SEO cannot check for cannibalization." >&2
 fi
-if curl -fsSL "$REPO_RAW/bin/index_ping.py" -o "$FF/bin/index_ping.py"; then
+if gh_curl "$REPO_RAW/bin/index_ping.py" -o "$FF/bin/index_ping.py"; then
   chmod +x "$FF/bin/index_ping.py" 2>/dev/null || true
   echo "  - Re-crawl request helper installed"
 else
@@ -147,7 +198,7 @@ fi
 # context (About-Pabau), and SERP title optimization (Meta-title-best-practices).
 # The editorial prompt and factcheck-reporter read them.
 for g in core-rules Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent WordPress-blocks Visuals; do
-  if ! curl -fsSL "$REPO_RAW/guides/$g.md" -o "$GUIDES/$g.md"; then
+  if ! gh_curl "$REPO_RAW/guides/$g.md" -o "$GUIDES/$g.md"; then
     echo "  ERROR: could not download guides/$g.md — check your internet connection." >&2
     exit 1
   fi
@@ -168,6 +219,16 @@ cat > "$FF/update.sh" <<'UPDATESH'
 #   - Author-safe: gated on the remote commit SHA. If nobody has pushed since the
 #     last sync, this is a no-op — so uncommitted local edits are never clobbered.
 #   - Quiet: prints nothing on success so it doesn't pollute session context.
+#   - Private-repo ready: every GitHub read carries a read-only "repo token" when this
+#     machine has one (env $PABAU_REPO_TOKEN, then ~/.claude/factcheck-flow/.repo-token,
+#     then the cluster write token — $PABAU_CLUSTERS_TOKEN or .clusters-token — since a
+#     contents:write token can read too). No token means unauthenticated requests, exactly
+#     as before, which works for as long as the repo is public. A token is never printed.
+#   - Says ONE line when it matters, and only then (SessionStart stdout reaches the session,
+#     so Claude can pass it on): a 401/403/404 from GitHub pauses updates with a line saying
+#     why — no token on this machine, or GitHub refused the one it has — and a machine that
+#     still updates without a token gets a heads-up to save one before the repo goes
+#     private. A machine with a working token stays silent.
 #
 set -uo pipefail   # deliberately NOT -e
 
@@ -179,6 +240,18 @@ FF="$HOME/.claude/factcheck-flow"
 STATE="$FF/.last-sync-sha"
 
 mkdir -p "$FF/prompts" "$FF/guides" "$FF/bin" "$FF/clusters" "$HOME/.claude/commands" "$HOME/.claude/agents" "$HOME/.claude/skills/wordpress-access" 2>/dev/null || true
+
+# Read-only repo token, optional (see the header). Whitespace is stripped so a pasted
+# trailing newline or space never corrupts the header. AUTH is expanded everywhere as
+# ${AUTH[@]+"${AUTH[@]}"}: macOS ships bash 3.2, where `set -u` treats an empty
+# "${AUTH[@]}" as an unbound variable and would kill the script on a tokenless machine.
+_tok() { printf '%s' "${1:-}" | tr -d '[:space:]'; }
+TOKEN="$(_tok "${PABAU_REPO_TOKEN:-}")"
+[ -n "$TOKEN" ] || TOKEN="$(_tok "$(cat "$FF/.repo-token" 2>/dev/null)")"
+[ -n "$TOKEN" ] || TOKEN="$(_tok "${PABAU_CLUSTERS_TOKEN:-}")"
+[ -n "$TOKEN" ] || TOKEN="$(_tok "$(cat "$FF/.clusters-token" 2>/dev/null)")"
+AUTH=()
+[ -n "$TOKEN" ] && AUTH=(-H "Authorization: Bearer $TOKEN")
 
 # 0. The central cluster store (clusters/CONTRACT.md). It lives on its OWN branch,
 #    `clusters-data`, and syncs on that branch's head sha — recorded by cluster_sync.py in
@@ -207,9 +280,36 @@ if [ -z "${FF_SELFUPDATED:-}" ] && command -v python3 >/dev/null 2>&1 \
   ) </dev/null >/dev/null 2>&1 &
 fi
 
-# 1. Latest commit on main. Bail quietly if we can't reach GitHub.
-remote_sha="$(curl -fsSL --max-time 8 -H 'Accept: application/vnd.github+json' "$API" 2>/dev/null \
-  | grep -m1 '"sha"' | sed -E 's/.*"sha"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"
+# 1. Latest commit on main. Bail quietly if we can't reach GitHub at all. No -f: the HTTP
+#    status is what tells "no access" apart from "offline", so it is captured on the last
+#    line of the output and the body is everything above it.
+resp="$(curl -sSL --max-time 8 -H 'Accept: application/vnd.github+json' ${AUTH[@]+"${AUTH[@]}"} \
+  -w '\n%{http_code}' "$API" 2>/dev/null)" || exit 0
+code="${resp##*$'\n'}"
+body="${resp%$'\n'*}"
+case "$code" in
+  200) ;;
+  401|403|404)
+    # A rate limit is also a 403. That is not an access problem and passes on its own, so
+    # it stays silent like any other transient failure.
+    case "$body" in *[Rr]ate\ limit*) exit 0 ;; esac
+    if [ -z "$TOKEN" ]; then
+      echo "factcheck-flow: updates paused — this machine has no repo token. Save the token David sent to ~/.claude/factcheck-flow/.repo-token (then restart Claude Code)."
+    else
+      echo "factcheck-flow: updates paused — GitHub refused the repo token (HTTP $code). It has probably expired; ask David for a new one."
+    fi
+    exit 0 ;;
+  *) exit 0 ;;
+esac
+# Still public and this machine has no token: it works today and will stop the day the repo
+# goes private, so say so. FF_HEADSUP_SHOWN keeps the self-update re-exec below from
+# repeating the line in the same session.
+if [ -z "$TOKEN" ] && [ -z "${FF_HEADSUP_SHOWN:-}" ]; then
+  echo "factcheck-flow: heads-up — the tool's GitHub repo is going private soon. Save the repo token David sent to ~/.claude/factcheck-flow/.repo-token so your updates keep working."
+  export FF_HEADSUP_SHOWN=1
+fi
+remote_sha="$(printf '%s\n' "$body" | grep -m1 '"sha"' \
+  | sed -E 's/.*"sha"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"
 [ -n "${remote_sha:-}" ] || exit 0
 
 # 2. Nothing new since last sync? Do nothing (this is what protects unpushed edits).
@@ -228,7 +328,7 @@ SELF="$FF/update.sh"
 if [ -z "${FF_SELFUPDATED:-}" ]; then
   tmp_self="$(mktemp 2>/dev/null || true)"
   if [ -n "${tmp_self:-}" ] \
-     && curl -fsSL --max-time 8 "$RAW/update.sh" -o "$tmp_self" 2>/dev/null \
+     && curl -fsSL --max-time 8 ${AUTH[@]+"${AUTH[@]}"} "$RAW/update.sh" -o "$tmp_self" 2>/dev/null \
      && [ -s "$tmp_self" ] \
      && head -1 "$tmp_self" 2>/dev/null | grep -q '^#!' \
      && grep -q 'factcheck-flow auto-updater' "$tmp_self" \
@@ -247,7 +347,8 @@ fi
 fetch() { # $1 = repo-relative path, $2 = local destination
   local tmp
   tmp="$(mktemp 2>/dev/null)" || return 0
-  if curl -fsSL --max-time 8 "$RAW/$1" -o "$tmp" 2>/dev/null && [ -s "$tmp" ]; then
+  if curl -fsSL --max-time 8 ${AUTH[@]+"${AUTH[@]}"} "$RAW/$1" -o "$tmp" 2>/dev/null \
+     && [ -s "$tmp" ]; then
     mkdir -p "$(dirname "$2")" 2>/dev/null || true
     mv "$tmp" "$2" 2>/dev/null || rm -f "$tmp" 2>/dev/null || true
   else
@@ -520,9 +621,9 @@ EOF
 echo "  - /fact command installed"
 
 # --- 2b. The /SEO command -------------------------------------------------
-if curl -fsSL "$REPO_RAW/commands/SEO.md" -o "$CLAUDE/commands/SEO.md"; then
+if gh_curl "$REPO_RAW/commands/SEO.md" -o "$CLAUDE/commands/SEO.md"; then
   echo "  - /SEO command installed"
-  if curl -fsSL "$REPO_RAW/agents/seo-writer.md" -o "$CLAUDE/agents/seo-writer.md"; then
+  if gh_curl "$REPO_RAW/agents/seo-writer.md" -o "$CLAUDE/agents/seo-writer.md"; then
     echo "  - seo-writer agent installed"
   else
     echo "  NOTE: could not download agents/seo-writer.md — /SEO cannot write without it." >&2
@@ -533,9 +634,9 @@ else
 fi
 
 # --- 2c. The /generate command --------------------------------------------
-if curl -fsSL "$REPO_RAW/commands/generate.md" -o "$CLAUDE/commands/generate.md"; then
+if gh_curl "$REPO_RAW/commands/generate.md" -o "$CLAUDE/commands/generate.md"; then
   echo "  - /generate command installed"
-  if curl -fsSL "$REPO_RAW/agents/article-generator.md" -o "$CLAUDE/agents/article-generator.md"; then
+  if gh_curl "$REPO_RAW/agents/article-generator.md" -o "$CLAUDE/agents/article-generator.md"; then
     echo "  - article-generator agent installed"
   else
     echo "  NOTE: could not download agents/article-generator.md — /generate cannot write without it." >&2
@@ -1496,11 +1597,12 @@ else
 fi
 
 # --- 4f. Write access to the central cluster store (OPTIONAL) -------------
-# The store itself needs no credential: reads come off the public `clusters-data` branch
-# and work for everybody. The token only buys WRITE access, so a cluster you reason during
-# a run reaches the branch immediately instead of sitting in a local queue.
+# Reading the store needs no write token: reads come off the `clusters-data` branch using
+# the repo token from step 0 (or unauthenticated, while the repo is still public), and work
+# for everybody who can install at all. This token only buys WRITE access, so a cluster you
+# reason during a run reaches the branch immediately instead of sitting in a local queue.
 #
-# The token is NEVER in this file — this repo is public. You paste it, it lands in
+# The token is NEVER in this file or anywhere in the repo. You paste it, it lands in
 # $FF/.clusters-token with mode 600, and .gitignore covers that path.
 CLUSTERS_TOKEN_DEST="$FF/.clusters-token"
 if [ -s "$CLUSTERS_TOKEN_DEST" ]; then
@@ -1508,9 +1610,10 @@ if [ -s "$CLUSTERS_TOKEN_DEST" ]; then
 else
   echo ""
   echo "  OPTIONAL: a write token for the shared cluster store."
-  echo "  Skipping is fine and nothing breaks: reading cluster assignments needs no token,"
-  echo "  and any assignment you reason is queued locally and goes up automatically on the"
-  echo "  first run that has one. Nothing is ever lost by skipping this."
+  echo "  Skipping is fine and nothing breaks: reading cluster assignments needs only the repo"
+  echo "  token (or none, while the repo is public), and any assignment you reason is queued"
+  echo "  locally and goes up automatically on the first run that has a write token. Nothing"
+  echo "  is ever lost by skipping this."
   echo "  Ask David for a fine-grained PAT (this repo, contents:write) when you want one."
   ask_secret CLUSTERS_TOKEN "  Cluster store write token (blank to skip): "
   if [ -n "${CLUSTERS_TOKEN:-}" ]; then
@@ -1520,7 +1623,7 @@ else
     unset CLUSTERS_TOKEN
     echo "  - cluster store token saved (readable only by you) to $CLUSTERS_TOKEN_DEST"
   else
-    echo "  - skipped — reads work, writes queue locally until a token exists"
+    echo "  - skipped — reads still work, writes queue locally until a write token exists"
   fi
 fi
 

@@ -193,8 +193,11 @@ is the existing `cluster_lookup.py` cache behavior and it does not change.
    endpoint refuses content above 1 MB and `base.jsonl` is already 4.6 MB. So:
      - the blob sha comes from the Contents API DIRECTORY listing (which carries a sha at any
        size),
-     - the content comes from raw.githubusercontent PINNED TO THE HEAD COMMIT SHA, not to the
-       branch ref — the branch ref is CDN-cached for minutes and will serve you a stale file,
+     - the content comes from the Contents API with `Accept: application/vnd.github.raw`
+       (serves files up to 100 MB) and `?ref=` PINNED TO THE HEAD COMMIT SHA, not to the
+       branch ref, so every file is read from one consistent snapshot. Not from
+       raw.githubusercontent: that answers a refused or missing token with 404, which reads
+       exactly like "file missing", while the API answers 401,
      - the PUT carries the listing's sha.
    Append only rows not already present (dedupe on normalized url) and never overwrite an
    existing row. On a sha conflict, re-fetch and re-merge — never force — up to 5 times with
@@ -212,8 +215,16 @@ A push with no token is not an error. It is a no-op that leaves the queue intact
     $PABAU_CLUSTERS_TOKEN, else ~/.claude/factcheck-flow/.clusters-token (chmod 600)
 
 A fine-grained PAT scoped to this repo with contents:write. It is NEVER embedded in
-`install.sh` or any other file in this repo — the repo is public. `install.sh` prompts for it
-and writes it to that path; `.gitignore` covers it.
+`install.sh` or any other file in this repo. `install.sh` prompts for it and writes it to that
+path; `.gitignore` covers it.
+
+Reads (every GET, including the pull) use the write token when there is one, else the
+read-only repo token:
+
+    $PABAU_REPO_TOKEN, else ~/.claude/factcheck-flow/.repo-token (chmod 600)
+
+The repo token is sent on GETs only, never on a PUT/POST. With neither token, reads go out
+unauthenticated, which works only while the repo is public.
 
 ## Consolidation
 

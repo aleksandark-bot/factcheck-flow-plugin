@@ -16,10 +16,15 @@ wp-credentials
 wp-credentials.*
 
 # --- the central cluster store (clusters/CONTRACT.md) ---------------------
-# The write token. The repo is PUBLIC: this must never be committed, and it is never
-# embedded in install.sh either — install.sh prompts for it and writes it here.
+# The write token. It must never be committed (the repo was public, and history is
+# forever), and it is never embedded in install.sh either — install.sh prompts for it and writes it here.
 .clusters-token
 *.clusters-token
+
+# The read-only repo token (install.sh / update.sh). Lets a machine read the repo once it is
+# private; it is a secret like the write token and must never be committed.
+.repo-token
+*.repo-token
 
 # The local submit queue. Per-machine state, not shared data: it holds rows that have not
 # reached the branch yet, and committing one would replay another person's pending writes.

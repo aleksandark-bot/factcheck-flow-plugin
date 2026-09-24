@@ -28,6 +28,25 @@ In Claude Code:
 (You can also `/plugin marketplace add /absolute/path/to/factcheck-flow-plugin` for
 local testing before pushing to a git host.)
 
+**Without the plugin system**, run the installer from a terminal. While the repo is public:
+
+```
+bash <(curl -fsSL https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/install.sh)
+```
+
+Once the repo is private, use the read-only repo token David sends you:
+
+```
+export PABAU_REPO_TOKEN=<token>
+bash <(curl -fsSL -H "Authorization: Bearer $PABAU_REPO_TOKEN" https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/install.sh)
+```
+
+The installer saves the token to `~/.claude/factcheck-flow/.repo-token` (chmod 600), and the
+auto-updater sends it on every GitHub read. Already installed? Save the token to that file
+yourself and restart Claude Code. If the updater prints "updates paused", the token is
+missing or has expired. Keep it `bash <(...)`, not `curl | bash`: the installer asks
+questions and needs the terminal.
+
 ## One-time setup: WordPress credentials
 
 Credentials are **not** stored in this plugin. The `wordpress-access` skill carries only
@@ -283,11 +302,12 @@ earliest wins, so the store stays stable no matter who runs what.
 #### The write token (optional)
 
 Writing to the data branch needs a fine-grained GitHub token with `contents:write` on this
-repo. It is never embedded here — the repo is public. The installer asks for it and stores it
+repo. It is never embedded here or anywhere in the repo. The installer asks for it and stores it
 at `~/.claude/factcheck-flow/.clusters-token` (chmod 600); `$PABAU_CLUSTERS_TOKEN` overrides.
 
-**Skipping it costs you nothing you'll notice.** Reads work: the store is public and pulls
-without any token. Writes queue instead — every submitted assignment is appended to
+**Skipping it costs you nothing you'll notice.** Reads work: pulls use the read-only repo
+token (`~/.claude/factcheck-flow/.repo-token`, `$PABAU_REPO_TOKEN` overrides), or no token at
+all while the repo is public. Writes queue instead — every submitted assignment is appended to
 `~/.claude/factcheck-flow/cluster-queue.jsonl` *before* the network is touched, and the whole
 queue goes up on the first run that has a token. A missing token is a no-op, never an error,
 and never blocks a `/fact` run.

@@ -8,6 +8,16 @@
 #   - Author-safe: gated on the remote commit SHA. If nobody has pushed since the
 #     last sync, this is a no-op — so uncommitted local edits are never clobbered.
 #   - Quiet: prints nothing on success so it doesn't pollute session context.
+#   - Private-repo ready: every GitHub read carries a read-only "repo token" when this
+#     machine has one (env $PABAU_REPO_TOKEN, then ~/.claude/factcheck-flow/.repo-token,
+#     then the cluster write token — $PABAU_CLUSTERS_TOKEN or .clusters-token — since a
+#     contents:write token can read too). No token means unauthenticated requests, exactly
+#     as before, which works for as long as the repo is public. A token is never printed.
+#   - Says ONE line when it matters, and only then (SessionStart stdout reaches the session,
+#     so Claude can pass it on): a 401/403/404 from GitHub pauses updates with a line saying
+#     why — no token on this machine, or GitHub refused the one it has — and a machine that
+#     still updates without a token gets a heads-up to save one before the repo goes
+#     private. A machine with a working token stays silent.
 #
 set -uo pipefail   # deliberately NOT -e
 
@@ -19,6 +29,18 @@ FF="$HOME/.claude/factcheck-flow"
 STATE="$FF/.last-sync-sha"
 
 mkdir -p "$FF/prompts" "$FF/guides" "$FF/bin" "$FF/clusters" "$HOME/.claude/commands" "$HOME/.claude/agents" "$HOME/.claude/skills/wordpress-access" 2>/dev/null || true
+
+# Read-only repo token, optional (see the header). Whitespace is stripped so a pasted
+# trailing newline or space never corrupts the header. AUTH is expanded everywhere as
+# ${AUTH[@]+"${AUTH[@]}"}: macOS ships bash 3.2, where `set -u` treats an empty
+# "${AUTH[@]}" as an unbound variable and would kill the script on a tokenless machine.
+_tok() { printf '%s' "${1:-}" | tr -d '[:space:]'; }
+TOKEN="$(_tok "${PABAU_REPO_TOKEN:-}")"
+[ -n "$TOKEN" ] || TOKEN="$(_tok "$(cat "$FF/.repo-token" 2>/dev/null)")"
+[ -n "$TOKEN" ] || TOKEN="$(_tok "${PABAU_CLUSTERS_TOKEN:-}")"
+[ -n "$TOKEN" ] || TOKEN="$(_tok "$(cat "$FF/.clusters-token" 2>/dev/null)")"
+AUTH=()
+[ -n "$TOKEN" ] && AUTH=(-H "Authorization: Bearer $TOKEN")
 
 # 0. The central cluster store (clusters/CONTRACT.md). It lives on its OWN branch,
 #    `clusters-data`, and syncs on that branch's head sha — recorded by cluster_sync.py in
@@ -47,9 +69,36 @@ if [ -z "${FF_SELFUPDATED:-}" ] && command -v python3 >/dev/null 2>&1 \
   ) </dev/null >/dev/null 2>&1 &
 fi
 
-# 1. Latest commit on main. Bail quietly if we can't reach GitHub.
-remote_sha="$(curl -fsSL --max-time 8 -H 'Accept: application/vnd.github+json' "$API" 2>/dev/null \
-  | grep -m1 '"sha"' | sed -E 's/.*"sha"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"
+# 1. Latest commit on main. Bail quietly if we can't reach GitHub at all. No -f: the HTTP
+#    status is what tells "no access" apart from "offline", so it is captured on the last
+#    line of the output and the body is everything above it.
+resp="$(curl -sSL --max-time 8 -H 'Accept: application/vnd.github+json' ${AUTH[@]+"${AUTH[@]}"} \
+  -w '\n%{http_code}' "$API" 2>/dev/null)" || exit 0
+code="${resp##*$'\n'}"
+body="${resp%$'\n'*}"
+case "$code" in
+  200) ;;
+  401|403|404)
+    # A rate limit is also a 403. That is not an access problem and passes on its own, so
+    # it stays silent like any other transient failure.
+    case "$body" in *[Rr]ate\ limit*) exit 0 ;; esac
+    if [ -z "$TOKEN" ]; then
+      echo "factcheck-flow: updates paused — this machine has no repo token. Save the token David sent to ~/.claude/factcheck-flow/.repo-token (then restart Claude Code)."
+    else
+      echo "factcheck-flow: updates paused — GitHub refused the repo token (HTTP $code). It has probably expired; ask David for a new one."
+    fi
+    exit 0 ;;
+  *) exit 0 ;;
+esac
+# Still public and this machine has no token: it works today and will stop the day the repo
+# goes private, so say so. FF_HEADSUP_SHOWN keeps the self-update re-exec below from
+# repeating the line in the same session.
+if [ -z "$TOKEN" ] && [ -z "${FF_HEADSUP_SHOWN:-}" ]; then
+  echo "factcheck-flow: heads-up — the tool's GitHub repo is going private soon. Save the repo token David sent to ~/.claude/factcheck-flow/.repo-token so your updates keep working."
+  export FF_HEADSUP_SHOWN=1
+fi
+remote_sha="$(printf '%s\n' "$body" | grep -m1 '"sha"' \
+  | sed -E 's/.*"sha"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"
 [ -n "${remote_sha:-}" ] || exit 0
 
 # 2. Nothing new since last sync? Do nothing (this is what protects unpushed edits).
@@ -68,7 +117,7 @@ SELF="$FF/update.sh"
 if [ -z "${FF_SELFUPDATED:-}" ]; then
   tmp_self="$(mktemp 2>/dev/null || true)"
   if [ -n "${tmp_self:-}" ] \
-     && curl -fsSL --max-time 8 "$RAW/update.sh" -o "$tmp_self" 2>/dev/null \
+     && curl -fsSL --max-time 8 ${AUTH[@]+"${AUTH[@]}"} "$RAW/update.sh" -o "$tmp_self" 2>/dev/null \
      && [ -s "$tmp_self" ] \
      && head -1 "$tmp_self" 2>/dev/null | grep -q '^#!' \
      && grep -q 'factcheck-flow auto-updater' "$tmp_self" \
@@ -87,7 +136,8 @@ fi
 fetch() { # $1 = repo-relative path, $2 = local destination
   local tmp
   tmp="$(mktemp 2>/dev/null)" || return 0
-  if curl -fsSL --max-time 8 "$RAW/$1" -o "$tmp" 2>/dev/null && [ -s "$tmp" ]; then
+  if curl -fsSL --max-time 8 ${AUTH[@]+"${AUTH[@]}"} "$RAW/$1" -o "$tmp" 2>/dev/null \
+     && [ -s "$tmp" ]; then
     mkdir -p "$(dirname "$2")" 2>/dev/null || true
     mv "$tmp" "$2" 2>/dev/null || rm -f "$tmp" 2>/dev/null || true
   else

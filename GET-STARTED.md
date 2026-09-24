@@ -27,7 +27,21 @@ Open the Terminal and paste this **one line**, then press Enter:
 bash <(curl -fsSL https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/install.sh)
 ```
 
+**If David sent you a repo token** (the tool's repo is going private), paste these **two
+lines** instead, putting the token where it says `<token>`:
+
+```
+export PABAU_REPO_TOKEN=<token>
+bash <(curl -fsSL -H "Authorization: Bearer $PABAU_REPO_TOKEN" https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/install.sh)
+```
+
+The installer saves the token so updates keep working. Already installed? Save the token on
+its own in `~/.claude/factcheck-flow/.repo-token` and restart Claude Code.
+
 It will set everything up and then ask you a few questions:
+
+- **Repo token** — asked first, and only if you used the one-line version. Paste the token
+  David sent, or press Enter while the repo is still public.
 
 1. **Site URL** — your WordPress address, e.g. `https://pabau.com`
 2. **WordPress username** — your login name

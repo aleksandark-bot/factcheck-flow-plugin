@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Move cluster assignments between this machine and the central store.
 
-The central store is the `clusters-data` branch of the public repo
+The central store is the `clusters-data` branch of the repo
 aleksandark-bot/factcheck-flow-plugin (see clusters/CONTRACT.md — that file is the
 agreement, this script is one implementation of it). Nothing here ever decides WHAT a
 cluster is; `cluster_lookup.py` reads, `cluster_store.py` merges, this moves bytes.
@@ -21,9 +21,13 @@ Design rules, all of them load-bearing:
     Nothing is ever lost to a missing token.
   * ATOMIC. Every local write is temp-file + os.replace, after validation, so a partial
     download can never truncate a good local file.
-  * THE TOKEN IS NEVER PRINTED. The repo is public; the token is a fine-grained PAT with
-    contents:write on it. It is read from the environment or a chmod-600 file, used as a
-    header, and scrubbed out of every message this script emits.
+  * THE TOKEN IS NEVER PRINTED. There are two, both optional. The WRITE token is a
+    fine-grained PAT with contents:write; it authenticates everything, PUTs included. The
+    READ-ONLY repo token is what lets a machine read the repo once it is private; it rides
+    on GETs only and is never sent on a PUT/POST. With neither, reads go out
+    unauthenticated, which works for as long as the repo is public. Both are read from the
+    environment or a chmod-600 file, used as a header, and scrubbed out of every message
+    this script emits.
 
 Depends on `cluster_store.py` (same directory) for url normalization, the row schema, the
 authority ladder and the merged read path. Without it this still queues and pushes, degraded,
@@ -31,12 +35,16 @@ and says so.
 
 Data (override with env vars):
   $PABAU_CLUSTERS_TOKEN  else ~/.claude/factcheck-flow/.clusters-token   (contents:write PAT)
+  $PABAU_REPO_TOKEN      else ~/.claude/factcheck-flow/.repo-token       (read-only PAT; GETs
+                         only, used when there is no write token — reads a private repo)
   $PABAU_CLUSTERS_XLSX   else ~/Desktop/pabau-content-clusters.xlsx      (adopt's input)
   $PABAU_CLUSTER_USER    else git config user.email's localpart, else $USER  (snapshot name)
   $PABAU_FACTCHECK_DIR   else ~/.claude/factcheck-flow                   (local store root)
   $PABAU_CLUSTERS_DIR    else <$PABAU_FACTCHECK_DIR>/clusters   (where pull writes)
   $PABAU_CLUSTERS_REPO   $PABAU_CLUSTERS_BRANCH
-  $PABAU_CLUSTERS_API_BASE  $PABAU_CLUSTERS_RAW_BASE   (test seams; default GitHub)
+  $PABAU_CLUSTERS_API_BASE   (test seam; default https://api.github.com. Every read and
+                             write goes through the API — raw.githubusercontent is no
+                             longer used, so the old $PABAU_CLUSTERS_RAW_BASE is ignored)
 
 Exit codes: 0 always, except 2 for a setup/usage error or a `submit` that re-litigates a
 human assignment.
@@ -64,14 +72,13 @@ QUEUE = os.path.join(FF, "cluster-queue.jsonl")
 SHA_STATE = os.path.join(FF, ".last-clusters-sha")
 ADOPT_STATE = os.path.join(FF, ".last-adopt.json")
 TOKEN_FILE = os.path.join(FF, ".clusters-token")
+REPO_TOKEN_FILE = os.path.join(FF, ".repo-token")
 XLSX = os.environ.get("PABAU_CLUSTERS_XLSX") or os.path.join(
     HOME, "Desktop", "pabau-content-clusters.xlsx")
 
 REPO = os.environ.get("PABAU_CLUSTERS_REPO") or "aleksandark-bot/factcheck-flow-plugin"
 BRANCH = os.environ.get("PABAU_CLUSTERS_BRANCH") or "clusters-data"
 API_BASE = (os.environ.get("PABAU_CLUSTERS_API_BASE") or "https://api.github.com").rstrip("/")
-RAW_BASE = (os.environ.get("PABAU_CLUSTERS_RAW_BASE")
-            or "https://raw.githubusercontent.com").rstrip("/")
 
 TIMEOUT = 8            # every network call. Non-negotiable: this runs inside /fact.
 PULL_DEADLINE = 25     # whole-command budget for `pull`: six requests must not add up
@@ -228,12 +235,43 @@ def token_source():
     return _TOKEN_CACHE[1] if len(_TOKEN_CACHE) > 1 else ""
 
 
+_REPO_TOKEN_CACHE = []
+
+
+def read_repo_token():
+    """The READ-ONLY repo PAT, or "". Env first, then the chmod-600 file. Cached like
+    read_token(). http() sends it on GETs only, and only when there is no write token."""
+    if _REPO_TOKEN_CACHE:
+        return _REPO_TOKEN_CACHE[0]
+    tok = (os.environ.get("PABAU_REPO_TOKEN") or "").strip()
+    src = "env" if tok else ""
+    if not tok:
+        try:
+            with open(REPO_TOKEN_FILE) as fh:
+                tok = fh.read().strip()
+            src = "file" if tok else ""
+        except Exception:
+            tok = ""
+    _REPO_TOKEN_CACHE.append(tok)
+    _REPO_TOKEN_CACHE.append(src)
+    return tok
+
+
+def repo_token_source():
+    read_repo_token()
+    return _REPO_TOKEN_CACHE[1] if len(_REPO_TOKEN_CACHE) > 1 else ""
+
+
 def scrub(msg):
-    """Belt and braces: even an accidental interpolation can't leak the token to a log."""
+    """Belt and braces: even an accidental interpolation can't leak a token to a log."""
     s = str(msg)
-    tok = _TOKEN_CACHE[0] if _TOKEN_CACHE else (os.environ.get("PABAU_CLUSTERS_TOKEN") or "")
-    if tok and len(tok) > 6 and tok in s:
-        s = s.replace(tok, "***redacted***")
+    toks = [_TOKEN_CACHE[0] if _TOKEN_CACHE else (os.environ.get("PABAU_CLUSTERS_TOKEN") or ""),
+            _REPO_TOKEN_CACHE[0] if _REPO_TOKEN_CACHE else (os.environ.get("PABAU_REPO_TOKEN")
+                                                            or "")]
+    for tok in toks:
+        tok = (tok or "").strip()
+        if tok and len(tok) > 6 and tok in s:
+            s = s.replace(tok, "***redacted***")
     return s
 
 
@@ -243,12 +281,19 @@ def http(url, method="GET", data=None, headers=None, auth=True, timeout=TIMEOUT)
     """(status, body_bytes, error) — never raises, never blocks longer than `timeout`.
 
     status 0 means the request never completed (DNS, TLS, timeout, refused).
+    `headers` is merged OVER the defaults, so a caller's Accept replaces the JSON one.
+
+    With auth, the write token goes on every method. Without one, a GET falls back to the
+    read-only repo token; a PUT/POST never carries it (it cannot write, so a write goes out
+    under the write token or not authenticated at all).
     """
     hdrs = {"User-Agent": UA, "Accept": "application/vnd.github+json"}
     if headers:
         hdrs.update(headers)
     if auth:
         tok = read_token()
+        if not tok and method.upper() == "GET":
+            tok = read_repo_token()
         if tok:
             hdrs["Authorization"] = "Bearer " + tok
     if isinstance(data, str):
@@ -303,7 +348,10 @@ def api_error(code, obj):
 
 
 def head_sha():
-    """Head commit of the data branch, or "". Works unauthenticated — the repo is public."""
+    """Head commit of the data branch, or "". Authenticated when this machine has a token
+    (write token, else the read-only repo token); unauthenticated otherwise, which works
+    only while the repo is public. A refused or missing token on a private repo reads as ""
+    — "could not reach the store" — so a pull keeps whatever is on disk."""
     url = "%s/repos/%s/commits/%s" % (API_BASE, REPO, urllib.parse.quote(BRANCH))
     code, obj, err = http_json(url)
     if code == 200 and isinstance(obj, dict) and obj.get("sha"):
@@ -312,19 +360,27 @@ def head_sha():
 
 
 def raw_get(commit, repo_path, timeout=TIMEOUT):
-    """(status, bytes, error) for a file, pinned to a COMMIT sha.
+    """(status, bytes, error) for a file's raw bytes, pinned to a COMMIT sha.
 
-    Pinning matters twice: raw.githubusercontent caches branch refs for minutes, and a
-    multi-file pull must see one consistent snapshot, not a moving branch.
+    Read through the Contents API with the raw media type, authenticated like every other
+    GET here — NOT through raw.githubusercontent, and the reason is the status codes:
+    raw.githubusercontent answers a refused or missing token with 404 (measured: no auth
+    200, bogus bearer 404), which is indistinguishable from "file missing". A 404 that
+    really meant "your token was refused" once read as "the file is empty" one caller up,
+    which silently replaced additions.jsonl with the pusher's rows alone and wiped
+    teammates' rows. The API answers a bad token with 401, so a refusal stays a refusal —
+    and a private repo can only be read with a token at all, which raw handles worst.
 
-    NEVER AUTHENTICATED. The repo is public, so raw needs no token — and sending one only
-    adds a failure mode: raw.githubusercontent answers 404, not 401, when it rejects a
-    bearer (measured: no auth 200, bogus bearer 404). A 404 that really meant "your token
-    was refused" used to read as "the file is empty" one caller up, which silently
-    replaced additions.jsonl with the pusher's rows alone. The token stays on the API.
+    `Accept: application/vnd.github.raw` returns the file body itself (no base64 JSON
+    wrapper) and serves files up to 100 MB; the JSON form stops at 1 MB, and base.jsonl is
+    ~4.6 MB. Still pinned to a commit sha (`ref=`), so a multi-file pull sees one
+    consistent snapshot, not a moving branch.
     """
-    url = "%s/%s/%s/%s" % (RAW_BASE, REPO, commit, repo_path)
-    return http(url, auth=False, timeout=timeout)
+    url = "%s/repos/%s/contents/%s?ref=%s" % (
+        API_BASE, REPO, urllib.parse.quote(repo_path, safe="/"),
+        urllib.parse.quote(commit, safe=""))
+    return http(url, headers={"Accept": "application/vnd.github.raw"}, auth=True,
+                timeout=timeout)
 
 
 def dir_listing(repo_dir, ref=None):
@@ -1086,6 +1142,8 @@ def file_rows(name):
 def cmd_status(a):
     tok_src = {"env": "yes ($PABAU_CLUSTERS_TOKEN)",
                "file": "yes (%s)" % TOKEN_FILE}.get(token_source(), "NO")
+    repo_tok_src = {"env": "yes ($PABAU_REPO_TOKEN)",
+                    "file": "yes (%s)" % REPO_TOKEN_FILE}.get(repo_token_source(), "NO")
     local_sha = ""
     try:
         with open(SHA_STATE) as fh:
@@ -1099,6 +1157,7 @@ def cmd_status(a):
     info = {
         "repo": REPO, "branch": BRANCH, "store": DATA_DIR,
         "token": tok_src,
+        "repo_token": repo_tok_src,
         "cluster_store": "ok" if STORE_OK else "missing",
         "local_sha": local_sha or "(never pulled)",
         "remote_sha": remote or ("(not checked)" if a.offline else "(unreachable)"),
@@ -1118,6 +1177,7 @@ def cmd_status(a):
     say("repo            : %s @ %s" % (REPO, BRANCH))
     say("store           : %s" % DATA_DIR)
     say("token present   : %s" % tok_src)
+    say("repo token      : %s" % repo_tok_src)
     say("cluster_store   : %s" % ("ok" if STORE_OK else "MISSING — running degraded"))
     say("local data sha  : %s" % info["local_sha"])
     say("remote head sha : %s%s" % (info["remote_sha"],
