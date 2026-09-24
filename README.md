@@ -26,7 +26,8 @@ In Claude Code:
 ```
 
 (You can also `/plugin marketplace add /absolute/path/to/factcheck-flow-plugin` for
-local testing before pushing to a git host.)
+local testing before pushing to a git host.) Once the repo is private, this route needs
+GitHub access to it for the account git uses on your machine.
 
 **Without the plugin system**, run the installer from a terminal. While the repo is public:
 
@@ -42,10 +43,11 @@ bash <(curl -fsSL -H "Authorization: Bearer $PABAU_REPO_TOKEN" https://raw.githu
 ```
 
 The installer saves the token to `~/.claude/factcheck-flow/.repo-token` (chmod 600), and the
-auto-updater sends it on every GitHub read. Already installed? Save the token to that file
-yourself and restart Claude Code. If the updater prints "updates paused", the token is
-missing or has expired. Keep it `bash <(...)`, not `curl | bash`: the installer asks
-questions and needs the terminal.
+auto-updater sends it on every GitHub read. Already installed? Re-run the token version of
+the install command above: an older install's updater has no token support, so saving the
+token on its own is not enough. If the updater prints "updates paused", the token is missing
+or GitHub refused it; re-run the installer with a new one from David. Keep it `bash <(...)`,
+not `curl | bash`: the installer asks questions and needs the terminal.
 
 ## One-time setup: WordPress credentials
 

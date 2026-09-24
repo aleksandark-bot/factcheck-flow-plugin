@@ -24,10 +24,12 @@ Design rules, all of them load-bearing:
   * THE TOKEN IS NEVER PRINTED. There are two, both optional. The WRITE token is a
     fine-grained PAT with contents:write; it authenticates everything, PUTs included. The
     READ-ONLY repo token is what lets a machine read the repo once it is private; it rides
-    on GETs only and is never sent on a PUT/POST. With neither, reads go out
-    unauthenticated, which works for as long as the repo is public. Both are read from the
-    environment or a chmod-600 file, used as a header, and scrubbed out of every message
-    this script emits.
+    on GETs only and is never sent on a PUT/POST. A GET that GitHub answers 401 steps down
+    write token -> read token -> no auth, and keeps what worked for the rest of the run, so
+    a stale token never breaks reads of a still-public repo. With no token, reads go out
+    unauthenticated (file bodies from raw.githubusercontent, as before), which works for as
+    long as the repo is public. Both are read from the environment or a chmod-600 file,
+    used as a header, and scrubbed out of every message this script emits.
 
 Depends on `cluster_store.py` (same directory) for url normalization, the row schema, the
 authority ladder and the merged read path. Without it this still queues and pushes, degraded,
@@ -36,15 +38,14 @@ and says so.
 Data (override with env vars):
   $PABAU_CLUSTERS_TOKEN  else ~/.claude/factcheck-flow/.clusters-token   (contents:write PAT)
   $PABAU_REPO_TOKEN      else ~/.claude/factcheck-flow/.repo-token       (read-only PAT; GETs
-                         only, used when there is no write token — reads a private repo)
+                         only — used when there is no write token, or it was refused)
   $PABAU_CLUSTERS_XLSX   else ~/Desktop/pabau-content-clusters.xlsx      (adopt's input)
   $PABAU_CLUSTER_USER    else git config user.email's localpart, else $USER  (snapshot name)
   $PABAU_FACTCHECK_DIR   else ~/.claude/factcheck-flow                   (local store root)
   $PABAU_CLUSTERS_DIR    else <$PABAU_FACTCHECK_DIR>/clusters   (where pull writes)
   $PABAU_CLUSTERS_REPO   $PABAU_CLUSTERS_BRANCH
-  $PABAU_CLUSTERS_API_BASE   (test seam; default https://api.github.com. Every read and
-                             write goes through the API — raw.githubusercontent is no
-                             longer used, so the old $PABAU_CLUSTERS_RAW_BASE is ignored)
+  $PABAU_CLUSTERS_API_BASE  $PABAU_CLUSTERS_RAW_BASE   (test seams; default GitHub. File
+                             bodies go through the API with a token, through raw without)
 
 Exit codes: 0 always, except 2 for a setup/usage error or a `submit` that re-litigates a
 human assignment.
@@ -79,6 +80,8 @@ XLSX = os.environ.get("PABAU_CLUSTERS_XLSX") or os.path.join(
 REPO = os.environ.get("PABAU_CLUSTERS_REPO") or "aleksandark-bot/factcheck-flow-plugin"
 BRANCH = os.environ.get("PABAU_CLUSTERS_BRANCH") or "clusters-data"
 API_BASE = (os.environ.get("PABAU_CLUSTERS_API_BASE") or "https://api.github.com").rstrip("/")
+RAW_BASE = (os.environ.get("PABAU_CLUSTERS_RAW_BASE")
+            or "https://raw.githubusercontent.com").rstrip("/")
 
 TIMEOUT = 8            # every network call. Non-negotiable: this runs inside /fact.
 PULL_DEADLINE = 25     # whole-command budget for `pull`: six requests must not add up
@@ -240,7 +243,8 @@ _REPO_TOKEN_CACHE = []
 
 def read_repo_token():
     """The READ-ONLY repo PAT, or "". Env first, then the chmod-600 file. Cached like
-    read_token(). http() sends it on GETs only, and only when there is no write token."""
+    read_token(). http() sends it on GETs only: when there is no write token, or when
+    GitHub answered the write token with 401."""
     if _REPO_TOKEN_CACHE:
         return _REPO_TOKEN_CACHE[0]
     tok = (os.environ.get("PABAU_REPO_TOKEN") or "").strip()
@@ -277,27 +281,29 @@ def scrub(msg):
 
 # ------------------------------------------------------------------------------ http
 
-def http(url, method="GET", data=None, headers=None, auth=True, timeout=TIMEOUT):
-    """(status, body_bytes, error) — never raises, never blocks longer than `timeout`.
+_GET_AUTH = []   # [index into get_auth_candidates()] once a GET was refused and stepped down
 
-    status 0 means the request never completed (DNS, TLS, timeout, refused).
-    `headers` is merged OVER the defaults, so a caller's Accept replaces the JSON one.
 
-    With auth, the write token goes on every method. Without one, a GET falls back to the
-    read-only repo token; a PUT/POST never carries it (it cannot write, so a write goes out
-    under the write token or not authenticated at all).
-    """
-    hdrs = {"User-Agent": UA, "Accept": "application/vnd.github+json"}
-    if headers:
-        hdrs.update(headers)
-    if auth:
-        tok = read_token()
-        if not tok and method.upper() == "GET":
-            tok = read_repo_token()
-        if tok:
-            hdrs["Authorization"] = "Bearer " + tok
-    if isinstance(data, str):
-        data = data.encode("utf-8")
+def get_auth_candidates():
+    """The Authorization a GET may try, in order: write token, read-only token (when present
+    and different), none. "" means no Authorization header."""
+    out = []
+    w, r = read_token(), read_repo_token()
+    if w:
+        out.append(w)
+    if r and r != w:
+        out.append(r)
+    out.append("")
+    return out
+
+
+def get_token():
+    """The token the next GET will send, or "" — what raw_get() keys its endpoint on."""
+    cands = get_auth_candidates()
+    return cands[min(_GET_AUTH[0] if _GET_AUTH else 0, len(cands) - 1)]
+
+
+def _send(url, method, data, hdrs, timeout):
     req = urllib.request.Request(url, data=data, method=method, headers=hdrs)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -310,6 +316,48 @@ def http(url, method="GET", data=None, headers=None, auth=True, timeout=TIMEOUT)
         return e.code, body, "HTTP %d" % e.code
     except Exception as e:  # URLError, socket.timeout, ssl, anything
         return 0, b"", type(e).__name__ + ": " + str(e)
+
+
+def http(url, method="GET", data=None, headers=None, auth=True, timeout=TIMEOUT):
+    """(status, body_bytes, error) — never raises, never blocks longer than `timeout`
+    per attempt.
+
+    status 0 means the request never completed (DNS, TLS, timeout, refused).
+    `headers` is merged OVER the defaults, so a caller's Accept replaces the JSON one.
+
+    With auth, a PUT/POST carries the write token or nothing — never the read-only token,
+    which cannot write. A GET tries get_auth_candidates() in order and steps to the next one
+    only on a 401 (the token itself was refused: expired, revoked, mistyped); the step is
+    remembered for the rest of the process, so later GETs don't re-send a refused token.
+    That is what keeps a stale token from breaking reads while the repo is still public.
+    """
+    hdrs = {"User-Agent": UA, "Accept": "application/vnd.github+json"}
+    if headers:
+        hdrs.update(headers)
+    if isinstance(data, str):
+        data = data.encode("utf-8")
+    if not auth:
+        return _send(url, method, data, hdrs, timeout)
+    if method.upper() != "GET":
+        tok = read_token()
+        if tok:
+            hdrs["Authorization"] = "Bearer " + tok
+        return _send(url, method, data, hdrs, timeout)
+    cands = get_auth_candidates()
+    start = min(_GET_AUTH[0] if _GET_AUTH else 0, len(cands) - 1)
+    i = start
+    while True:
+        h = dict(hdrs)
+        if cands[i]:
+            h["Authorization"] = "Bearer " + cands[i]
+        res = _send(url, method, data, h, timeout)
+        if res[0] == 401 and i + 1 < len(cands):
+            i += 1
+            continue
+        break
+    if i != start:
+        _GET_AUTH[:] = [i]
+    return res
 
 
 def http_json(url, method="GET", payload=None, auth=True, timeout=TIMEOUT):
@@ -349,8 +397,8 @@ def api_error(code, obj):
 
 def head_sha():
     """Head commit of the data branch, or "". Authenticated when this machine has a token
-    (write token, else the read-only repo token); unauthenticated otherwise, which works
-    only while the repo is public. A refused or missing token on a private repo reads as ""
+    (write token, else the read-only repo token, stepping down on a 401 — see http());
+    unauthenticated otherwise, which works only while the repo is public. A refused or missing token on a private repo reads as ""
     — "could not reach the store" — so a pull keeps whatever is on disk."""
     url = "%s/repos/%s/commits/%s" % (API_BASE, REPO, urllib.parse.quote(BRANCH))
     code, obj, err = http_json(url)
@@ -362,25 +410,36 @@ def head_sha():
 def raw_get(commit, repo_path, timeout=TIMEOUT):
     """(status, bytes, error) for a file's raw bytes, pinned to a COMMIT sha.
 
-    Read through the Contents API with the raw media type, authenticated like every other
-    GET here — NOT through raw.githubusercontent, and the reason is the status codes:
-    raw.githubusercontent answers a refused or missing token with 404 (measured: no auth
-    200, bogus bearer 404), which is indistinguishable from "file missing". A 404 that
-    really meant "your token was refused" once read as "the file is empty" one caller up,
-    which silently replaced additions.jsonl with the pusher's rows alone and wiped
-    teammates' rows. The API answers a bad token with 401, so a refusal stays a refusal —
-    and a private repo can only be read with a token at all, which raw handles worst.
+    Pinning matters twice: raw.githubusercontent caches branch refs for minutes, and a
+    multi-file pull must see one consistent snapshot, not a moving branch.
 
-    `Accept: application/vnd.github.raw` returns the file body itself (no base64 JSON
-    wrapper) and serves files up to 100 MB; the JSON form stops at 1 MB, and base.jsonl is
-    ~4.6 MB. Still pinned to a commit sha (`ref=`), so a multi-file pull sees one
-    consistent snapshot, not a moving branch.
+    Two endpoints, chosen by whether the next GET carries a token (get_token()):
+
+      * WITH a token: the Contents API with `Accept: application/vnd.github.raw` (the file
+        body itself, up to 100 MB — the JSON form stops at 1 MB and base.jsonl is ~4.6 MB),
+        `?ref=<commit>`. This is the documented way to read a private repo with a
+        fine-grained token, and it answers a refused token with 401.
+      * WITHOUT one: raw.githubusercontent, unauthenticated, exactly as before tokens
+        existed. It costs no API quota — the unauthenticated API allowance is 60/hour per
+        IP, shared by the whole office — and works while the repo is public.
+
+    NEVER send a token to raw.githubusercontent: it answers a refused or missing token with
+    404, not 401 (measured: no auth 200, bogus bearer 404). A 404 that really meant "your
+    token was refused" once read as "the file is empty" one caller up, which silently
+    replaced additions.jsonl with the pusher's rows alone. Unauthenticated, raw's 404 can
+    only mean the file is not at that commit — and even then, callers never INFER emptiness
+    from a failed read: push and publish read a file only after a listing proved it exists,
+    and pull treats a missing required file as an incomplete download.
     """
-    url = "%s/repos/%s/contents/%s?ref=%s" % (
-        API_BASE, REPO, urllib.parse.quote(repo_path, safe="/"),
-        urllib.parse.quote(commit, safe=""))
-    return http(url, headers={"Accept": "application/vnd.github.raw"}, auth=True,
-                timeout=timeout)
+    if get_token():
+        url = "%s/repos/%s/contents/%s?ref=%s" % (
+            API_BASE, REPO, urllib.parse.quote(repo_path, safe="/"),
+            urllib.parse.quote(commit, safe=""))
+        return http(url, headers={"Accept": "application/vnd.github.raw"}, auth=True,
+                    timeout=timeout)
+    url = "%s/%s/%s/%s" % (RAW_BASE, REPO, urllib.parse.quote(commit, safe=""),
+                           urllib.parse.quote(repo_path, safe="/"))
+    return http(url, auth=False, timeout=timeout)
 
 
 def dir_listing(repo_dir, ref=None):

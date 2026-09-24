@@ -193,11 +193,13 @@ is the existing `cluster_lookup.py` cache behavior and it does not change.
    endpoint refuses content above 1 MB and `base.jsonl` is already 4.6 MB. So:
      - the blob sha comes from the Contents API DIRECTORY listing (which carries a sha at any
        size),
-     - the content comes from the Contents API with `Accept: application/vnd.github.raw`
-       (serves files up to 100 MB) and `?ref=` PINNED TO THE HEAD COMMIT SHA, not to the
-       branch ref, so every file is read from one consistent snapshot. Not from
-       raw.githubusercontent: that answers a refused or missing token with 404, which reads
-       exactly like "file missing", while the API answers 401,
+     - the content is read PINNED TO THE HEAD COMMIT SHA, not to the branch ref, so every
+       file is read from one consistent snapshot. With a token, through the Contents API
+       with `Accept: application/vnd.github.raw` (serves files up to 100 MB) and `?ref=`;
+       without one, from raw.githubusercontent at that commit, unauthenticated (no API
+       quota). A token is never sent to raw.githubusercontent: that answers a refused or
+       missing token with 404, which reads exactly like "file missing", while the API
+       answers 401,
      - the PUT carries the listing's sha.
    Append only rows not already present (dedupe on normalized url) and never overwrite an
    existing row. On a sha conflict, re-fetch and re-merge — never force — up to 5 times with
@@ -223,8 +225,11 @@ read-only repo token:
 
     $PABAU_REPO_TOKEN, else ~/.claude/factcheck-flow/.repo-token (chmod 600)
 
-The repo token is sent on GETs only, never on a PUT/POST. With neither token, reads go out
-unauthenticated, which works only while the repo is public.
+The repo token is sent on GETs only, never on a PUT/POST. A GET answered 401 steps down
+write token -> repo token -> no auth and keeps what worked for the rest of the run, so a
+stale token does not break reads while the repo is public. With neither token, reads go out
+unauthenticated (file bodies from raw.githubusercontent), which works only while the repo is
+public.
 
 ## Consolidation
 

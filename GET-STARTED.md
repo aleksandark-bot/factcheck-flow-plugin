@@ -35,8 +35,8 @@ export PABAU_REPO_TOKEN=<token>
 bash <(curl -fsSL -H "Authorization: Bearer $PABAU_REPO_TOKEN" https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/install.sh)
 ```
 
-The installer saves the token so updates keep working. Already installed? Save the token on
-its own in `~/.claude/factcheck-flow/.repo-token` and restart Claude Code.
+The installer saves the token so updates keep working. Already installed? Run the same two
+lines again: re-running the installer is what switches an existing install over to the token.
 
 It will set everything up and then ask you a few questions:
 

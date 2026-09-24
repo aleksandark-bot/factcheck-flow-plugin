@@ -11,13 +11,15 @@
 #   - Private-repo ready: every GitHub read carries a read-only "repo token" when this
 #     machine has one (env $PABAU_REPO_TOKEN, then ~/.claude/factcheck-flow/.repo-token,
 #     then the cluster write token — $PABAU_CLUSTERS_TOKEN or .clusters-token — since a
-#     contents:write token can read too). No token means unauthenticated requests, exactly
-#     as before, which works for as long as the repo is public. A token is never printed.
-#   - Says ONE line when it matters, and only then (SessionStart stdout reaches the session,
-#     so Claude can pass it on): a 401/403/404 from GitHub pauses updates with a line saying
-#     why — no token on this machine, or GitHub refused the one it has — and a machine that
-#     still updates without a token gets a heads-up to save one before the repo goes
-#     private. A machine with a working token stays silent.
+#     contents:write token can read too). With a token, files come through the Contents
+#     API pinned to the commit just checked; without one, from raw.githubusercontent
+#     unauthenticated, exactly as before, which works for as long as the repo is public.
+#     A token is never printed.
+#   - Says ONE line only when the user has to act (SessionStart stdout reaches the session,
+#     so Claude can pass it on): updates paused by a 401/403/404 — no token on this machine,
+#     or GitHub refused the one it has — or a token GitHub refused while the repo is still
+#     public, so updates carry on unauthenticated for now. A tokenless machine that can
+#     reach the repo, and a machine with a working token, both stay silent.
 #
 set -uo pipefail   # deliberately NOT -e
 
@@ -25,6 +27,7 @@ REPO="aleksandark-bot/factcheck-flow-plugin"
 BRANCH="main"
 RAW="https://raw.githubusercontent.com/$REPO/$BRANCH"
 API="https://api.github.com/repos/$REPO/commits/$BRANCH"
+CONTENTS="https://api.github.com/repos/$REPO/contents"
 FF="$HOME/.claude/factcheck-flow"
 STATE="$FF/.last-sync-sha"
 
@@ -39,6 +42,10 @@ TOKEN="$(_tok "${PABAU_REPO_TOKEN:-}")"
 [ -n "$TOKEN" ] || TOKEN="$(_tok "$(cat "$FF/.repo-token" 2>/dev/null)")"
 [ -n "$TOKEN" ] || TOKEN="$(_tok "${PABAU_CLUSTERS_TOKEN:-}")"
 [ -n "$TOKEN" ] || TOKEN="$(_tok "$(cat "$FF/.clusters-token" 2>/dev/null)")"
+# Set by step 1 below when GitHub refused this machine's token but the repo still answered
+# without one, and carried across the self-update re-exec so that run neither re-sends the
+# refused token nor repeats the line about it.
+[ -n "${FF_TOKEN_REFUSED:-}" ] && TOKEN=""
 AUTH=()
 [ -n "$TOKEN" ] && AUTH=(-H "Authorization: Bearer $TOKEN")
 
@@ -72,10 +79,31 @@ fi
 # 1. Latest commit on main. Bail quietly if we can't reach GitHub at all. No -f: the HTTP
 #    status is what tells "no access" apart from "offline", so it is captured on the last
 #    line of the output and the body is everything above it.
-resp="$(curl -sSL --max-time 8 -H 'Accept: application/vnd.github+json' ${AUTH[@]+"${AUTH[@]}"} \
-  -w '\n%{http_code}' "$API" 2>/dev/null)" || exit 0
-code="${resp##*$'\n'}"
-body="${resp%$'\n'*}"
+check() { # sets $code and $body; "$@" = extra curl args (the auth header, or nothing)
+  local resp
+  resp="$(curl -sSL --max-time 8 -H 'Accept: application/vnd.github+json' "$@" \
+    -w '\n%{http_code}' "$API" 2>/dev/null)" || return 1
+  code="${resp##*$'\n'}"
+  body="${resp%$'\n'*}"
+}
+code="" body=""
+check ${AUTH[@]+"${AUTH[@]}"} || exit 0
+if [ "$code" = 401 ] && [ -n "$TOKEN" ]; then
+  # GitHub refused the token. While the repo is public it still answers without one, so a
+  # stale token must not stop updates: retry once unauthenticated and, if that works, carry
+  # on without the token for the rest of this run (files then come from raw, as before).
+  if check && [ "$code" = 200 ]; then
+    echo "factcheck-flow: GitHub refused the token this machine uses (HTTP 401) — it has probably expired. Updates still work for now, but ask David for a new one."
+    TOKEN=""
+    AUTH=()
+    export FF_TOKEN_REFUSED=1
+  else
+    # Refused with the token and not readable without it: that is the paused case, whatever
+    # the retry itself answered (the 401 is the part the user can act on).
+    echo "factcheck-flow: updates paused — GitHub refused the token this machine uses (HTTP 401). Ask David for a new one."
+    exit 0
+  fi
+fi
 case "$code" in
   200) ;;
   401|403|404)
@@ -83,23 +111,43 @@ case "$code" in
     # it stays silent like any other transient failure.
     case "$body" in *[Rr]ate\ limit*) exit 0 ;; esac
     if [ -z "$TOKEN" ]; then
-      echo "factcheck-flow: updates paused — this machine has no repo token. Save the token David sent to ~/.claude/factcheck-flow/.repo-token (then restart Claude Code)."
+      echo "factcheck-flow: updates paused — this machine has no repo token. Re-run the install command from David's message (it includes the token)."
     else
-      echo "factcheck-flow: updates paused — GitHub refused the repo token (HTTP $code). It has probably expired; ask David for a new one."
+      echo "factcheck-flow: updates paused — GitHub refused the token this machine uses (HTTP $code). Ask David for a new one."
     fi
     exit 0 ;;
   *) exit 0 ;;
 esac
-# Still public and this machine has no token: it works today and will stop the day the repo
-# goes private, so say so. FF_HEADSUP_SHOWN keeps the self-update re-exec below from
-# repeating the line in the same session.
-if [ -z "$TOKEN" ] && [ -z "${FF_HEADSUP_SHOWN:-}" ]; then
-  echo "factcheck-flow: heads-up — the tool's GitHub repo is going private soon. Save the repo token David sent to ~/.claude/factcheck-flow/.repo-token so your updates keep working."
-  export FF_HEADSUP_SHOWN=1
-fi
 remote_sha="$(printf '%s\n' "$body" | grep -m1 '"sha"' \
   | sed -E 's/.*"sha"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"
 [ -n "${remote_sha:-}" ] || exit 0
+case "$remote_sha" in *[!0-9a-f]*) exit 0 ;; esac
+
+# Download one repo file ($1, repo-relative) to $2. With a token: the Contents API's raw
+# media type, pinned to $remote_sha — documented to take a fine-grained token on a private
+# repo, answers a refused one with 401 rather than raw.githubusercontent's ambiguous 404,
+# serves files up to 100 MB, and gives one consistent snapshot with no branch cache.
+# Without a token: raw.githubusercontent, unauthenticated, exactly as before — it costs no
+# API quota, and the unauthenticated API allowance (60/hour) is shared by the whole office IP.
+urlpath() { # percent-encode a repo path, keeping "/" and the RFC 3986 unreserved set
+  local LC_ALL=C s="$1" out="" c   # C locale: one byte per step, so UTF-8 encodes right
+  while [ -n "$s" ]; do
+    c="${s%"${s#?}"}"; s="${s#?}"
+    case "$c" in
+      [A-Za-z0-9._~/-]) out="$out$c" ;;
+      *) out="$out$(printf '%%%02X' $(( $(printf '%d' "'$c") & 255 )))" ;;   # & 255: 3.2 sign-extends
+    esac
+  done
+  printf '%s' "$out"
+}
+get() { # $1 = repo-relative path, $2 = output file
+  if [ -n "$TOKEN" ]; then
+    curl -fsSL --max-time 8 ${AUTH[@]+"${AUTH[@]}"} -H 'Accept: application/vnd.github.raw' \
+      "$CONTENTS/$(urlpath "$1")?ref=$remote_sha" -o "$2" 2>/dev/null
+  else
+    curl -fsSL --max-time 8 "$RAW/$1" -o "$2" 2>/dev/null
+  fi
+}
 
 # 2. Nothing new since last sync? Do nothing (this is what protects unpushed edits).
 if [ -f "$STATE" ] && [ "$(cat "$STATE" 2>/dev/null)" = "$remote_sha" ]; then
@@ -117,7 +165,7 @@ SELF="$FF/update.sh"
 if [ -z "${FF_SELFUPDATED:-}" ]; then
   tmp_self="$(mktemp 2>/dev/null || true)"
   if [ -n "${tmp_self:-}" ] \
-     && curl -fsSL --max-time 8 ${AUTH[@]+"${AUTH[@]}"} "$RAW/update.sh" -o "$tmp_self" 2>/dev/null \
+     && get update.sh "$tmp_self" \
      && [ -s "$tmp_self" ] \
      && head -1 "$tmp_self" 2>/dev/null | grep -q '^#!' \
      && grep -q 'factcheck-flow auto-updater' "$tmp_self" \
@@ -132,16 +180,23 @@ if [ -z "${FF_SELFUPDATED:-}" ]; then
 fi
 
 # 3. Download each file to a temp path; only replace the real file on a clean,
-#    non-empty download so a partial fetch never truncates a good local file.
+#    non-empty download so a partial fetch never truncates a good local file. FAILS counts
+#    every file that did not land: step 4 records the sync only when it is zero, so a run
+#    that lost a file (network blip, refused token) is retried next session instead of
+#    being marked done and skipped until the next push.
+FAILS=0
 fetch() { # $1 = repo-relative path, $2 = local destination
   local tmp
-  tmp="$(mktemp 2>/dev/null)" || return 0
-  if curl -fsSL --max-time 8 ${AUTH[@]+"${AUTH[@]}"} "$RAW/$1" -o "$tmp" 2>/dev/null \
-     && [ -s "$tmp" ]; then
+  tmp="$(mktemp 2>/dev/null)" || { FAILS=$((FAILS + 1)); return 0; }
+  if get "$1" "$tmp" && [ -s "$tmp" ]; then
     mkdir -p "$(dirname "$2")" 2>/dev/null || true
-    mv "$tmp" "$2" 2>/dev/null || rm -f "$tmp" 2>/dev/null || true
+    if ! mv "$tmp" "$2" 2>/dev/null; then
+      rm -f "$tmp" 2>/dev/null || true
+      FAILS=$((FAILS + 1))
+    fi
   else
     rm -f "$tmp" 2>/dev/null || true
+    FAILS=$((FAILS + 1))
   fi
 }
 
@@ -188,6 +243,9 @@ for b in gsc_query gsc_cannibal keyword_picker serp_picker dfs_lists sentence_ch
   fetch "bin/$b.py" "$FF/bin/$b.py"; chmod +x "$FF/bin/$b.py" 2>/dev/null || true
 done
 
-# 4. Remember the commit we're now in sync with.
-printf '%s\n' "$remote_sha" > "$STATE" 2>/dev/null || true
+# 4. Remember the commit we're now in sync with — but only if every file above arrived.
+#    Otherwise leave STATE alone so the next session tries again.
+if [ "$FAILS" -eq 0 ]; then
+  printf '%s\n' "$remote_sha" > "$STATE" 2>/dev/null || true
+fi
 exit 0
