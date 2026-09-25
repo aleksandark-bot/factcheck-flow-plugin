@@ -1389,9 +1389,12 @@ def cmd_publish(args):
     up_base_rows = None
     if listing.get("base.jsonl"):
         code, body, err = sy.raw_get(head, "clusters/base.jsonl")
-        if code == 200 and not err:
-            up_base_rows = len([l for l in body.decode("utf-8", "replace").splitlines()
-                                if l.strip()])
+        if code != 200 or err:
+            die("publish: clusters/base.jsonl exists upstream but could not be read (%s). "
+                "Refusing — without the upstream row count the shrink guard cannot run, "
+                "and a bad base would overwrite the store unchecked." % (err or code))
+        up_base_rows = len([l for l in body.decode("utf-8", "replace").splitlines()
+                            if l.strip()])
     add_text = ""
     if listing.get("additions.jsonl"):
         code, body, err = sy.raw_get(head, sy.ADDITIONS_PATH)

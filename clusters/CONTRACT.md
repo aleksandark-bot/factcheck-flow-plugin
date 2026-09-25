@@ -197,9 +197,16 @@ is the existing `cluster_lookup.py` cache behavior and it does not change.
        file is read from one consistent snapshot. With a token, through the Contents API
        with `Accept: application/vnd.github.raw` (serves files up to 100 MB) and `?ref=`;
        without one, from raw.githubusercontent at that commit, unauthenticated (no API
-       quota). A token is never sent to raw.githubusercontent: that answers a refused or
-       missing token with 404, which reads exactly like "file missing", while the API
-       answers 401,
+       quota). The rule is the same in all three scripts that read the repo
+       (`cluster_sync.py`, `update.sh`, `install.sh`, and the documented bootstrap command):
+       a token only ever goes to api.github.com, and raw.githubusercontent is only ever
+       called unauthenticated, because it answers a refused or missing token with 404 —
+       which reads exactly like "file missing" — while the API answers 401. A token GitHub
+       refuses is retried once without it (cluster_sync.py on a 401 from any GET; update.sh
+       and install.sh on a 401/403/404 from the commit check that is not a rate limit), so
+       a stale token cannot stop reads while the repo is public. A Contents-API answer typed
+       `application/json` is GitHub's JSON wrapper, not the file (the raw type comes back as
+       `application/vnd.github.raw`), so it is a failed read and is never saved as the file,
      - the PUT carries the listing's sha.
    Append only rows not already present (dedupe on normalized url) and never overwrite an
    existing row. On a sha conflict, re-fetch and re-merge — never force — up to 5 times with

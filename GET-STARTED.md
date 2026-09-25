@@ -32,8 +32,12 @@ lines** instead, putting the token where it says `<token>`:
 
 ```
 export PABAU_REPO_TOKEN=<token>
-bash <(curl -fsSL -H "Authorization: Bearer $PABAU_REPO_TOKEN" https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/install.sh)
+curl -fsSL -H "Authorization: Bearer $PABAU_REPO_TOKEN" -H "Accept: application/vnd.github.raw" https://api.github.com/repos/aleksandark-bot/factcheck-flow-plugin/contents/install.sh -o /tmp/ff-install.sh && bash /tmp/ff-install.sh
 ```
+
+The second line is long: copy it whole. If it prints an error like
+`curl: (22) The requested URL returned error: 401`, the token did not work — ask David for a
+new one, then paste the two lines again with the new token.
 
 The installer saves the token so updates keep working. Already installed? Run the same two
 lines again: re-running the installer is what switches an existing install over to the token.

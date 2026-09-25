@@ -39,15 +39,19 @@ Once the repo is private, use the read-only repo token David sends you:
 
 ```
 export PABAU_REPO_TOKEN=<token>
-bash <(curl -fsSL -H "Authorization: Bearer $PABAU_REPO_TOKEN" https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/install.sh)
+curl -fsSL -H "Authorization: Bearer $PABAU_REPO_TOKEN" -H "Accept: application/vnd.github.raw" https://api.github.com/repos/aleksandark-bot/factcheck-flow-plugin/contents/install.sh -o /tmp/ff-install.sh && bash /tmp/ff-install.sh
 ```
 
-The installer saves the token to `~/.claude/factcheck-flow/.repo-token` (chmod 600), and the
-auto-updater sends it on every GitHub read. Already installed? Re-run the token version of
-the install command above: an older install's updater has no token support, so saving the
-token on its own is not enough. If the updater prints "updates paused", the token is missing
-or GitHub refused it; re-run the installer with a new one from David. Keep it `bash <(...)`,
-not `curl | bash`: the installer asks questions and needs the terminal.
+The second line downloads the installer through GitHub's API with the token, then runs it.
+If GitHub refuses the token, curl prints the error and stops, so bash never runs an empty
+script. The installer saves the token to `~/.claude/factcheck-flow/.repo-token` (chmod 600)
+once GitHub has accepted it, and the auto-updater sends it on every GitHub read. Already
+installed? Re-run the token version of the install command above: an older install's
+updater has no token support, so saving the token on its own is not enough. If the updater
+prints "updates paused", or says GitHub refused the token, the token is missing or no longer
+works: ask David for a new one, then re-run the install command from his message. Use
+one of the two forms above, never `curl | bash`: the installer asks questions and needs the
+terminal on stdin, which both forms keep.
 
 ## One-time setup: WordPress credentials
 

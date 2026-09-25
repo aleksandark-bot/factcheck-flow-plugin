@@ -88,33 +88,37 @@ check() { # sets $code and $body; "$@" = extra curl args (the auth header, or no
 }
 code="" body=""
 check ${AUTH[@]+"${AUTH[@]}"} || exit 0
-if [ "$code" = 401 ] && [ -n "$TOKEN" ]; then
-  # GitHub refused the token. While the repo is public it still answers without one, so a
-  # stale token must not stop updates: retry once unauthenticated and, if that works, carry
-  # on without the token for the rest of this run (files then come from raw, as before).
-  if check && [ "$code" = 200 ]; then
-    echo "factcheck-flow: GitHub refused the token this machine uses (HTTP 401) — it has probably expired. Updates still work for now, but ask David for a new one."
-    TOKEN=""
-    AUTH=()
-    export FF_TOKEN_REFUSED=1
-  else
-    # Refused with the token and not readable without it: that is the paused case, whatever
-    # the retry itself answered (the 401 is the part the user can act on).
-    echo "factcheck-flow: updates paused — GitHub refused the token this machine uses (HTTP 401). Ask David for a new one."
-    exit 0
-  fi
+if [ -n "$TOKEN" ]; then
+  case "$code" in
+    401|403|404)
+      # A rate limit is also a 403. That is not an access problem and passes on its own, so
+      # it stays silent like any other transient failure.
+      case "$body" in *[Rr]ate\ limit*) exit 0 ;; esac
+      # Otherwise GitHub refused the token: 401 when it is expired or revoked, 403 or 404
+      # when it no longer covers this repo. While the repo is public it still answers
+      # without one, so a stale token must not stop updates: retry once unauthenticated
+      # and, if that works, carry on without the token for the rest of this run (files
+      # then come from raw, as before).
+      refused="$code"
+      if check && [ "$code" = 200 ]; then
+        echo "factcheck-flow: GitHub refused the token this machine uses (HTTP $refused) — it has probably expired. Updates still work for now, but ask David for a new one, then re-run the install command from his message."
+        TOKEN=""
+        AUTH=()
+        export FF_TOKEN_REFUSED=1
+      else
+        # Refused with the token and not readable without it: that is the paused case,
+        # whatever the retry itself answered (the refusal is the part the user can act on).
+        echo "factcheck-flow: updates paused — GitHub refused the token this machine uses (HTTP $refused). Ask David for a new one, then re-run the install command from his message."
+        exit 0
+      fi ;;
+  esac
 fi
 case "$code" in
   200) ;;
   401|403|404)
-    # A rate limit is also a 403. That is not an access problem and passes on its own, so
-    # it stays silent like any other transient failure.
+    # Only a tokenless machine gets here: every tokened refusal was handled above.
     case "$body" in *[Rr]ate\ limit*) exit 0 ;; esac
-    if [ -z "$TOKEN" ]; then
-      echo "factcheck-flow: updates paused — this machine has no repo token. Re-run the install command from David's message (it includes the token)."
-    else
-      echo "factcheck-flow: updates paused — GitHub refused the token this machine uses (HTTP $code). Ask David for a new one."
-    fi
+    echo "factcheck-flow: updates paused — this machine has no repo token. Re-run the install command from David's message (it includes the token)."
     exit 0 ;;
   *) exit 0 ;;
 esac
@@ -140,13 +144,28 @@ urlpath() { # percent-encode a repo path, keeping "/" and the RFC 3986 unreserve
   done
   printf '%s' "$out"
 }
-get() { # $1 = repo-relative path, $2 = output file
+# get() sets GET_CODE to the HTTP status (000 when the request never completed), so fetch()
+# can tell "this file is not in the repo" (404) apart from a failed download.
+GET_CODE=""
+get() { # $1 = repo-relative path, $2 = output file; 0 only for a clean 200
+  local w ct
   if [ -n "$TOKEN" ]; then
-    curl -fsSL --max-time 8 ${AUTH[@]+"${AUTH[@]}"} -H 'Accept: application/vnd.github.raw' \
-      "$CONTENTS/$(urlpath "$1")?ref=$remote_sha" -o "$2" 2>/dev/null
+    w="$(curl -sSL --max-time 8 ${AUTH[@]+"${AUTH[@]}"} -H 'Accept: application/vnd.github.raw' \
+      -w '%{http_code} %{content_type}' "$CONTENTS/$(urlpath "$1")?ref=$remote_sha" \
+      -o "$2" 2>/dev/null)"
   else
-    curl -fsSL --max-time 8 "$RAW/$1" -o "$2" 2>/dev/null
+    w="$(curl -sSL --max-time 8 -w '%{http_code} %{content_type}' "$RAW/$1" -o "$2" 2>/dev/null)"
   fi
+  GET_CODE="${w%% *}"
+  [ -n "$GET_CODE" ] || GET_CODE=000
+  [ "$GET_CODE" = 200 ] || return 1
+  if [ -n "$TOKEN" ]; then
+    # The raw media type comes back as application/vnd.github.raw. application/json is
+    # GitHub's JSON wrapper (metadata + base64) — never the file itself, so a failed fetch.
+    ct="$(printf '%s' "${w#* }" | tr '[:upper:]' '[:lower:]')"
+    case "$ct" in application/json|application/json\;*|application/json\ *) return 1 ;; esac
+  fi
+  return 0
 }
 
 # 2. Nothing new since last sync? Do nothing (this is what protects unpushed edits).
@@ -183,7 +202,8 @@ fi
 #    non-empty download so a partial fetch never truncates a good local file. FAILS counts
 #    every file that did not land: step 4 records the sync only when it is zero, so a run
 #    that lost a file (network blip, refused token) is retried next session instead of
-#    being marked done and skipped until the next push.
+#    being marked done and skipped until the next push. A 404 is not a loss: the file is
+#    simply not in the repo at this commit.
 FAILS=0
 fetch() { # $1 = repo-relative path, $2 = local destination
   local tmp
@@ -196,7 +216,10 @@ fetch() { # $1 = repo-relative path, $2 = local destination
     fi
   else
     rm -f "$tmp" 2>/dev/null || true
-    FAILS=$((FAILS + 1))
+    # A 404 on a run whose commit check succeeded means the file is not in the repo at this
+    # commit (retired, or not added yet): nothing to download, so not a failure. Counting it
+    # would block STATE forever and re-download every file every session.
+    [ "$GET_CODE" = 404 ] || FAILS=$((FAILS + 1))
   fi
 }
 

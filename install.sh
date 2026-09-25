@@ -8,12 +8,13 @@
 # Run it with:
 # While the repo is public:
 #   bash <(curl -fsSL https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/install.sh)
-# Once it is private (token from David):
+# Once it is private (token from David) — download first, then run, so a refused token
+# stops with curl's error instead of handing bash an empty script:
 #   export PABAU_REPO_TOKEN=<token>
-#   bash <(curl -fsSL -H "Authorization: Bearer $PABAU_REPO_TOKEN" https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/install.sh)
+#   curl -fsSL -H "Authorization: Bearer $PABAU_REPO_TOKEN" -H "Accept: application/vnd.github.raw" https://api.github.com/repos/aleksandark-bot/factcheck-flow-plugin/contents/install.sh -o /tmp/ff-install.sh && bash /tmp/ff-install.sh
 #
-# It must stay `bash <(...)`, not `curl ... | bash`: the installer asks questions, and a
-# piped script has no terminal to ask them on.
+# Either form keeps the terminal on stdin, which the installer's questions need. Never
+# `curl ... | bash`: a piped script has no terminal to ask them on.
 #
 set -euo pipefail
 
@@ -64,21 +65,137 @@ mkdir -p "$CLAUDE/commands" "$CLAUDE/agents" "$CLAUDE/skills/wordpress-access" "
 # --- 0. The repo token (read-only; optional while the repo is public) -----
 # Once the repo is private, every download below and every auto-update needs it. Looked up
 # in the same order the updater uses: $PABAU_REPO_TOKEN, then an existing $FF/.repo-token,
-# then the cluster write token in $FF/.clusters-token (contents:write can read too). A token
-# typed here or passed in the environment is saved to $FF/.repo-token (mode 600, covered by
-# .gitignore) so the auto-updater finds it. It is never echoed or printed.
+# then the cluster write token ($PABAU_CLUSTERS_TOKEN, then $FF/.clusters-token —
+# contents:write can read too). A token typed here or passed in $PABAU_REPO_TOKEN is saved
+# to $FF/.repo-token (mode 600, covered by .gitignore) so the auto-updater finds it — but
+# only once GitHub has accepted it. It is never echoed or printed.
 _tok() { printf '%s' "${1:-}" | tr -d '[:space:]'; }
 REPO_TOKEN="$(_tok "${PABAU_REPO_TOKEN:-}")"
+TOKEN_SRC=""
 SAVE_REPO_TOKEN=0
-[ -n "$REPO_TOKEN" ] && SAVE_REPO_TOKEN=1
-[ -n "$REPO_TOKEN" ] || REPO_TOKEN="$(_tok "$(cat "$FF/.repo-token" 2>/dev/null || true)")"
-[ -n "$REPO_TOKEN" ] || REPO_TOKEN="$(_tok "$(cat "$FF/.clusters-token" 2>/dev/null || true)")"
+if [ -n "$REPO_TOKEN" ]; then
+  TOKEN_SRC="the PABAU_REPO_TOKEN environment variable"; SAVE_REPO_TOKEN=1
+fi
+if [ -z "$REPO_TOKEN" ]; then
+  REPO_TOKEN="$(_tok "$(cat "$FF/.repo-token" 2>/dev/null || true)")"
+  [ -n "$REPO_TOKEN" ] && TOKEN_SRC="$FF/.repo-token"
+fi
+if [ -z "$REPO_TOKEN" ]; then
+  REPO_TOKEN="$(_tok "${PABAU_CLUSTERS_TOKEN:-}")"
+  [ -n "$REPO_TOKEN" ] && TOKEN_SRC="the PABAU_CLUSTERS_TOKEN environment variable (the cluster write token)"
+fi
+if [ -z "$REPO_TOKEN" ]; then
+  REPO_TOKEN="$(_tok "$(cat "$FF/.clusters-token" 2>/dev/null || true)")"
+  [ -n "$REPO_TOKEN" ] && TOKEN_SRC="$FF/.clusters-token (the cluster write token)"
+fi
 if [ -z "$REPO_TOKEN" ] && [ "$INTERACTIVE" = 1 ]; then
   echo "  The repo token David sent lets this machine download the tool and its updates."
   ask_secret REPO_TOKEN_IN "  Repo token (blank is fine while the repo is still public): "
   REPO_TOKEN="$(_tok "${REPO_TOKEN_IN:-}")"
   unset REPO_TOKEN_IN
-  [ -n "$REPO_TOKEN" ] && SAVE_REPO_TOKEN=1
+  if [ -n "$REPO_TOKEN" ]; then
+    TOKEN_SRC="the token you typed"; SAVE_REPO_TOKEN=1
+  fi
+fi
+
+# How the downloads below reach the repo — the same rule the auto-updater follows:
+#   * With a token, ONE up-front probe of the commits API decides. Accepted (200): every
+#     download goes through the Contents API raw type with the token, pinned to the commit
+#     the probe returned. Refused (401/403/404): the probe is retried without the token; if
+#     the repo still answers (it is public), the install warns once and carries on through
+#     raw.githubusercontent unauthenticated, and the refused token is not saved. If it does
+#     not answer either, the install stops and says where the refused token came from.
+#   * Without a token: raw.githubusercontent unauthenticated, exactly as before, with no
+#     probe — it costs no API quota, and the office IP's 60/hour unauthenticated allowance
+#     is often used up.
+# A token is never sent to raw.githubusercontent: it answers a refused token with 404 even
+# on a public repo, which is what used to abort this installer over a stale token.
+REPO="aleksandark-bot/factcheck-flow-plugin"
+REPO_API="https://api.github.com/repos/$REPO"
+DL_MODE=raw
+DL_SHA=""
+
+PROBE_CODE="" PROBE_BODY=""
+probe() { # probe [token] — sets PROBE_CODE ("000" = never completed) and PROBE_BODY
+  local resp=""
+  if [ -n "${1:-}" ]; then
+    resp="$(curl -sSL --max-time 15 -H 'Accept: application/vnd.github+json' \
+      -H "Authorization: Bearer $1" -w '\n%{http_code}' "$REPO_API/commits/main" 2>/dev/null)" || true
+  else
+    resp="$(curl -sSL --max-time 15 -H 'Accept: application/vnd.github+json' \
+      -w '\n%{http_code}' "$REPO_API/commits/main" 2>/dev/null)" || true
+  fi
+  PROBE_CODE="${resp##*$'\n'}"
+  PROBE_BODY="${resp%$'\n'*}"
+  case "$PROBE_CODE" in [0-9][0-9][0-9]) ;; *) PROBE_CODE=000 ;; esac
+}
+is_rate_limited() { case "$PROBE_BODY" in *[Rr]ate\ limit*) return 0 ;; esac; return 1; }
+probe_sha() {
+  printf '%s\n' "$PROBE_BODY" | grep -m1 '"sha"' \
+    | sed -E 's/.*"sha"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/' || true
+}
+# Can the repo be read with no token at all? The unauthenticated commits API first; if the
+# office IP has used up its API allowance, raw.githubusercontent decides instead (it costs
+# no quota and, unauthenticated, only answers 200 on a public repo).
+repo_is_public() {
+  probe
+  [ "$PROBE_CODE" = 200 ] && return 0
+  if [ "$PROBE_CODE" = 403 ] && is_rate_limited; then
+    curl -fsSL --max-time 15 -o /dev/null \
+      "https://raw.githubusercontent.com/$REPO/main/install.sh" 2>/dev/null && return 0
+  fi
+  return 1
+}
+token_refused_stop() { # $1 = the HTTP code the token got
+  echo "" >&2
+  echo "  ERROR: GitHub refused the repo token (HTTP $1), and the repo cannot be read without" >&2
+  echo "         one. The token has probably expired or been revoked. It came from" >&2
+  echo "         $TOKEN_SRC." >&2
+  echo "         Ask David for a new one, then re-run the install command from his message." >&2
+  exit 1
+}
+
+if [ -n "$REPO_TOKEN" ]; then
+  probe "$REPO_TOKEN"
+  case "$PROBE_CODE" in
+    200)
+      DL_SHA="$(probe_sha)"
+      case "$DL_SHA" in
+        ""|*[!0-9a-f]*)
+          echo "  ERROR: GitHub answered the repo check with something unexpected. Re-run the" >&2
+          echo "         install command in a minute." >&2
+          exit 1 ;;
+      esac
+      DL_MODE=api ;;
+    401|403|404)
+      if [ "$PROBE_CODE" = 403 ] && is_rate_limited; then
+        # The token was accepted but its hourly API allowance is used up. Not a refusal:
+        # keep (and save) the token, and download without it if the repo allows that.
+        if repo_is_public; then
+          echo "  NOTE: GitHub's hourly limit for the repo token is used up — downloading without"
+          echo "        it (the repo is still public). The token is kept for the auto-updater."
+        else
+          echo "  ERROR: GitHub's hourly limit for the repo token is used up. Re-run the install" >&2
+          echo "         command in an hour." >&2
+          exit 1
+        fi
+      else
+        refused="$PROBE_CODE"
+        if repo_is_public; then
+          echo "  WARNING: GitHub refused the token this machine has — continuing without it;"
+          echo "           ask David for a new one and re-run the install command from his message."
+          echo "           It came from $TOKEN_SRC."
+          SAVE_REPO_TOKEN=0
+          REPO_TOKEN=""
+        else
+          token_refused_stop "$refused"
+        fi
+      fi ;;
+    *)
+      echo "  ERROR: could not reach GitHub to check the repo token (HTTP $PROBE_CODE). Check your" >&2
+      echo "         internet connection, then re-run the install command." >&2
+      exit 1 ;;
+  esac
 fi
 if [ "$SAVE_REPO_TOKEN" = 1 ]; then
   # Subshell, so the umask never leaks into the rest of the installer.
@@ -87,77 +204,108 @@ if [ "$SAVE_REPO_TOKEN" = 1 ]; then
   echo "  - repo token saved (readable only by you) to $FF/.repo-token"
 fi
 
-# Every download from the repo goes through this: curl -fsSL, plus the auth header only
-# when there is a token. No array, so it is safe under `set -u` on macOS's bash 3.2.
-gh_curl() {
-  if [ -n "$REPO_TOKEN" ]; then
-    curl -fsSL -H "Authorization: Bearer $REPO_TOKEN" "$@"
+# percent-encode a repo path, keeping "/" and the RFC 3986 unreserved set — the same
+# function as the auto-updater's (bash-3.2-safe).
+urlpath() {
+  local LC_ALL=C s="$1" out="" c   # C locale: one byte per step, so UTF-8 encodes right
+  while [ -n "$s" ]; do
+    c="${s%"${s#?}"}"; s="${s#?}"
+    case "$c" in
+      [A-Za-z0-9._~/-]) out="$out$c" ;;
+      *) out="$out$(printf '%%%02X' $(( $(printf '%d' "'$c") & 255 )))" ;;   # & 255: 3.2 sign-extends
+    esac
+  done
+  printf '%s' "$out"
+}
+
+# Every download from the repo goes through this: gh_get <repo-relative path> <output file>.
+# No array, so it is safe under `set -u` on macOS's bash 3.2. A Contents-API answer typed
+# application/json is GitHub's JSON wrapper, never the file (the raw type comes back as
+# application/vnd.github.raw), so it counts as a failed download and is not left on disk.
+gh_get() {
+  local ct=""
+  if [ "$DL_MODE" = api ]; then
+    ct="$(curl -fsSL -H "Authorization: Bearer $REPO_TOKEN" -H 'Accept: application/vnd.github.raw' \
+      -w '%{content_type}' "$REPO_API/contents/$(urlpath "$1")?ref=$DL_SHA" -o "$2")" || return 1
+    ct="$(printf '%s' "$ct" | tr '[:upper:]' '[:lower:]')"
+    case "$ct" in
+      application/json|application/json\;*|application/json\ *) rm -f "$2"; return 1 ;;
+    esac
+    return 0
+  fi
+  curl -fsSL "$REPO_RAW/$1" -o "$2"
+}
+
+# Why a required download failed, for the ERROR lines below.
+dl_fail_hint() {
+  if [ "$DL_MODE" = api ]; then
+    echo "         Check your internet connection and re-run the install command." >&2
+  elif [ -n "$TOKEN_SRC" ] && [ -z "$REPO_TOKEN" ]; then
+    echo "         Check your internet connection. If the repo has just gone private, the" >&2
+    echo "         token from $TOKEN_SRC no longer works:" >&2
+    echo "         ask David for a new one, then re-run the install command from his message." >&2
   else
-    curl -fsSL "$@"
+    echo "         Check your internet connection. If the repo is now private, rerun with the" >&2
+    echo "         repo token David sent:" >&2
+    echo '           export PABAU_REPO_TOKEN=<token>' >&2
+    echo '           curl -fsSL -H "Authorization: Bearer $PABAU_REPO_TOKEN" -H "Accept: application/vnd.github.raw" https://api.github.com/repos/aleksandark-bot/factcheck-flow-plugin/contents/install.sh -o /tmp/ff-install.sh && bash /tmp/ff-install.sh' >&2
   fi
 }
 
 # --- 1. Download the editable prompt files from the repo -------------------
 for p in 1-factcheck 2-editorial 3-links seo-research seo-write generate-research generate-write; do
-  if ! gh_curl "$REPO_RAW/prompts/$p.md" -o "$PROMPTS/$p.md"; then
-    if [ -z "$REPO_TOKEN" ]; then
-      echo "  ERROR: could not download prompts/$p.md. Check your internet connection. If the" >&2
-      echo "         repo is now private, rerun with the repo token David sent:" >&2
-      echo '           export PABAU_REPO_TOKEN=<token>' >&2
-      echo '           bash <(curl -fsSL -H "Authorization: Bearer $PABAU_REPO_TOKEN" https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/install.sh)' >&2
-    else
-      echo "  ERROR: could not download prompts/$p.md. Check your internet connection — or" >&2
-      echo "         GitHub refused the repo token (expired?); ask David for a new one." >&2
-    fi
+  if ! gh_get "prompts/$p.md" "$PROMPTS/$p.md"; then
+    echo "  ERROR: could not download prompts/$p.md." >&2
+    dl_fail_hint
     exit 1
   fi
 done
 echo "  - prompts installed"
 
 # --- 1a. The GSC query helper (used by /SEO on published articles) --------
-if gh_curl "$REPO_RAW/bin/gsc_query.py" -o "$FF/bin/gsc_query.py"; then
+if gh_get "bin/gsc_query.py" "$FF/bin/gsc_query.py"; then
   chmod +x "$FF/bin/gsc_query.py" 2>/dev/null || true
   echo "  - GSC helper installed"
 else
   echo "  NOTE: could not download bin/gsc_query.py — /SEO's GSC step will be unavailable." >&2
 fi
-if gh_curl "$REPO_RAW/bin/keyword_picker.py" -o "$FF/bin/keyword_picker.py"; then
+if gh_get "bin/keyword_picker.py" "$FF/bin/keyword_picker.py"; then
   chmod +x "$FF/bin/keyword_picker.py" 2>/dev/null || true
   echo "  - keyword picker installed"
 else
   echo "  NOTE: could not download bin/keyword_picker.py — /SEO will use the in-chat picker." >&2
 fi
-if gh_curl "$REPO_RAW/bin/serp_picker.py" -o "$FF/bin/serp_picker.py"; then
+if gh_get "bin/serp_picker.py" "$FF/bin/serp_picker.py"; then
   chmod +x "$FF/bin/serp_picker.py" 2>/dev/null || true
   echo "  - SERP picker installed"
 else
   echo "  NOTE: could not download bin/serp_picker.py — /SEO will use the in-chat SERP list." >&2
 fi
-if gh_curl "$REPO_RAW/bin/dfs_lists.py" -o "$FF/bin/dfs_lists.py"; then
+if gh_get "bin/dfs_lists.py" "$FF/bin/dfs_lists.py"; then
   chmod +x "$FF/bin/dfs_lists.py" 2>/dev/null || true
   echo "  - keyword-list builder installed"
 else
   echo "  NOTE: could not download bin/dfs_lists.py — /SEO Stage 2 will have no helper." >&2
 fi
-if gh_curl "$REPO_RAW/bin/sentence_check.py" -o "$FF/bin/sentence_check.py"; then
+if gh_get "bin/sentence_check.py" "$FF/bin/sentence_check.py"; then
   chmod +x "$FF/bin/sentence_check.py" 2>/dev/null || true
   echo "  - sentence checker installed"
 else
   echo "  NOTE: could not download bin/sentence_check.py — the /fact sentence gate will be unavailable." >&2
 fi
-if gh_curl "$REPO_RAW/bin/serp_fetch.py" -o "$FF/bin/serp_fetch.py"; then
+if gh_get "bin/serp_fetch.py" "$FF/bin/serp_fetch.py"; then
   chmod +x "$FF/bin/serp_fetch.py" 2>/dev/null || true
   echo "  - SERP fetcher installed"
 else
   echo "  NOTE: could not download bin/serp_fetch.py — /SEO Stage 1 will have no helper." >&2
 fi
-if gh_curl "$REPO_RAW/bin/render_visual.py" -o "$FF/bin/render_visual.py"; then
+if gh_get "bin/render_visual.py" "$FF/bin/render_visual.py"; then
   chmod +x "$FF/bin/render_visual.py" 2>/dev/null || true
   echo "  - visual renderer installed"
 else
   echo "  NOTE: could not download bin/render_visual.py — /fact cannot build article visuals." >&2
 fi
-if gh_curl "$REPO_RAW/bin/cluster_lookup.py" -o "$FF/bin/cluster_lookup.py"; then
+if gh_get "bin/cluster_lookup.py" "$FF/bin/cluster_lookup.py"; then
   chmod +x "$FF/bin/cluster_lookup.py" 2>/dev/null || true
   echo "  - cluster lookup installed"
 else
@@ -167,26 +315,26 @@ fi
 # cluster_store.py, so without these three the link pass has no data layer at all: no
 # base.jsonl reader, no way to sync the branch, no way to write a reasoned assignment back.
 for b in cluster_store cluster_sync cluster_consolidate; do
-  if gh_curl "$REPO_RAW/bin/$b.py" -o "$FF/bin/$b.py"; then
+  if gh_get "bin/$b.py" "$FF/bin/$b.py"; then
     chmod +x "$FF/bin/$b.py" 2>/dev/null || true
   else
     echo "  NOTE: could not download bin/$b.py — /fact's link pass will be blocked." >&2
   fi
 done
 echo "  - cluster store installed"
-if gh_curl "$REPO_RAW/bin/elementor_guard.py" -o "$FF/bin/elementor_guard.py"; then
+if gh_get "bin/elementor_guard.py" "$FF/bin/elementor_guard.py"; then
   chmod +x "$FF/bin/elementor_guard.py" 2>/dev/null || true
   echo "  - Elementor guard installed"
 else
   echo "  NOTE: could not download bin/elementor_guard.py — engine detection falls back to REST." >&2
 fi
-if gh_curl "$REPO_RAW/bin/gsc_cannibal.py" -o "$FF/bin/gsc_cannibal.py"; then
+if gh_get "bin/gsc_cannibal.py" "$FF/bin/gsc_cannibal.py"; then
   chmod +x "$FF/bin/gsc_cannibal.py" 2>/dev/null || true
   echo "  - Keyword-ownership pre-flight installed"
 else
   echo "  NOTE: could not download bin/gsc_cannibal.py — /SEO cannot check for cannibalization." >&2
 fi
-if gh_curl "$REPO_RAW/bin/index_ping.py" -o "$FF/bin/index_ping.py"; then
+if gh_get "bin/index_ping.py" "$FF/bin/index_ping.py"; then
   chmod +x "$FF/bin/index_ping.py" 2>/dev/null || true
   echo "  - Re-crawl request helper installed"
 else
@@ -198,16 +346,9 @@ fi
 # context (About-Pabau), and SERP title optimization (Meta-title-best-practices).
 # The editorial prompt and factcheck-reporter read them.
 for g in core-rules Pabau-style-guide About-Pabau Meta-title-best-practices Originality-and-search-intent WordPress-blocks Visuals; do
-  if ! gh_curl "$REPO_RAW/guides/$g.md" -o "$GUIDES/$g.md"; then
-    if [ -z "$REPO_TOKEN" ]; then
-      echo "  ERROR: could not download guides/$g.md. Check your internet connection. If the" >&2
-      echo "         repo is now private, rerun with the repo token David sent:" >&2
-      echo '           export PABAU_REPO_TOKEN=<token>' >&2
-      echo '           bash <(curl -fsSL -H "Authorization: Bearer $PABAU_REPO_TOKEN" https://raw.githubusercontent.com/aleksandark-bot/factcheck-flow-plugin/main/install.sh)' >&2
-    else
-      echo "  ERROR: could not download guides/$g.md. Check your internet connection — or" >&2
-      echo "         GitHub refused the repo token (expired?); ask David for a new one." >&2
-    fi
+  if ! gh_get "guides/$g.md" "$GUIDES/$g.md"; then
+    echo "  ERROR: could not download guides/$g.md." >&2
+    dl_fail_hint
     exit 1
   fi
 done
@@ -307,33 +448,37 @@ check() { # sets $code and $body; "$@" = extra curl args (the auth header, or no
 }
 code="" body=""
 check ${AUTH[@]+"${AUTH[@]}"} || exit 0
-if [ "$code" = 401 ] && [ -n "$TOKEN" ]; then
-  # GitHub refused the token. While the repo is public it still answers without one, so a
-  # stale token must not stop updates: retry once unauthenticated and, if that works, carry
-  # on without the token for the rest of this run (files then come from raw, as before).
-  if check && [ "$code" = 200 ]; then
-    echo "factcheck-flow: GitHub refused the token this machine uses (HTTP 401) — it has probably expired. Updates still work for now, but ask David for a new one."
-    TOKEN=""
-    AUTH=()
-    export FF_TOKEN_REFUSED=1
-  else
-    # Refused with the token and not readable without it: that is the paused case, whatever
-    # the retry itself answered (the 401 is the part the user can act on).
-    echo "factcheck-flow: updates paused — GitHub refused the token this machine uses (HTTP 401). Ask David for a new one."
-    exit 0
-  fi
+if [ -n "$TOKEN" ]; then
+  case "$code" in
+    401|403|404)
+      # A rate limit is also a 403. That is not an access problem and passes on its own, so
+      # it stays silent like any other transient failure.
+      case "$body" in *[Rr]ate\ limit*) exit 0 ;; esac
+      # Otherwise GitHub refused the token: 401 when it is expired or revoked, 403 or 404
+      # when it no longer covers this repo. While the repo is public it still answers
+      # without one, so a stale token must not stop updates: retry once unauthenticated
+      # and, if that works, carry on without the token for the rest of this run (files
+      # then come from raw, as before).
+      refused="$code"
+      if check && [ "$code" = 200 ]; then
+        echo "factcheck-flow: GitHub refused the token this machine uses (HTTP $refused) — it has probably expired. Updates still work for now, but ask David for a new one, then re-run the install command from his message."
+        TOKEN=""
+        AUTH=()
+        export FF_TOKEN_REFUSED=1
+      else
+        # Refused with the token and not readable without it: that is the paused case,
+        # whatever the retry itself answered (the refusal is the part the user can act on).
+        echo "factcheck-flow: updates paused — GitHub refused the token this machine uses (HTTP $refused). Ask David for a new one, then re-run the install command from his message."
+        exit 0
+      fi ;;
+  esac
 fi
 case "$code" in
   200) ;;
   401|403|404)
-    # A rate limit is also a 403. That is not an access problem and passes on its own, so
-    # it stays silent like any other transient failure.
+    # Only a tokenless machine gets here: every tokened refusal was handled above.
     case "$body" in *[Rr]ate\ limit*) exit 0 ;; esac
-    if [ -z "$TOKEN" ]; then
-      echo "factcheck-flow: updates paused — this machine has no repo token. Re-run the install command from David's message (it includes the token)."
-    else
-      echo "factcheck-flow: updates paused — GitHub refused the token this machine uses (HTTP $code). Ask David for a new one."
-    fi
+    echo "factcheck-flow: updates paused — this machine has no repo token. Re-run the install command from David's message (it includes the token)."
     exit 0 ;;
   *) exit 0 ;;
 esac
@@ -359,13 +504,28 @@ urlpath() { # percent-encode a repo path, keeping "/" and the RFC 3986 unreserve
   done
   printf '%s' "$out"
 }
-get() { # $1 = repo-relative path, $2 = output file
+# get() sets GET_CODE to the HTTP status (000 when the request never completed), so fetch()
+# can tell "this file is not in the repo" (404) apart from a failed download.
+GET_CODE=""
+get() { # $1 = repo-relative path, $2 = output file; 0 only for a clean 200
+  local w ct
   if [ -n "$TOKEN" ]; then
-    curl -fsSL --max-time 8 ${AUTH[@]+"${AUTH[@]}"} -H 'Accept: application/vnd.github.raw' \
-      "$CONTENTS/$(urlpath "$1")?ref=$remote_sha" -o "$2" 2>/dev/null
+    w="$(curl -sSL --max-time 8 ${AUTH[@]+"${AUTH[@]}"} -H 'Accept: application/vnd.github.raw' \
+      -w '%{http_code} %{content_type}' "$CONTENTS/$(urlpath "$1")?ref=$remote_sha" \
+      -o "$2" 2>/dev/null)"
   else
-    curl -fsSL --max-time 8 "$RAW/$1" -o "$2" 2>/dev/null
+    w="$(curl -sSL --max-time 8 -w '%{http_code} %{content_type}' "$RAW/$1" -o "$2" 2>/dev/null)"
   fi
+  GET_CODE="${w%% *}"
+  [ -n "$GET_CODE" ] || GET_CODE=000
+  [ "$GET_CODE" = 200 ] || return 1
+  if [ -n "$TOKEN" ]; then
+    # The raw media type comes back as application/vnd.github.raw. application/json is
+    # GitHub's JSON wrapper (metadata + base64) — never the file itself, so a failed fetch.
+    ct="$(printf '%s' "${w#* }" | tr '[:upper:]' '[:lower:]')"
+    case "$ct" in application/json|application/json\;*|application/json\ *) return 1 ;; esac
+  fi
+  return 0
 }
 
 # 2. Nothing new since last sync? Do nothing (this is what protects unpushed edits).
@@ -402,7 +562,8 @@ fi
 #    non-empty download so a partial fetch never truncates a good local file. FAILS counts
 #    every file that did not land: step 4 records the sync only when it is zero, so a run
 #    that lost a file (network blip, refused token) is retried next session instead of
-#    being marked done and skipped until the next push.
+#    being marked done and skipped until the next push. A 404 is not a loss: the file is
+#    simply not in the repo at this commit.
 FAILS=0
 fetch() { # $1 = repo-relative path, $2 = local destination
   local tmp
@@ -415,7 +576,10 @@ fetch() { # $1 = repo-relative path, $2 = local destination
     fi
   else
     rm -f "$tmp" 2>/dev/null || true
-    FAILS=$((FAILS + 1))
+    # A 404 on a run whose commit check succeeded means the file is not in the repo at this
+    # commit (retired, or not added yet): nothing to download, so not a failure. Counting it
+    # would block STATE forever and re-download every file every session.
+    [ "$GET_CODE" = 404 ] || FAILS=$((FAILS + 1))
   fi
 }
 
@@ -687,28 +851,30 @@ EOF
 echo "  - /fact command installed"
 
 # --- 2b. The /SEO command -------------------------------------------------
-if gh_curl "$REPO_RAW/commands/SEO.md" -o "$CLAUDE/commands/SEO.md"; then
+if gh_get "commands/SEO.md" "$CLAUDE/commands/SEO.md"; then
   echo "  - /SEO command installed"
-  if gh_curl "$REPO_RAW/agents/seo-writer.md" -o "$CLAUDE/agents/seo-writer.md"; then
+  if gh_get "agents/seo-writer.md" "$CLAUDE/agents/seo-writer.md"; then
     echo "  - seo-writer agent installed"
   else
     echo "  NOTE: could not download agents/seo-writer.md — /SEO cannot write without it." >&2
   fi
 else
-  echo "  ERROR: could not download commands/SEO.md — check your internet connection." >&2
+  echo "  ERROR: could not download commands/SEO.md." >&2
+  dl_fail_hint
   exit 1
 fi
 
 # --- 2c. The /generate command --------------------------------------------
-if gh_curl "$REPO_RAW/commands/generate.md" -o "$CLAUDE/commands/generate.md"; then
+if gh_get "commands/generate.md" "$CLAUDE/commands/generate.md"; then
   echo "  - /generate command installed"
-  if gh_curl "$REPO_RAW/agents/article-generator.md" -o "$CLAUDE/agents/article-generator.md"; then
+  if gh_get "agents/article-generator.md" "$CLAUDE/agents/article-generator.md"; then
     echo "  - article-generator agent installed"
   else
     echo "  NOTE: could not download agents/article-generator.md — /generate cannot write without it." >&2
   fi
 else
-  echo "  ERROR: could not download commands/generate.md — check your internet connection." >&2
+  echo "  ERROR: could not download commands/generate.md." >&2
+  dl_fail_hint
   exit 1
 fi
 

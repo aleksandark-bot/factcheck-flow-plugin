@@ -303,10 +303,15 @@ def get_token():
     return cands[min(_GET_AUTH[0] if _GET_AUTH else 0, len(cands) - 1)]
 
 
+_LAST_CTYPE = [""]   # Content-Type of the most recent response; raw_get() checks it
+
+
 def _send(url, method, data, hdrs, timeout):
     req = urllib.request.Request(url, data=data, method=method, headers=hdrs)
+    _LAST_CTYPE[0] = ""
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
+            _LAST_CTYPE[0] = r.headers.get("Content-Type") or ""
             return r.getcode(), r.read(), None
     except urllib.error.HTTPError as e:
         try:
@@ -435,8 +440,16 @@ def raw_get(commit, repo_path, timeout=TIMEOUT):
         url = "%s/repos/%s/contents/%s?ref=%s" % (
             API_BASE, REPO, urllib.parse.quote(repo_path, safe="/"),
             urllib.parse.quote(commit, safe=""))
-        return http(url, headers={"Accept": "application/vnd.github.raw"}, auth=True,
-                    timeout=timeout)
+        res = http(url, headers={"Accept": "application/vnd.github.raw"}, auth=True,
+                   timeout=timeout)
+        # The raw media type comes back as application/vnd.github.raw (measured for .json,
+        # .jsonl, .md and .py alike). application/json means GitHub ignored the Accept and
+        # sent its JSON wrapper (metadata + base64, or a directory listing) — never the
+        # file. Saving that as the file would corrupt it, so it is a failed read. Status 0
+        # rather than 200, so no caller can mistake it for an empty file.
+        if res[0] == 200 and _LAST_CTYPE[0].split(";")[0].strip().lower() == "application/json":
+            return 0, b"", "the Contents API sent its JSON wrapper, not the raw file"
+        return res
     url = "%s/%s/%s/%s" % (RAW_BASE, REPO, urllib.parse.quote(commit, safe=""),
                            urllib.parse.quote(repo_path, safe="/"))
     return http(url, auth=False, timeout=timeout)
