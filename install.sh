@@ -504,6 +504,10 @@ urlpath() { # percent-encode a repo path, keeping "/" and the RFC 3986 unreserve
   done
   printf '%s' "$out"
 }
+# curl runs without -f so the status code can be read, which means a non-zero exit is a
+# transport failure — most often --max-time firing mid-body AFTER a 200 header. The write-out
+# still says 200 then, so the exit status is the only thing that catches a truncated file.
+RAW_PIN="https://raw.githubusercontent.com/$REPO/$remote_sha"
 # get() sets GET_CODE to the HTTP status (000 when the request never completed), so fetch()
 # can tell "this file is not in the repo" (404) apart from a failed download.
 GET_CODE=""
@@ -512,9 +516,12 @@ get() { # $1 = repo-relative path, $2 = output file; 0 only for a clean 200
   if [ -n "$TOKEN" ]; then
     w="$(curl -sSL --max-time 8 ${AUTH[@]+"${AUTH[@]}"} -H 'Accept: application/vnd.github.raw' \
       -w '%{http_code} %{content_type}' "$CONTENTS/$(urlpath "$1")?ref=$remote_sha" \
-      -o "$2" 2>/dev/null)"
+      -o "$2" 2>/dev/null)" || { GET_CODE=000; return 1; }
   else
-    w="$(curl -sSL --max-time 8 -w '%{http_code} %{content_type}' "$RAW/$1" -o "$2" 2>/dev/null)"
+    # Pinned to the commit, not the branch: raw's CDN caches branch refs for minutes, and a
+    # sync that records $remote_sha must have fetched $remote_sha's files.
+    w="$(curl -sSL --max-time 8 -w '%{http_code} %{content_type}' "$RAW_PIN/$1" -o "$2" \
+      2>/dev/null)" || { GET_CODE=000; return 1; }
   fi
   GET_CODE="${w%% *}"
   [ -n "$GET_CODE" ] || GET_CODE=000
@@ -538,7 +545,8 @@ fi
 #     newly added guide) — propagate without a manual reinstall. Safe by design:
 #       - Guarded by FF_SELFUPDATED so the re-exec can't loop.
 #       - Only acts on a validated download (non-empty, has a shebang, is actually
-#         our updater), and only re-execs when the copy genuinely changed.
+#         our updater, ends on its final `exit 0` so a truncated copy is refused), and
+#         only re-execs when the copy genuinely changed.
 #       - On any failure it falls through to run the current copy unchanged.
 SELF="$FF/update.sh"
 if [ -z "${FF_SELFUPDATED:-}" ]; then
@@ -548,6 +556,7 @@ if [ -z "${FF_SELFUPDATED:-}" ]; then
      && [ -s "$tmp_self" ] \
      && head -1 "$tmp_self" 2>/dev/null | grep -q '^#!' \
      && grep -q 'factcheck-flow auto-updater' "$tmp_self" \
+     && [ "$(tail -n 1 "$tmp_self" 2>/dev/null)" = "exit 0" ] \
      && ! cmp -s "$tmp_self" "$SELF" 2>/dev/null; then
     if mv "$tmp_self" "$SELF" 2>/dev/null; then
       chmod +x "$SELF" 2>/dev/null || true
