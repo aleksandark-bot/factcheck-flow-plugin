@@ -21,7 +21,8 @@
 #     so Claude can pass it on): updates paused by a 401/403/404 — no token on this machine,
 #     or GitHub refused the one it has — or a token GitHub refused while the repo is still
 #     public, so updates carry on unauthenticated for now. A tokenless machine that can
-#     reach the repo, and a machine with a working token, both stay silent.
+#     reach the repo, and a machine with a working token, both stay silent. Likewise one
+#     line when GitHub refused the last SEO-knowledge skill fetch (step 0b).
 #
 set -uo pipefail   # deliberately NOT -e
 
@@ -68,8 +69,22 @@ AUTH=()
 #    Skipped on the self-update re-exec below (FF_SELFUPDATED set), which is the one path
 #    that runs this script twice in a session: two concurrent pulls would race over the
 #    same 4.6 MB base.jsonl.
-if [ -z "${FF_SELFUPDATED:-}" ] && command -v python3 >/dev/null 2>&1 \
-   && [ -f "$FF/bin/cluster_sync.py" ]; then
+#
+#    On macOS /usr/bin/python3 is an installer stub until the Command Line Tools are there:
+#    running it pops an "install developer tools" dialog, which here would be every session.
+#    So on a Mac that one path is only run once xcode-select points at a developer dir that
+#    holds a real python3. Homebrew / python.org pythons live elsewhere and are used as is.
+ff_py_ok() { # a real python3 on PATH — never the macOS installer stub
+  local p dev
+  p="$(command -v python3 2>/dev/null)" || return 1
+  [ -n "$p" ] || return 1
+  if [ "$(uname -s 2>/dev/null)" = Darwin ] && [ "$p" = /usr/bin/python3 ]; then
+    dev="$(xcode-select -p 2>/dev/null)" || return 1
+    [ -n "$dev" ] && [ -x "$dev/usr/bin/python3" ] || return 1
+  fi
+  return 0
+}
+if [ -z "${FF_SELFUPDATED:-}" ] && ff_py_ok && [ -f "$FF/bin/cluster_sync.py" ]; then
   (
     python3 "$FF/bin/cluster_sync.py" pull --quiet
     if [ -n "${PABAU_CLUSTERS_TOKEN:-}" ] || [ -s "$FF/.clusters-token" ]; then
@@ -82,6 +97,9 @@ fi
 #     at ~/.claude/skills/SEO-knowledge. Same reasoning as step 0: it has its own history,
 #     so it cannot wait behind main's gate, and it runs backgrounded and silenced. It only
 #     ever FAST-FORWARDS, and only when every one of these holds — otherwise it does nothing:
+#       - not the maintainer's machine. David publishes the skill FROM his checkout
+#         (seo-universal/publish-skill.sh), so where that script exists this step does
+#         nothing at all: no fetch racing his rebuilds or his own fetch/push;
 #       - the directory is a git checkout whose origin is that repo (https, with or without .git);
 #       - git is really there. On macOS /usr/bin/git is a stub that pops an "install developer
 #         tools" dialog when the Command Line Tools are missing, so on a Mac that stub is only
@@ -89,14 +107,22 @@ fi
 #       - at most once an hour ($FF/.last-skill-pull), since sessions start often;
 #       - no git operation in progress (index.lock, rebase, merge, cherry-pick), no maintainer
 #         rebuild running, branch `main`, working tree clean, and the local branch not ahead of
-#         the remote. David's machine publishes the skill FROM this checkout, so a rebuild's
-#         half-written files or an unpushed commit must never be pulled over.
+#         the remote.
 #     The token (when there is one) travels as a one-off http.extraheader scoped to
-#     https://github.com/ — never written to .git/config, never in the remote URL. If the
-#     tokened fetch fails, one unauthenticated retry (a still-public repo, a stale token).
+#     https://github.com/ — never written to .git/config, never in the remote URL, and on
+#     git 2.31+ passed through the environment (GIT_CONFIG_COUNT) so it is not in `ps`
+#     either. If the tokened fetch fails, one unauthenticated retry (a still-public repo, a
+#     stale token). A user url.<ssh>.insteadOf rule is overridden for this one repo, so the
+#     fetch stays on HTTPS with the token instead of going over SSH and maybe prompting.
+#     When GitHub refuses access on every attempt, $FF/.skill-pull-status says `auth`, and
+#     the next session prints one line about it (cleared by the next good fetch). Offline,
+#     timeouts and other failures stay silent.
 SK_DIR="$HOME/.claude/skills/SEO-knowledge"
 SK_STAMP="$FF/.last-skill-pull"
 SK_LOCK="$FF/.skill-pull.lock"
+SK_STATUS="$FF/.skill-pull-status"
+SK_PUBLISHER="$HOME/Desktop/temp/seo-universal/publish-skill.sh"
+SK_PIN="url.https://github.com/aleksandark-bot/seo-knowledge-skill.insteadOf=https://github.com/aleksandark-bot/seo-knowledge-skill"
 sk_git_ok() { # a real git on PATH — never the macOS installer stub
   local g dev
   g="$(command -v git 2>/dev/null)" || return 1
@@ -107,6 +133,17 @@ sk_git_ok() { # a real git on PATH — never the macOS installer stub
   fi
   return 0
 }
+sk_git_ge() { # sk_git_ge MAJOR MINOR — the installed git is at least that version
+  local v maj min
+  v="$(git --version 2>/dev/null)"
+  v="${v#git version }"
+  maj="${v%%.*}"
+  min="${v#*.}"; min="${min%%[!0-9]*}"
+  case "$maj" in ''|*[!0-9]*) return 1 ;; esac
+  [ -n "$min" ] || min=0
+  [ "$maj" -gt "$1" ] && return 0
+  [ "$maj" -eq "$1" ] && [ "$min" -ge "$2" ]
+}
 sk_origin_ok() {
   case "$(git -C "$SK_DIR" config --get remote.origin.url 2>/dev/null)" in
     https://github.com/aleksandark-bot/seo-knowledge-skill|https://github.com/aleksandark-bot/seo-knowledge-skill.git) return 0 ;;
@@ -114,7 +151,7 @@ sk_origin_ok() {
   return 1
 }
 sk_safe() { # nothing in flight, nothing local that a pull could touch
-  local gd="$SK_DIR/.git" f
+  local gd="$SK_DIR/.git" f st
   for f in index.lock rebase-merge rebase-apply MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD BISECT_LOG; do
     [ -e "$gd/$f" ] && return 1
   done
@@ -123,40 +160,70 @@ sk_safe() { # nothing in flight, nothing local that a pull could touch
     return 1
   fi
   [ "$(git -C "$SK_DIR" symbolic-ref -q --short HEAD 2>/dev/null)" = main ] || return 1
-  [ -z "$(git -C "$SK_DIR" status --porcelain 2>/dev/null)" ] || return 1
+  # GIT_OPTIONAL_LOCKS=0 is `git --no-optional-locks`: status must not take index.lock
+  # (refreshing the index) under whatever else is using this checkout.
+  st="$(GIT_OPTIONAL_LOCKS=0 git -C "$SK_DIR" status --porcelain 2>/dev/null)" || return 1
+  [ -z "$st" ] || return 1
   git -C "$SK_DIR" rev-parse -q --verify HEAD >/dev/null 2>&1 || return 1
   return 0
 }
-sk_fetch() { # $1 = token or empty. `git fetch origin main`, killed after 120 s
-  local hdr="" pid rc=0 n=0
+sk_auth_err() { # $1 = a failed git's stderr. 0 when it says GitHub refused access
+  [ -s "$1" ] || return 1
+  grep -Eiq "authentication failed|repository '[^']*' not found|repository not found|could not read (username|password)|terminal prompts disabled|invalid username or (password|token)|returned error: 40[134]|HTTP 40[134]|permission denied \(publickey" "$1"
+}
+sk_fetch() { # $1 = token or empty, $2 = stderr file. Killed (whole process group) after 120 s
+  local hdr="" pid rc=0 n=0 env=0 i
   if [ -n "${1:-}" ]; then
     hdr="$(printf 'x-access-token:%s' "$1" | base64 2>/dev/null | tr -d '\n\r')"
     [ -n "$hdr" ] || return 1
+    sk_git_ge 2 31 && env=1
   fi
+  # `set -m` puts the job in its own process group (pgid = its pid), so the watchdog can
+  # kill git AND its git-remote-https child, not just the parent.
+  set -m
   (
     # Never prompt: no terminal, no askpass, no credential helper (Git Credential Manager
-    # would open a browser window for a private repo it has no login for).
+    # would open a browser window for a private repo it has no login for), no SSH prompt.
     export GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=never GIT_ASKPASS=true SSH_ASKPASS=true \
+           GIT_SSH_COMMAND='ssh -oBatchMode=yes' \
            GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=30
-    if [ -n "$hdr" ]; then
-      exec git -C "$SK_DIR" -c credential.helper= \
-        -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $hdr" \
-        fetch -q --no-tags origin main
+    set -- -C "$SK_DIR" -c credential.helper= -c "$SK_PIN" -c gc.auto=0 -c maintenance.auto=false \
+      fetch -q --no-tags
+    sk_git_ge 2 29 && set -- "$@" --no-write-fetch-head
+    set -- "$@" origin +refs/heads/main:refs/remotes/origin/main
+    if [ -n "$hdr" ] && [ "$env" = 1 ]; then
+      # Off argv: config from the environment (git 2.31+), appended to any the user has.
+      i="${GIT_CONFIG_COUNT:-0}"
+      case "$i" in ''|*[!0-9]*) i=0 ;; esac
+      export "GIT_CONFIG_KEY_$i=http.https://github.com/.extraheader" \
+             "GIT_CONFIG_VALUE_$i=AUTHORIZATION: basic $hdr" "GIT_CONFIG_COUNT=$((i + 1))"
+      exec git "$@"
+    elif [ -n "$hdr" ]; then
+      exec git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $hdr" "$@"
     else
-      exec git -C "$SK_DIR" -c credential.helper= fetch -q --no-tags origin main
+      exec git "$@"
     fi
-  ) &
+  ) </dev/null >/dev/null 2>"$2" &
   pid=$!
+  set +m
+  trap 'kill -TERM -- "-$pid" 2>/dev/null; exit 1' INT TERM HUP   # our own group goes with us
   while kill -0 "$pid" 2>/dev/null; do
     n=$((n + 1))
-    if [ "$n" -gt 120 ]; then kill "$pid" 2>/dev/null; break; fi
+    if [ "$n" -gt 120 ]; then
+      kill -TERM -- "-$pid" 2>/dev/null
+      n=0
+      while kill -0 "$pid" 2>/dev/null && [ "$n" -lt 5 ]; do sleep 1; n=$((n + 1)); done
+      kill -KILL -- "-$pid" 2>/dev/null
+      break
+    fi
     sleep 1
   done
-  wait "$pid" 2>/dev/null || rc=$?
+  { wait "$pid"; } 2>/dev/null || rc=$?
+  trap - INT TERM HUP
   return "$rc"
 }
 sk_pull() {
-  local now last new
+  local now last new err ok=0 tauth=1
   sk_git_ok || return 0
   now="$(date +%s 2>/dev/null)"
   case "$now" in ''|*[!0-9]*) return 0 ;; esac
@@ -167,26 +234,42 @@ sk_pull() {
   # One puller at a time (two sessions opening together); a lock older than 10 min is stale.
   if ! mkdir "$SK_LOCK" 2>/dev/null; then
     [ -n "$(find "$SK_LOCK" -maxdepth 0 -mmin +10 2>/dev/null)" ] || return 0
-    rmdir "$SK_LOCK" 2>/dev/null; mkdir "$SK_LOCK" 2>/dev/null || return 0
+    rm -rf "$SK_LOCK" 2>/dev/null; mkdir "$SK_LOCK" 2>/dev/null || return 0
   fi
-  trap 'rmdir "$SK_LOCK" 2>/dev/null' EXIT
+  trap 'rm -rf "$SK_LOCK" 2>/dev/null' EXIT
   printf '%s\n' "$now" > "$SK_STAMP" 2>/dev/null || true
   sk_origin_ok || return 0
   sk_safe || return 0
-  if [ -n "$TOKEN" ] && sk_fetch "$TOKEN"; then :
-  elif sk_fetch ""; then :
-  else return 0
+  err="$SK_LOCK/err"
+  if [ -n "$TOKEN" ]; then
+    if sk_fetch "$TOKEN" "$err"; then ok=1
+    else sk_auth_err "$err" || tauth=0
+    fi
   fi
-  new="$(git -C "$SK_DIR" rev-parse -q --verify FETCH_HEAD 2>/dev/null)" || return 0
+  if [ "$ok" = 0 ]; then
+    if sk_fetch "" "$err"; then ok=1
+    else
+      # Refused on every attempt → tell the next session. Anything else stays silent.
+      if [ "$tauth" = 1 ] && sk_auth_err "$err"; then
+        printf 'auth\n' > "$SK_STATUS" 2>/dev/null || true
+      fi
+      return 0
+    fi
+  fi
+  rm -f "$SK_STATUS" 2>/dev/null
+  new="$(git -C "$SK_DIR" rev-parse -q --verify refs/remotes/origin/main 2>/dev/null)" || return 0
   [ -n "$new" ] || return 0
   [ "$new" = "$(git -C "$SK_DIR" rev-parse -q --verify HEAD 2>/dev/null)" ] && return 0
   sk_safe || return 0   # re-check: the fetch took time
   # Behind, not ahead or diverged: HEAD must be an ancestor of what was fetched.
   git -C "$SK_DIR" merge-base --is-ancestor HEAD "$new" 2>/dev/null || return 0
-  git -C "$SK_DIR" merge -q --ff-only "$new" 2>/dev/null || return 0
+  git -C "$SK_DIR" -c gc.auto=0 -c maintenance.auto=false merge -q --ff-only "$new" 2>/dev/null || return 0
   return 0
 }
-if [ -z "${FF_SELFUPDATED:-}" ] && [ -d "$SK_DIR/.git" ]; then
+if [ -z "${FF_SELFUPDATED:-}" ] && [ -d "$SK_DIR/.git" ] && [ ! -e "$SK_PUBLISHER" ]; then
+  if [ "$(cat "$SK_STATUS" 2>/dev/null)" = auth ]; then
+    echo "factcheck-flow: SEO-knowledge updates paused — GitHub refused access. Re-run the install command from David's message."
+  fi
   ( sk_pull ) </dev/null >/dev/null 2>&1 &
 fi
 

@@ -56,7 +56,10 @@ terminal on stdin, which both forms keep.
 The installer also sets up the **SEO-knowledge** skill (a git clone at
 `~/.claude/skills/SEO-knowledge`, via the same token), and the auto-updater fast-forwards it
 at most hourly. A clone with local changes or unpushed commits is never touched; without
-git (on a Mac: the developer tools) that step is skipped with a note.
+git (on a Mac: the developer tools) that step is skipped with a note. If GitHub refuses the
+skill fetch, the next session says so in one line ("SEO-knowledge updates paused"): re-run
+the install command. On the maintainer's machine (where `seo-universal/publish-skill.sh`
+exists) neither the installer nor the updater touches the checkout.
 
 ## One-time setup: WordPress credentials
 
