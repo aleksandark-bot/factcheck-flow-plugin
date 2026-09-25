@@ -42,6 +42,9 @@ new one, then paste the two lines again with the new token.
 The installer saves the token so updates keep working. Already installed? Run the same two
 lines again: re-running the installer is what switches an existing install over to the token.
 
+The same install also adds the **SEO-knowledge** skill (the SEO knowledge base Claude uses)
+and keeps it up to date on its own — nothing extra to do.
+
 It will set everything up and then ask you a few questions:
 
 - **Repo token** — asked first, and only if you used the one-line version. Paste the token

@@ -375,6 +375,8 @@ cat > "$FF/update.sh" <<'UPDATESH'
 #     API pinned to the commit just checked; without one, from raw.githubusercontent
 #     unauthenticated, exactly as before, which works for as long as the repo is public.
 #     A token is never printed.
+#   - Also keeps the SEO-knowledge skill's git clone (~/.claude/skills/SEO-knowledge)
+#     fast-forwarded, backgrounded and at most hourly — see step 0b.
 #   - Says ONE line only when the user has to act (SessionStart stdout reaches the session,
 #     so Claude can pass it on): updates paused by a 401/403/404 — no token on this machine,
 #     or GitHub refused the one it has — or a token GitHub refused while the repo is still
@@ -434,6 +436,118 @@ if [ -z "${FF_SELFUPDATED:-}" ] && command -v python3 >/dev/null 2>&1 \
       python3 "$FF/bin/cluster_sync.py" push
     fi
   ) </dev/null >/dev/null 2>&1 &
+fi
+
+# 0b. The SEO-knowledge skill (github.com/aleksandark-bot/seo-knowledge-skill), a git clone
+#     at ~/.claude/skills/SEO-knowledge. Same reasoning as step 0: it has its own history,
+#     so it cannot wait behind main's gate, and it runs backgrounded and silenced. It only
+#     ever FAST-FORWARDS, and only when every one of these holds — otherwise it does nothing:
+#       - the directory is a git checkout whose origin is that repo (https, with or without .git);
+#       - git is really there. On macOS /usr/bin/git is a stub that pops an "install developer
+#         tools" dialog when the Command Line Tools are missing, so on a Mac that stub is only
+#         run once xcode-select points at a developer dir that holds a real git;
+#       - at most once an hour ($FF/.last-skill-pull), since sessions start often;
+#       - no git operation in progress (index.lock, rebase, merge, cherry-pick), no maintainer
+#         rebuild running, branch `main`, working tree clean, and the local branch not ahead of
+#         the remote. David's machine publishes the skill FROM this checkout, so a rebuild's
+#         half-written files or an unpushed commit must never be pulled over.
+#     The token (when there is one) travels as a one-off http.extraheader scoped to
+#     https://github.com/ — never written to .git/config, never in the remote URL. If the
+#     tokened fetch fails, one unauthenticated retry (a still-public repo, a stale token).
+SK_DIR="$HOME/.claude/skills/SEO-knowledge"
+SK_STAMP="$FF/.last-skill-pull"
+SK_LOCK="$FF/.skill-pull.lock"
+sk_git_ok() { # a real git on PATH — never the macOS installer stub
+  local g dev
+  g="$(command -v git 2>/dev/null)" || return 1
+  [ -n "$g" ] || return 1
+  if [ "$(uname -s 2>/dev/null)" = Darwin ] && [ "$g" = /usr/bin/git ]; then
+    dev="$(xcode-select -p 2>/dev/null)" || return 1
+    [ -n "$dev" ] && [ -x "$dev/usr/bin/git" ] || return 1
+  fi
+  return 0
+}
+sk_origin_ok() {
+  case "$(git -C "$SK_DIR" config --get remote.origin.url 2>/dev/null)" in
+    https://github.com/aleksandark-bot/seo-knowledge-skill|https://github.com/aleksandark-bot/seo-knowledge-skill.git) return 0 ;;
+  esac
+  return 1
+}
+sk_safe() { # nothing in flight, nothing local that a pull could touch
+  local gd="$SK_DIR/.git" f
+  for f in index.lock rebase-merge rebase-apply MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD BISECT_LOG; do
+    [ -e "$gd/$f" ] && return 1
+  done
+  if command -v pgrep >/dev/null 2>&1 \
+     && pgrep -f 'seo-universal/(rebuild-all|publish-skill)|doctrine-update\.sh' >/dev/null 2>&1; then
+    return 1
+  fi
+  [ "$(git -C "$SK_DIR" symbolic-ref -q --short HEAD 2>/dev/null)" = main ] || return 1
+  [ -z "$(git -C "$SK_DIR" status --porcelain 2>/dev/null)" ] || return 1
+  git -C "$SK_DIR" rev-parse -q --verify HEAD >/dev/null 2>&1 || return 1
+  return 0
+}
+sk_fetch() { # $1 = token or empty. `git fetch origin main`, killed after 120 s
+  local hdr="" pid rc=0 n=0
+  if [ -n "${1:-}" ]; then
+    hdr="$(printf 'x-access-token:%s' "$1" | base64 2>/dev/null | tr -d '\n\r')"
+    [ -n "$hdr" ] || return 1
+  fi
+  (
+    # Never prompt: no terminal, no askpass, no credential helper (Git Credential Manager
+    # would open a browser window for a private repo it has no login for).
+    export GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=never GIT_ASKPASS=true SSH_ASKPASS=true \
+           GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=30
+    if [ -n "$hdr" ]; then
+      exec git -C "$SK_DIR" -c credential.helper= \
+        -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $hdr" \
+        fetch -q --no-tags origin main
+    else
+      exec git -C "$SK_DIR" -c credential.helper= fetch -q --no-tags origin main
+    fi
+  ) &
+  pid=$!
+  while kill -0 "$pid" 2>/dev/null; do
+    n=$((n + 1))
+    if [ "$n" -gt 120 ]; then kill "$pid" 2>/dev/null; break; fi
+    sleep 1
+  done
+  wait "$pid" 2>/dev/null || rc=$?
+  return "$rc"
+}
+sk_pull() {
+  local now last new
+  sk_git_ok || return 0
+  now="$(date +%s 2>/dev/null)"
+  case "$now" in ''|*[!0-9]*) return 0 ;; esac
+  last="$(cat "$SK_STAMP" 2>/dev/null)"
+  case "$last" in ''|*[!0-9]*) last=0 ;; esac
+  # Throttle; a stamp from the future (clock moved back) counts as due.
+  if [ "$last" -le "$now" ] && [ $((now - last)) -lt 3600 ]; then return 0; fi
+  # One puller at a time (two sessions opening together); a lock older than 10 min is stale.
+  if ! mkdir "$SK_LOCK" 2>/dev/null; then
+    [ -n "$(find "$SK_LOCK" -maxdepth 0 -mmin +10 2>/dev/null)" ] || return 0
+    rmdir "$SK_LOCK" 2>/dev/null; mkdir "$SK_LOCK" 2>/dev/null || return 0
+  fi
+  trap 'rmdir "$SK_LOCK" 2>/dev/null' EXIT
+  printf '%s\n' "$now" > "$SK_STAMP" 2>/dev/null || true
+  sk_origin_ok || return 0
+  sk_safe || return 0
+  if [ -n "$TOKEN" ] && sk_fetch "$TOKEN"; then :
+  elif sk_fetch ""; then :
+  else return 0
+  fi
+  new="$(git -C "$SK_DIR" rev-parse -q --verify FETCH_HEAD 2>/dev/null)" || return 0
+  [ -n "$new" ] || return 0
+  [ "$new" = "$(git -C "$SK_DIR" rev-parse -q --verify HEAD 2>/dev/null)" ] && return 0
+  sk_safe || return 0   # re-check: the fetch took time
+  # Behind, not ahead or diverged: HEAD must be an ancestor of what was fetched.
+  git -C "$SK_DIR" merge-base --is-ancestor HEAD "$new" 2>/dev/null || return 0
+  git -C "$SK_DIR" merge -q --ff-only "$new" 2>/dev/null || return 0
+  return 0
+}
+if [ -z "${FF_SELFUPDATED:-}" ] && [ -d "$SK_DIR/.git" ]; then
+  ( sk_pull ) </dev/null >/dev/null 2>&1 &
 fi
 
 # 1. Latest commit on main. Bail quietly if we can't reach GitHub at all. No -f: the HTTP
@@ -1895,6 +2009,145 @@ if command -v python3 >/dev/null 2>&1 && [ -f "$FF/bin/cluster_sync.py" ]; then
     echo "        workbook:  python3 -m pip install --user openpyxl"
   fi
 fi
+
+# --- 4h. The SEO-knowledge skill -------------------------------------------
+# The SEO knowledge base Claude queries for any SEO task (CLAUDE.md tells it to), shipped as
+# its own repo and installed as a git clone at ~/.claude/skills/SEO-knowledge. From here on
+# the auto-updater fast-forwards it at most hourly (update.sh step 0b). This step:
+#   - not there yet → clone it (into a temp dir first, so a failed clone leaves nothing);
+#   - already that clone → the same safe fast-forward the updater does: only on branch main,
+#     only with a clean tree, nothing in flight and nothing unpushed;
+#   - something else at that path → left alone, with a note;
+#   - no usable git → skipped with a note. None of this ever fails the install.
+# The token travels as a one-off http.extraheader for https://github.com/ — never written
+# to .git/config or into the remote URL — and a failed tokened try is retried once without.
+SK_DIR="$CLAUDE/skills/SEO-knowledge"
+SK_URL="https://github.com/aleksandark-bot/seo-knowledge-skill.git"
+sk_git_ok() { # a real git on PATH — never the macOS stub that pops an installer dialog
+  local g dev
+  g="$(command -v git 2>/dev/null)" || return 1
+  [ -n "$g" ] || return 1
+  if [ "$(uname -s 2>/dev/null)" = Darwin ] && [ "$g" = /usr/bin/git ]; then
+    dev="$(xcode-select -p 2>/dev/null)" || return 1
+    [ -n "$dev" ] && [ -x "$dev/usr/bin/git" ] || return 1
+  fi
+  return 0
+}
+sk_origin_ok() {
+  case "$(git -C "$SK_DIR" config --get remote.origin.url 2>/dev/null || true)" in
+    https://github.com/aleksandark-bot/seo-knowledge-skill|https://github.com/aleksandark-bot/seo-knowledge-skill.git) return 0 ;;
+  esac
+  return 1
+}
+sk_safe() { # sets SK_WHY when it says no
+  local gd="$SK_DIR/.git" f
+  SK_WHY=""
+  for f in index.lock rebase-merge rebase-apply MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD BISECT_LOG; do
+    if [ -e "$gd/$f" ]; then SK_WHY="a git operation is in progress"; return 1; fi
+  done
+  if command -v pgrep >/dev/null 2>&1 \
+     && pgrep -f 'seo-universal/(rebuild-all|publish-skill)|doctrine-update\.sh' >/dev/null 2>&1; then
+    SK_WHY="a knowledge-base rebuild is running"; return 1
+  fi
+  if [ "$(git -C "$SK_DIR" symbolic-ref -q --short HEAD 2>/dev/null || true)" != main ]; then
+    SK_WHY="not on branch main"; return 1
+  fi
+  if [ -n "$(git -C "$SK_DIR" status --porcelain 2>/dev/null || echo x)" ]; then
+    SK_WHY="local changes"; return 1
+  fi
+  return 0
+}
+sk_git() { # sk_git <token or ""> <timeout s> <git args...> — no prompts, no helpers, watchdog
+  local tok="$1" limit="$2" hdr="" pid rc=0 n=0
+  shift 2
+  if [ -n "$tok" ]; then
+    hdr="$(printf 'x-access-token:%s' "$tok" | base64 2>/dev/null | tr -d '\n\r' || true)"
+    [ -n "$hdr" ] || return 1
+  fi
+  (
+    export GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=never GIT_ASKPASS=true SSH_ASKPASS=true \
+           GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=30
+    if [ -n "$hdr" ]; then
+      exec git -c credential.helper= \
+        -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $hdr" "$@"
+    else
+      exec git -c credential.helper= "$@"
+    fi
+  ) </dev/null >/dev/null 2>&1 &
+  pid=$!
+  while kill -0 "$pid" 2>/dev/null; do
+    n=$((n + 1))
+    if [ "$n" -gt "$limit" ]; then kill "$pid" 2>/dev/null || true; break; fi
+    sleep 1
+  done
+  wait "$pid" 2>/dev/null || rc=$?
+  return "$rc"
+}
+sk_stamp() { date +%s > "$FF/.last-skill-pull" 2>/dev/null || true; }  # updater: no re-pull this hour
+SK_TOK="${REPO_TOKEN:-}"
+SK_DONE=0
+if ! sk_git_ok; then
+  if [ "$(uname -s 2>/dev/null)" = Darwin ]; then
+    echo "  NOTE: SEO-knowledge skill skipped — git is not available (the Mac developer tools are"
+    echo "        not installed). Run  xcode-select --install , then re-run this installer."
+  else
+    echo "  NOTE: SEO-knowledge skill skipped — git is not installed. Install git, then re-run"
+    echo "        this installer."
+  fi
+elif [ -d "$SK_DIR/.git" ] && sk_origin_ok; then
+  if ! sk_safe; then
+    echo "  - SEO-knowledge skill: skipped: $SK_WHY in $SK_DIR"
+  else
+    SK_OK=0
+    if [ -n "$SK_TOK" ] && sk_git "$SK_TOK" 180 -C "$SK_DIR" fetch -q --no-tags origin main; then SK_OK=1
+    elif sk_git "" 180 -C "$SK_DIR" fetch -q --no-tags origin main; then SK_OK=1
+    fi
+    if [ "$SK_OK" = 0 ]; then
+      echo "  NOTE: SEO-knowledge skill: could not reach GitHub — the updater retries hourly."
+    else
+      SK_NEW="$(git -C "$SK_DIR" rev-parse -q --verify FETCH_HEAD 2>/dev/null || true)"
+      SK_HEAD="$(git -C "$SK_DIR" rev-parse -q --verify HEAD 2>/dev/null || true)"
+      if [ -z "$SK_NEW" ] || [ "$SK_NEW" = "$SK_HEAD" ]; then
+        echo "  - SEO-knowledge skill: already up to date"; SK_DONE=1; sk_stamp
+      elif ! git -C "$SK_DIR" merge-base --is-ancestor HEAD "$SK_NEW" 2>/dev/null; then
+        echo "  - SEO-knowledge skill: skipped: local commits not on GitHub in $SK_DIR"
+      elif git -C "$SK_DIR" merge -q --ff-only "$SK_NEW" >/dev/null 2>&1; then
+        echo "  - SEO-knowledge skill: updated"; SK_DONE=1; sk_stamp
+      else
+        echo "  - SEO-knowledge skill: skipped: local changes in $SK_DIR"
+      fi
+    fi
+  fi
+elif [ -e "$SK_DIR" ]; then
+  echo "  NOTE: $SK_DIR exists but is not a git clone of seo-knowledge-skill — left untouched."
+  echo "        To have it installed and auto-updated, move it aside and re-run this installer."
+else
+  mkdir -p "$CLAUDE/skills"
+  SK_TMP="$(mktemp -d "$CLAUDE/skills/.SEO-knowledge.tmp.XXXXXX" 2>/dev/null || true)"
+  if [ -z "$SK_TMP" ]; then
+    echo "  NOTE: SEO-knowledge skill skipped — could not create a temp dir in $CLAUDE/skills."
+  else
+    SK_OK=0
+    if [ -n "$SK_TOK" ] && sk_git "$SK_TOK" 300 clone -q "$SK_URL" "$SK_TMP/repo"; then SK_OK=1
+    else
+      rm -rf "$SK_TMP/repo"
+      if sk_git "" 300 clone -q "$SK_URL" "$SK_TMP/repo"; then SK_OK=1; fi
+    fi
+    if [ "$SK_OK" = 1 ] && [ -f "$SK_TMP/repo/SKILL.md" ] && [ ! -e "$SK_DIR" ] \
+       && mv "$SK_TMP/repo" "$SK_DIR" 2>/dev/null; then
+      echo "  - SEO-knowledge skill installed to $SK_DIR"; SK_DONE=1; sk_stamp
+    else
+      echo "  NOTE: SEO-knowledge skill: could not download it now. Re-run this installer later;"
+      echo "        until it is installed, it does not auto-update."
+    fi
+    rm -rf "$SK_TMP"
+  fi
+fi
+if [ "$SK_DONE" = 1 ] && command -v python3 >/dev/null 2>&1 && [ -f "$SK_DIR/scripts/kb.py" ]; then
+  SK_STATS="$(python3 "$SK_DIR/scripts/kb.py" stats 2>/dev/null | head -1 || true)"
+  [ -n "$SK_STATS" ] && echo "    $SK_STATS"
+fi
+unset SK_TOK
 
 # --- 5. WordPress credentials (interactive) -------------------------------
 if [ -f "$CREDS" ]; then

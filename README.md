@@ -53,6 +53,11 @@ works: ask David for a new one, then re-run the install command from his message
 one of the two forms above, never `curl | bash`: the installer asks questions and needs the
 terminal on stdin, which both forms keep.
 
+The installer also sets up the **SEO-knowledge** skill (a git clone at
+`~/.claude/skills/SEO-knowledge`, via the same token), and the auto-updater fast-forwards it
+at most hourly. A clone with local changes or unpushed commits is never touched; without
+git (on a Mac: the developer tools) that step is skipped with a note.
+
 ## One-time setup: WordPress credentials
 
 Credentials are **not** stored in this plugin. The `wordpress-access` skill carries only
